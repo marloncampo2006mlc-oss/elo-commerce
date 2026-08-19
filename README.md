@@ -65,19 +65,6 @@ Cada módulo de domínio (`clientes`, `produtos`, `pedidos`, `atendimentos`) seg
 - **Fluxo da URA como dado** — o atendimento inteiro é um objeto declarativo (`src/modules/atendimentos/fluxo.js`); mudar o menu não mexe no motor.
 - **Views para analytics** — o dashboard consome views versionadas em migration (`src/db/sql/002_views.sql`), não SQL solto espalhado pelo código.
 
-## Rodando localmente
-
-Pré-requisitos: Node.js 20+ e PostgreSQL 14+ rodando localmente.
-
-```bash
-npm install
-cp .env.example .env    # ajuste usuário/senha do seu PostgreSQL
-npm run db:reset        # cria o schema e popula dados de demonstração
-npm start
-```
-
-Acesse **http://localhost:3333**.
-
 ### Scripts disponíveis
 
 | Comando | O que faz |
