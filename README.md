@@ -1,5 +1,7 @@
 # ◆ Elo Commerce
 
+**Demo ao vivo:** [elo-commerce-xi.vercel.app](https://elo-commerce-xi.vercel.app)
+
 Plataforma de vendas com atendimento omnichannel — CRUD completo em **Node.js + Express + PostgreSQL**, sem ORM, com front-end em JavaScript puro (zero frameworks, zero build step).
 
 Projeto construído como estudo aplicado para a vaga de estágio em **Conhecimento, Serviços e Integrações (CSI)** — cobre exatamente o que a área trabalha: desenvolvimento frontend/backend, integrações e soluções de comunicação (chatbot e URA).
