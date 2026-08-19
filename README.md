@@ -1,105 +1,141 @@
-# ◆ Elo Commerce
+# ◆ Elo Platform
 
-**Demo ao vivo:** [elo-commerce-xi.vercel.app](https://elo-commerce-xi.vercel.app)
+Plataforma que reúne **loja**, **gestão**, **construtor de chatbot no-code**, **atendimento humano** e **BI** — com o fluxo criado no no-code alimentando de verdade o assistente da loja.
 
-Plataforma de vendas com atendimento omnichannel — CRUD completo em **Node.js + Express + PostgreSQL**, sem ORM, com front-end em JavaScript puro (zero frameworks, zero build step).
+Construída sobre Next.js, TypeScript e PostgreSQL, sem ORM: todo SQL é escrito à mão e as regras críticas de integridade vivem no próprio banco.
 
-Projeto construído como estudo aplicado para a vaga de estágio em **Conhecimento, Serviços e Integrações (CSI)** — cobre exatamente o que a área trabalha: desenvolvimento frontend/backend, integrações e soluções de comunicação (chatbot e URA).
+> Esta é a branch `elo-platform`. A branch `main` mantém a versão anterior (Express + JavaScript puro), publicada e funcionando.
 
-## O que tem aqui
+## O ciclo que o projeto demonstra
 
-- **Clientes** — cadastro com validação real de CPF (dígitos verificadores), busca, filtros e histórico de compras.
-- **Produtos** — catálogo com imagens, categorias, controle de estoque e ajuste atômico de saldo.
-- **Pedidos** — venda transacional: pedido, itens e baixa de estoque são gravados atomicamente (tudo ou nada), com máquina de estados (`rascunho → aguardando pagamento → pago → enviado → entregue`, com cancelamento devolvendo estoque).
-- **Loja** — vitrine pública com carrinho e checkout, consumindo a mesma API do backoffice.
-- **Atendimento (chatbot / URA)** — motor conversacional próprio: o fluxo de diálogo é *dado* (não código), a mesma "árvore" atende tanto teclas de URA quanto linguagem natural no chat, e toda sessão fica registrada em `JSONB` no PostgreSQL.
-- **Dashboard** — indicadores, gráficos (SVG puro, sem libs) e alertas de estoque, tudo servido por views SQL versionadas em migration.
+```
+Gerente monta o fluxo no No-Code  ─┐
+   arrasta blocos, conecta         │
+   Salvar → Testar → Publicar      │
+                                   ▼
+Cliente abre o chat na loja  ── usa a versão publicada
+   pergunta sobre um pedido        │
+   o bot consulta o banco de verdade
+   pede atendente                  │
+                                   ▼
+Conversa entra na fila do Atendimento
+   atendente assume e responde     │
+                                   ▼
+Tudo vira indicador no BI
+```
+
+## Módulos
+
+| Área | O que faz |
+|---|---|
+| **Loja** (`/`) | vitrine com busca e filtros, carrinho, checkout e widget de atendimento |
+| **Gestão** (`/gestao`) | painel, catálogo, pedidos com máquina de estados, clientes |
+| **No-Code** (`/gestao/no-code`) | editor visual de fluxos com 9 tipos de bloco, versionamento e publicação |
+| **Atendimento** (`/gestao/atendimento`) | fila, transferência do bot para humano, histórico e contexto do cliente |
+| **BI** (`/gestao/bi`) | indicadores com filtro de período, gráficos de vendas, pedidos, clientes e atendimento |
 
 ## Stack
 
 | Camada | Tecnologia |
 |---|---|
-| Backend | Node.js (ESM) + Express |
-| Banco | PostgreSQL 16 — enums, triggers, funções PL/pgSQL, views, JSONB |
-| Validação | Zod |
-| Frontend | JavaScript puro, SPA com router próprio via hash, CSS com design tokens (tema claro/escuro) |
-| Testes | `node --test` |
-
-Sem ORM: todo SQL é escrito à mão e parametrizado. Regras de negócio críticas (recalcular total do pedido, baixar estoque) vivem como triggers e funções no próprio banco — não dependem do código da aplicação para se manterem íntegras.
+| Aplicação | Next.js (App Router) + React + TypeScript strict |
+| Banco | PostgreSQL — enums, triggers, funções PL/pgSQL, views, JSONB |
+| Validação | Zod, na borda de toda rota |
+| Editor visual | React Flow (`@xyflow/react`) |
+| Gráficos | Recharts |
+| Testes | Vitest |
+| Autenticação | própria — bcrypt + cookie HttpOnly assinado por HMAC |
 
 ## Arquitetura
 
 ```
-requisição
-   │
-   ▼
-routes.js          → define a rota e encadeia middlewares
-   │
-   ▼
-validate(schema)    → Zod valida e converte a entrada (422 se inválida)
-   │
-   ▼
-controller          → só traduz HTTP ⇄ domínio
-   │
-   ▼
-service              → regras de negócio, transações, orquestração
-   │
-   ▼
-repository            → único lugar com SQL, sempre parametrizado
-   │
-   ▼
-PostgreSQL             → constraints, triggers e funções garantem a integridade
-   │
-   ▼
-errorHandler          → traduz erro do banco (23505, 23503…) em mensagem de negócio
+app/(loja)      público          app/gestao      exige sessão
+     │                                │
+     └────────────┬───────────────────┘
+                  ▼
+     app/api/loja · app/api/chat · app/api/gestao
+                  │
+                  ▼
+     modules/  catalogo · pedidos · clientes · bots · atendimento · indicadores
+               schema (Zod) → service (regras) → repository (SQL)
+                  │
+                  ▼
+     chatbot/  motor + executores (um arquivo por tipo de bloco)
+                  │
+                  ▼
+     PostgreSQL — constraints, triggers e funções garantem a integridade
 ```
 
-Cada módulo de domínio (`clientes`, `produtos`, `pedidos`, `atendimentos`) segue essa mesma divisão em `src/modules/<nome>/`.
+**Duas regras mantêm isso saudável:** `app/` nunca contém SQL nem regra de negócio; `modules/` e `chatbot/` nunca importam React.
 
-### Decisões de projeto
+### Decisões que valem explicar
 
-- **Transação na venda** — pedido, itens e baixa de estoque são atômicos: se um item falhar, nada é gravado.
-- **`SELECT … FOR UPDATE`** — trava a linha do produto durante a venda, eliminando corrida de estoque em compras simultâneas.
-- **Máquina de estados nos pedidos** — o pedido só transita por caminhos válidos; cancelar devolve o estoque automaticamente.
-- **Exclusão protegida** — cliente com pedido ou produto já vendido não pode ser apagado; a saída é inativar.
-- **Fluxo da URA como dado** — o atendimento inteiro é um objeto declarativo (`src/modules/atendimentos/fluxo.js`); mudar o menu não mexe no motor.
-- **Views para analytics** — o dashboard consome views versionadas em migration (`src/db/sql/002_views.sql`), não SQL solto espalhado pelo código.
+- **Separação por prefixo de rota** — `/api/gestao/*` tem a autorização no grupo, então uma rota nova já nasce protegida, em vez de depender de lembrar de aplicar um middleware.
+- **Venda transacional** — pedido, itens e baixa de estoque são atômicos. `SELECT … FOR UPDATE` trava a linha do produto, eliminando corrida de estoque em compras simultâneas.
+- **Máquina de estados do pedido** — fonte única em `pedidos.types.ts`, importada tanto pelo servidor (que valida) quanto pela interface (que só exibe o que é possível).
+- **Fluxo do chatbot é dado, não código** — `{ nodes, edges }` em JSONB. Trocar o atendimento inteiro não toca no motor.
+- **Conversa guarda a versão do bot** — publicar uma v2 não altera conversas em andamento nem reescreve o histórico.
+- **Validação antes de publicar** — bloco sem saída, menu com opção desconectada, condição sem os dois caminhos: a publicação é recusada com a lista de problemas.
+- **Limite de saltos por turno** — um ciclo desenhado no fluxo é interrompido em vez de travar o servidor.
+- **Motor no servidor** — o widget nunca recebe o fluxo. Ele envia a entrada e recebe as falas; a lógica que consulta o banco não vai para o navegador.
+- **Atendimento por polling** — funções serverless não mantêm WebSocket aberto; consultar a cada 5s é a solução honesta para esse ambiente.
+- **Exclusão protegida** — cliente com pedido e produto vendido são inativados, nunca apagados.
 
-### Scripts disponíveis
+## Rodando localmente
+
+Pré-requisitos: Node.js 20+ e PostgreSQL 14+.
+
+```bash
+npm install
+cp .env.example .env    # ajuste as credenciais do seu PostgreSQL
+createdb elo_commerce
+npm run db:reset        # schema + dados fictícios + usuários + chatbot inicial
+npm run dev
+```
+
+Acesse **http://localhost:3000**. O comando `db:usuarios` imprime as senhas geradas — elas não são exibidas de novo.
+
+### Scripts
 
 | Comando | O que faz |
 |---|---|
-| `npm start` | sobe o servidor |
-| `npm run dev` | sobe com `--watch` (recarrega ao salvar) |
-| `npm run db:migrate` | aplica as migrations pendentes |
-| `npm run db:seed` | popula o banco com dados de demonstração |
-| `npm run db:reset` | reseta o schema e roda tudo de novo |
+| `npm run dev` | sobe a aplicação em desenvolvimento |
+| `npm run build` | build de produção |
+| `npm run db:migrate` | aplica migrations pendentes |
+| `npm run db:reset` | recria tudo do zero (recusa rodar contra banco remoto) |
+| `npm run db:bot` | cria e publica o chatbot inicial |
 | `npm test` | roda a suíte de testes |
+| `npm run typecheck` | verificação de tipos |
+
+## Segurança
+
+- Autorização verificada **no servidor**, junto do acesso ao dado — esconder botão não é proteção.
+- `401` para quem não tem sessão, `403` para quem tem sessão mas não tem o papel.
+- Senhas com bcrypt; o hash é comparado mesmo quando o e-mail não existe, para o tempo de resposta não revelar quais e-mails estão cadastrados.
+- Cookie `HttpOnly` + `SameSite` + `Secure` em produção, assinado por HMAC.
+- Todo SQL parametrizado; nenhuma concatenação de entrada do usuário.
+- `db:reset` recusa executar contra banco remoto ou `NODE_ENV=production`.
+
+## Testes
+
+```bash
+npm test
+```
+
+Cobrem o que quebra silenciosamente: validação de CPF por dígito verificador, transições válidas do pedido, integridade do token de sessão (adulteração e expiração), execução do motor do chatbot (menu, condição, contexto, ciclo infinito) e as regras que impedem publicar um fluxo quebrado.
 
 ## Estrutura
 
 ```
 src/
-  config/        variáveis de ambiente centralizadas
-  db/            pool de conexão, migrations, seed, SQL (schema + views)
-  middlewares/   tratamento de erro, log de requisições
-  modules/       um diretório por domínio (schema · repository · service · controller · routes)
-  shared/        helpers de HTTP, erros e validação
-public/
-  css/           design system (tokens, temas claro/escuro)
-  js/            SPA: router, cliente de API, páginas, widget de chat
-  assets/        renders SVG do catálogo de produtos
+  app/
+    (loja)/       vitrine, carrinho          — público
+    gestao/       painel, produtos, pedidos, clientes, no-code, atendimento, bi
+    api/          loja · chat · gestao
+  modules/        domínio por contexto (schema · service · repository)
+  chatbot/        motor + executores por tipo de bloco
+  components/     interface compartilhada
+  lib/            db · sessão · autorização · erros · formato
+  db/sql/         migrations versionadas
+  test/           suíte Vitest
 ```
-
-## Endpoints principais
-
-```
-GET    /api/dashboard                    indicadores completos em uma chamada
-GET    /api/clientes                     lista com busca, filtros e paginação
-POST   /api/pedidos                      venda transacional com baixa de estoque
-PATCH  /api/pedidos/:id/status           avança o pedido na máquina de estados
-POST   /api/atendimentos                 abre uma sessão de chatbot/URA
-POST   /api/atendimentos/:id/mensagens   processa um turno da conversa
-```
-
-A lista completa, com exemplos, está disponível na própria aplicação em **API & Arquitetura** (`/#/api`).
