@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { cookies } from 'next/headers';
+import { COOKIE_SESSAO } from './constantes';
 
 /**
  * Sessão assinada, guardada em cookie HttpOnly.
@@ -11,7 +12,7 @@ import { cookies } from 'next/headers';
  * O cookie guarda apenas identificação e papel — nunca senha ou hash.
  */
 
-export const COOKIE_SESSAO = 'elo_sessao';
+export { COOKIE_SESSAO };
 const DURACAO_MS = 8 * 60 * 60 * 1000; // 8 horas
 
 export type PapelUsuario = 'administrador' | 'gerente' | 'supervisor' | 'atendente';
