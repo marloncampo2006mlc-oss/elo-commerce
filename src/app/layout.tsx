@@ -3,7 +3,7 @@ import './globais.css';
 
 export const metadata: Metadata = {
   title: 'Elo Platform',
-  description: 'Plataforma de vendas com no-code, atendimento e BI',
+  description: 'Loja, gestão, chatbot no-code, atendimento e BI numa plataforma só',
 };
 
 export default function LayoutRaiz({ children }: { children: React.ReactNode }) {
