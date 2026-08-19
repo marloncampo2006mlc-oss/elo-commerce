@@ -114,7 +114,3 @@ POST   /api/atendimentos/:id/mensagens   processa um turno da conversa
 ```
 
 A lista completa, com exemplos, está disponível na própria aplicação em **API & Arquitetura** (`/#/api`).
-
----
-
-Projeto de estudo — não representa produto oficial da Dígitro.
