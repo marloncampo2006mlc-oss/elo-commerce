@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-tema="escuro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Elo Commerce · Vendas e Atendimento Omnichannel</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>◆</text></svg>" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- ================= SIDEBAR ================= -->
+    <aside class="sidebar" id="sidebar">
+      <div class="marca">
+        <div class="marca__logo">◆</div>
+        <div class="marca__texto">
+          <strong>Elo Commerce</strong>
+          <span>vendas + atendimento</span>
+        </div>
+      </div>
+
+      <nav class="nav" id="nav">
+        <span class="nav__grupo">Gestão</span>
+        <a class="nav__item" href="#/dashboard"   data-icone="◈">Dashboard</a>
+        <a class="nav__item" href="#/clientes"    data-icone="◍">Clientes</a>
+        <a class="nav__item" href="#/produtos"    data-icone="▤">Produtos</a>
+        <a class="nav__item" href="#/pedidos"     data-icone="▦">Pedidos</a>
+        <span class="nav__grupo">Canais</span>
+        <a class="nav__item" href="#/loja"        data-icone="◉">Loja</a>
+        <a class="nav__item" href="#/atendimentos" data-icone="◐">Atendimentos</a>
+        <span class="nav__grupo">Plataforma</span>
+        <a class="nav__item" href="#/api"         data-icone="⌘">API &amp; Arquitetura</a>
+      </nav>
+
+      <div class="sidebar__rodape">
+        <button class="btn-tema" id="btn-tema" title="Alternar tema">
+          <span class="btn-tema__icone">☾</span><span>Tema escuro</span>
+        </button>
+        <div class="status-db" id="status-db"><i></i> conectando…</div>
+      </div>
+    </aside>
+
+    <!-- ================= CONTEÚDO ================= -->
+    <div class="conteudo">
+      <header class="topbar">
+        <button class="menu-mobile" id="menu-mobile" aria-label="Menu">☰</button>
+        <div class="topbar__titulo">
+          <h1 id="titulo-pagina">Dashboard</h1>
+          <p id="subtitulo-pagina">Visão geral da operação</p>
+        </div>
+        <div class="topbar__acoes">
+          <div class="carrinho-chip" id="carrinho-chip" hidden>
+            <span>🛒</span><b id="carrinho-qtd">0</b>
+          </div>
+          <button class="btn btn--fantasma" id="btn-atualizar" title="Recarregar dados">⟳</button>
+        </div>
+      </header>
+
+      <main class="pagina" id="pagina"></main>
+    </div>
+  </div>
+
+  <!-- ================= WIDGET DE ATENDIMENTO ================= -->
+  <button class="fab-chat" id="fab-chat" title="Abrir assistente">
+    <span>💬</span>
+  </button>
+
+  <section class="chat" id="chat" hidden>
+    <header class="chat__topo">
+      <div class="chat__id">
+        <div class="chat__avatar">◆</div>
+        <div>
+          <strong>Assistente Elo</strong>
+          <span id="chat-protocolo">iniciando sessão…</span>
+        </div>
+      </div>
+      <div class="chat__canais">
+        <button class="chip chip--ativo" data-canal="chatbot">Chat</button>
+        <button class="chip" data-canal="ura">URA</button>
+        <button class="chat__fechar" id="chat-fechar">✕</button>
+      </div>
+    </header>
+
+    <div class="chat__mensagens" id="chat-mensagens"></div>
+
+    <div class="chat__teclado" id="chat-teclado" hidden></div>
+
+    <form class="chat__form" id="chat-form">
+      <input id="chat-input" placeholder="Digite sua mensagem…" autocomplete="off" maxlength="200" />
+      <button class="btn btn--primario" type="submit">➤</button>
+    </form>
+  </section>
+
+  <!-- ================= MODAL + TOASTS ================= -->
+  <div class="modal" id="modal" hidden>
+    <div class="modal__fundo" data-fechar></div>
+    <div class="modal__caixa" role="dialog" aria-modal="true">
+      <header class="modal__topo">
+        <h2 id="modal-titulo">Título</h2>
+        <button class="modal__fechar" data-fechar>✕</button>
+      </header>
+      <div class="modal__corpo" id="modal-corpo"></div>
+    </div>
+  </div>
+
+  <div class="toasts" id="toasts"></div>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

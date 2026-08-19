@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Barra de videoconferência para salas">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="40%" r="75%"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#dde1ee"/></radialGradient>
+    <linearGradient id="corpo" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4d5462"/><stop offset="55%" stop-color="#262b35"/><stop offset="100%" stop-color="#12151b"/></linearGradient>
+    <radialGradient id="lente" cx="40%" cy="35%" r="70%"><stop offset="0%" stop-color="#7fb2ff"/><stop offset="45%" stop-color="#16205a"/><stop offset="100%" stop-color="#04060b"/></radialGradient>
+    <pattern id="tecido" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1.2" fill="#0b0e14" opacity=".65"/></pattern>
+  </defs>
+  <rect width="400" height="300" fill="url(#bg)"/>
+  <ellipse cx="200" cy="222" rx="156" ry="12" fill="#0b1020" opacity=".16"/>
+  <rect x="36" y="122" width="328" height="84" rx="40" fill="url(#corpo)"/>
+  <rect x="46" y="130" width="308" height="26" rx="13" fill="#fff" opacity=".07"/>
+  <rect x="62" y="150" width="104" height="34" rx="17" fill="#171b23"/>
+  <rect x="62" y="150" width="104" height="34" rx="17" fill="url(#tecido)"/>
+  <rect x="234" y="150" width="104" height="34" rx="17" fill="#171b23"/>
+  <rect x="234" y="150" width="104" height="34" rx="17" fill="url(#tecido)"/>
+  <circle cx="200" cy="164" r="30" fill="#0b0e13"/>
+  <circle cx="200" cy="164" r="24" fill="url(#lente)"/>
+  <circle cx="191" cy="155" r="6" fill="#d6e6ff" opacity=".5"/>
+  <circle cx="176" cy="140" r="3" fill="#34d399"/>
+  <rect x="150" y="206" width="100" height="10" rx="5" fill="#2f3540"/>
+</svg>

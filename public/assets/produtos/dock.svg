@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Dock station USB-C">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="40%" r="75%"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#dde1ee"/></radialGradient>
+    <linearGradient id="metal" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#8d95a4"/><stop offset="50%" stop-color="#5b6371"/><stop offset="100%" stop-color="#3a404b"/></linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#bg)"/>
+  <ellipse cx="200" cy="216" rx="140" ry="12" fill="#0b1020" opacity=".16"/>
+  <path d="M70 150 L330 150 L316 132 L84 132 Z" fill="#9aa2b1"/>
+  <rect x="70" y="150" width="260" height="52" rx="9" fill="url(#metal)"/>
+  <rect x="70" y="150" width="260" height="7" fill="#fff" opacity=".16"/>
+  <g fill="#12151b">
+    <rect x="90" y="166" width="30" height="14" rx="2.5"/>
+    <rect x="128" y="166" width="30" height="14" rx="2.5"/>
+    <rect x="166" y="168" width="22" height="10" rx="5"/>
+    <rect x="196" y="168" width="22" height="10" rx="5"/>
+    <rect x="226" y="164" width="34" height="18" rx="2.5"/>
+    <rect x="268" y="166" width="24" height="14" rx="2.5"/>
+  </g>
+  <g fill="#2a303b">
+    <rect x="94" y="169" width="22" height="8" rx="1"/>
+    <rect x="132" y="169" width="22" height="8" rx="1"/>
+    <rect x="230" y="167" width="26" height="12" rx="1"/>
+  </g>
+  <circle cx="308" cy="173" r="4" fill="#34d399"/>
+  <path d="M330 176 q34 6 40 30" fill="none" stroke="#22262f" stroke-width="7" stroke-linecap="round"/>
+</svg>

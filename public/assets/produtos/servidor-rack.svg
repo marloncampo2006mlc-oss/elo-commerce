@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Servidor de rack 1U">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="40%" r="75%"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#dde1ee"/></radialGradient>
+    <linearGradient id="chassi" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6f7787"/><stop offset="14%" stop-color="#454c5a"/><stop offset="100%" stop-color="#1c202a"/></linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#bg)"/>
+  <ellipse cx="200" cy="222" rx="156" ry="12" fill="#0b1020" opacity=".16"/>
+  <path d="M28 124 L372 124 L356 108 L44 108 Z" fill="#79818f"/>
+  <rect x="28" y="124" width="344" height="86" rx="5" fill="url(#chassi)"/>
+  <rect x="28" y="124" width="344" height="7" fill="#fff" opacity=".09"/>
+  <rect x="14" y="128" width="18" height="78" rx="3" fill="#525a67"/>
+  <rect x="368" y="128" width="18" height="78" rx="3" fill="#525a67"/>
+  <circle cx="23" cy="142" r="3.2" fill="#1e222a"/><circle cx="23" cy="192" r="3.2" fill="#1e222a"/>
+  <circle cx="377" cy="142" r="3.2" fill="#1e222a"/><circle cx="377" cy="192" r="3.2" fill="#1e222a"/>
+  <g>
+    <rect x="52" y="138" width="60" height="58" rx="3" fill="#232833"/>
+    <rect x="118" y="138" width="60" height="58" rx="3" fill="#232833"/>
+    <rect x="184" y="138" width="60" height="58" rx="3" fill="#232833"/>
+    <rect x="250" y="138" width="60" height="58" rx="3" fill="#232833"/>
+  </g>
+  <g fill="#12151c">
+    <rect x="58" y="146" width="48" height="42" rx="2"/><rect x="124" y="146" width="48" height="42" rx="2"/>
+    <rect x="190" y="146" width="48" height="42" rx="2"/><rect x="256" y="146" width="48" height="42" rx="2"/>
+  </g>
+  <g fill="#34d399">
+    <rect x="62" y="150" width="3" height="10"/><rect x="128" y="150" width="3" height="10"/>
+    <rect x="194" y="150" width="3" height="10"/><rect x="260" y="150" width="3" height="10"/>
+  </g>
+  <rect x="318" y="138" width="42" height="58" rx="3" fill="#191d25"/>
+  <g fill="#7c5cff" opacity=".8"><circle cx="330" cy="150" r="3"/><circle cx="330" cy="163" r="3"/></g>
+  <text x="345" y="188" font-family="monospace" font-size="8" fill="#8b93a4" text-anchor="middle">1U</text>
+</svg>

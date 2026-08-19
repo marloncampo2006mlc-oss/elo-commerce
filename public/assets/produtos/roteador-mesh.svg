@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Roteador mesh tri-band">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="40%" r="75%"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#dde1ee"/></radialGradient>
+    <linearGradient id="corpo" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#c7ccda"/><stop offset="30%" stop-color="#fbfcff"/><stop offset="72%" stop-color="#eceef6"/><stop offset="100%" stop-color="#b7bdcd"/></linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#bg)"/>
+  <ellipse cx="200" cy="252" rx="72" ry="11" fill="#0b1020" opacity=".17"/>
+  <g opacity=".5">
+    <path d="M126 118 a92 92 0 0 1 148 0" fill="none" stroke="#7c5cff" stroke-width="3" opacity=".28"/>
+    <path d="M146 100 a66 66 0 0 1 108 0" fill="none" stroke="#7c5cff" stroke-width="3" opacity=".45"/>
+    <path d="M166 84 a40 40 0 0 1 68 0" fill="none" stroke="#22d3ee" stroke-width="3" opacity=".7"/>
+  </g>
+  <rect x="152" y="126" width="96" height="124" rx="44" fill="url(#corpo)"/>
+  <ellipse cx="200" cy="130" rx="48" ry="15" fill="#f7f9ff"/>
+  <ellipse cx="200" cy="130" rx="30" ry="9" fill="#e2e6f1"/>
+  <rect x="160" y="196" width="80" height="6" rx="3" fill="#7c5cff" opacity=".65"/>
+  <circle cx="200" cy="224" r="8" fill="none" stroke="#9aa2b6" stroke-width="2"/>
+  <path d="M191 224 a9 9 0 0 1 18 0" fill="none" stroke="#22d3ee" stroke-width="2.4"/>
+  <rect x="166" y="140" width="20" height="70" rx="10" fill="#fff" opacity=".55"/>
+</svg>

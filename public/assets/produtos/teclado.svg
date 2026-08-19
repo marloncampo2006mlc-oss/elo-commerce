@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Teclado mecânico TKL">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="40%" r="75%"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#dde1ee"/></radialGradient>
+    <linearGradient id="placa" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#535b69"/><stop offset="100%" stop-color="#252a34"/></linearGradient>
+      </defs>
+  <rect width="400" height="300" fill="url(#bg)"/>
+  <ellipse cx="200" cy="240" rx="150" ry="12" fill="#0b1020" opacity=".16"/>
+  <path d="M44 100 L356 100 L370 216 L30 216 Z" fill="url(#placa)"/>
+  <path d="M44 100 L356 100 L358 110 L42 110 Z" fill="#6b7381" opacity=".7"/>
+  <g fill="#262c36" stroke="#12151b" stroke-width="1">
+    <g>
+      <rect x="56" y="118" width="20" height="16" rx="3"/><rect x="80" y="118" width="20" height="16" rx="3"/>
+      <rect x="104" y="118" width="20" height="16" rx="3"/><rect x="128" y="118" width="20" height="16" rx="3"/>
+      <rect x="152" y="118" width="20" height="16" rx="3"/><rect x="176" y="118" width="20" height="16" rx="3"/>
+      <rect x="200" y="118" width="20" height="16" rx="3"/><rect x="224" y="118" width="20" height="16" rx="3"/>
+      <rect x="248" y="118" width="20" height="16" rx="3"/><rect x="272" y="118" width="20" height="16" rx="3"/>
+      <rect x="296" y="118" width="20" height="16" rx="3"/><rect x="320" y="118" width="20" height="16" rx="3"/>
+    </g>
+    <g>
+      <rect x="54" y="140" width="20" height="17" rx="3"/><rect x="79" y="140" width="20" height="17" rx="3"/>
+      <rect x="104" y="140" width="20" height="17" rx="3"/><rect x="129" y="140" width="20" height="17" rx="3"/>
+      <rect x="154" y="140" width="20" height="17" rx="3"/><rect x="179" y="140" width="20" height="17" rx="3"/>
+      <rect x="204" y="140" width="20" height="17" rx="3"/><rect x="229" y="140" width="20" height="17" rx="3"/>
+      <rect x="254" y="140" width="20" height="17" rx="3"/><rect x="279" y="140" width="20" height="17" rx="3"/>
+      <rect x="304" y="140" width="20" height="17" rx="3"/><rect x="329" y="140" width="20" height="17" rx="3"/>
+    </g>
+    <g>
+      <rect x="52" y="163" width="26" height="18" rx="3"/><rect x="83" y="163" width="20" height="18" rx="3"/>
+      <rect x="108" y="163" width="20" height="18" rx="3"/><rect x="133" y="163" width="20" height="18" rx="3"/>
+      <rect x="158" y="163" width="20" height="18" rx="3"/><rect x="183" y="163" width="20" height="18" rx="3"/>
+      <rect x="208" y="163" width="20" height="18" rx="3"/><rect x="233" y="163" width="20" height="18" rx="3"/>
+      <rect x="258" y="163" width="20" height="18" rx="3"/><rect x="283" y="163" width="20" height="18" rx="3"/>
+      <rect x="308" y="163" width="32" height="18" rx="3"/>
+    </g>
+    <g>
+      <rect x="50" y="187" width="34" height="19" rx="3"/><rect x="89" y="187" width="20" height="19" rx="3"/>
+      <rect x="114" y="187" width="152" height="19" rx="3"/>
+      <rect x="271" y="187" width="20" height="19" rx="3"/><rect x="296" y="187" width="20" height="19" rx="3"/>
+      <rect x="321" y="187" width="24" height="19" rx="3"/>
+    </g>
+  </g>
+  <g opacity=".55">
+    <rect x="52" y="209" width="292" height="4" rx="2" fill="#7c5cff"/>
+  </g>
+</svg>
