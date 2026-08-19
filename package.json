@@ -8,18 +8,39 @@
     "node": "24.x"
   },
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "node --watch src/server.js",
-    "db:migrate": "node src/db/migrate.js",
-    "db:seed": "node src/db/seed.js",
-    "db:reset": "node src/db/migrate.js --reset && node src/db/seed.js",
-    "setup": "npm run db:reset && npm start",
-    "test": "node --test tests/"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "db:migrate": "tsx src/db/migrate.ts",
+    "db:seed": "tsx src/db/seed.ts",
+    "db:usuarios": "tsx src/db/seed-usuarios.ts",
+    "db:reset": "tsx src/db/migrate.ts --reset && npm run db:seed && npm run db:usuarios",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "legado:start": "node src/server.js"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "dotenv": "^16.4.5",
     "express": "^4.21.2",
+    "next": "^16.3.1",
     "pg": "^8.13.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^26.2.0",
+    "@types/pg": "^8.23.1",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "tsx": "^4.23.12",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.11"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
   }
 }
