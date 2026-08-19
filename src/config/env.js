@@ -32,6 +32,12 @@ const db = process.env.DATABASE_URL
 
 export const env = {
   port: Number(process.env.PORT ?? 3333),
+  session: {
+    secret: process.env.SESSION_SECRET ?? '',
+    adminPassword: process.env.ADMIN_PASSWORD ?? '',
+    // Sem os dois definidos, a escrita administrativa fica bloqueada.
+    configurado: Boolean(process.env.SESSION_SECRET && process.env.ADMIN_PASSWORD),
+  },
   nodeEnv: process.env.NODE_ENV ?? 'development',
   isDev: (process.env.NODE_ENV ?? 'development') === 'development',
   isServerless,

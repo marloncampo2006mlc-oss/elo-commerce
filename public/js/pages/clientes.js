@@ -3,6 +3,7 @@ import {
   brl, data, badge, esc, avatar, cpfFormatado, carregando, vazio, paginacao,
   abrirModal, fecharModal, confirmar, sucesso, falha, lerFormulario, marcarErros, debounce,
 } from '../ui.js';
+import { tratarErro } from '../sessao.js';
 
 const estado = { busca: '', status: '', uf: '', ordem: 'recentes', page: 1, limit: 8 };
 let alvoAtual = null;
@@ -155,7 +156,7 @@ async function abrirFormulario(id) {
       renderizarLista();
     } catch (err) {
       marcarErros(form, err.detalhes);
-      falha('Não foi possível salvar', err.message);
+      tratarErro(err, 'Não foi possível salvar');
     } finally {
       botao.disabled = false;
     }
@@ -214,6 +215,6 @@ async function excluir(id) {
     sucesso('Cliente removido');
     renderizarLista();
   } catch (err) {
-    falha('Exclusão bloqueada', err.message);
+    tratarErro(err, 'Exclusão bloqueada');
   }
 }

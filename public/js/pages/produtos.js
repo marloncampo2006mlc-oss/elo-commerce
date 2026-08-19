@@ -4,6 +4,7 @@ import {
   confirmar, sucesso, falha, lerFormulario, marcarErros, debounce,
   capaProduto, miniProduto, ehCaminhoDeImagem,
 } from '../ui.js';
+import { tratarErro } from '../sessao.js';
 
 const estado = { busca: '', categoria: '', ativo: '', ordem: 'recentes', page: 1, limit: 12 };
 let alvoAtual = null;
@@ -193,7 +194,7 @@ async function abrirFormulario(id) {
       renderizarLista();
     } catch (err) {
       marcarErros(form, err.detalhes);
-      falha('Não foi possível salvar', err.message);
+      tratarErro(err, 'Não foi possível salvar');
     } finally { botao.disabled = false; }
   };
 }
@@ -231,7 +232,7 @@ async function ajustarEstoque(id) {
       fecharModal();
       sucesso('Estoque atualizado', `${produto.nome}: ${atualizado.estoque} unidades`);
       renderizarLista();
-    } catch (err) { falha('Ajuste recusado', err.message); }
+    } catch (err) { tratarErro(err, 'Ajuste recusado'); }
   };
 }
 
@@ -247,5 +248,5 @@ async function excluir(id) {
     await api.produtos.remover(id);
     sucesso('Produto removido');
     renderizarLista();
-  } catch (err) { falha('Exclusão bloqueada', err.message); }
+  } catch (err) { tratarErro(err, 'Exclusão bloqueada'); }
 }

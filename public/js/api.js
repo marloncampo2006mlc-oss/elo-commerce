@@ -17,6 +17,7 @@ async function requisitar(rota, { metodo = 'GET', corpo, query } = {}) {
     method: metodo,
     headers: corpo ? { 'Content-Type': 'application/json' } : undefined,
     body: corpo ? JSON.stringify(corpo) : undefined,
+    credentials: 'same-origin',   // envia o cookie de sessão
   });
 
   if (resposta.status === 204) return null;
@@ -26,6 +27,7 @@ async function requisitar(rota, { metodo = 'GET', corpo, query } = {}) {
     const erro = new Error(dados.erro ?? `Falha na requisição (${resposta.status})`);
     erro.detalhes = dados.detalhes ?? [];
     erro.status = resposta.status;
+    erro.precisaLogin = resposta.status === 401;
     throw erro;
   }
   return dados;
@@ -41,6 +43,12 @@ const crud = (recurso) => ({
 
 export const api = {
   health: () => requisitar('/health').then((r) => r.data),
+
+  auth: {
+    sessao: () => requisitar('/auth/sessao').then((r) => r.data),
+    login: (senha) => requisitar('/auth/login', { metodo: 'POST', corpo: { senha } }).then((r) => r.data),
+    logout: () => requisitar('/auth/logout', { metodo: 'POST' }).then((r) => r.data),
+  },
   dashboard: () => requisitar('/dashboard').then((r) => r.data),
 
   clientes: { ...crud('clientes'), ufs: () => requisitar('/clientes/ufs').then((r) => r.data) },

@@ -5,6 +5,7 @@
 import { api } from './api.js';
 import { falha } from './ui.js';
 import { montarChat } from './chat.js';
+import { montarSessao } from './sessao.js';
 import { dashboard } from './pages/dashboard.js';
 import { clientes } from './pages/clientes.js';
 import { produtos } from './pages/produtos.js';
@@ -102,5 +103,6 @@ document.addEventListener('keydown', (e) => {
 window.addEventListener('hashchange', navegar);
 
 montarChat();
+montarSessao();
 verificarSaude();
 navegar();

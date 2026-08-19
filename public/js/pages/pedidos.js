@@ -4,6 +4,7 @@ import {
   abrirModal, fecharModal, confirmar, sucesso, falha, debounce, ROTULOS,
   miniProduto,
 } from '../ui.js';
+import { tratarErro } from '../sessao.js';
 
 const estado = { busca: '', status: '', canal: '', page: 1, limit: 10 };
 let alvoAtual = null;
@@ -150,7 +151,7 @@ async function verDetalhes(id) {
     const ok = await confirmar({ titulo: 'Excluir pedido', mensagem: `Excluir o pedido #${p.numero}?`, rotulo: 'Excluir' });
     if (!ok) return;
     try { await api.pedidos.remover(id); sucesso('Pedido excluído'); renderizarLista(); }
-    catch (err) { falha('Não foi possível excluir', err.message); }
+    catch (err) { tratarErro(err, 'Não foi possível excluir'); }
   });
 }
 
@@ -175,7 +176,7 @@ async function mudarStatus(id) {
       fecharModal();
       sucesso('Status atualizado', `Pedido #${pedido.numero} → ${ROTULOS[b.dataset.novo] ?? b.dataset.novo}`);
       renderizarLista();
-    } catch (err) { falha('Transição recusada', err.message); }
+    } catch (err) { tratarErro(err, 'Transição recusada'); }
   });
 }
 
