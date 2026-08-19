@@ -1,12 +1,19 @@
-import { pool, query, transaction } from './pool.js';
+import 'dotenv/config';
+import { consultar, consultarUm, emTransacao, executar, pool } from '../lib/db.js';
 
 /**
- * Popula o banco com uma base realista para demonstração:
- * clientes de várias UFs, catálogo de produtos, 60 dias de pedidos
- * distribuídos entre os canais e atendimentos já registrados.
+ * Popula o banco com uma base fictícia de demonstração: clientes de
+ * várias UFs, catálogo com imagens, 60 dias de pedidos distribuídos
+ * entre os canais e atendimentos já registrados.
+ *
+ * Todos os dados são claramente inventados — nenhum CPF, e-mail ou
+ * telefone corresponde a pessoa real.
  */
 
-const CLIENTES = [
+type LinhaCliente = [string, string, string, string, string, string, string, string];
+type LinhaProduto = [string, string, string, number, number, string, string];
+
+const CLIENTES: LinhaCliente[] = [
   ['Ana Beatriz Machado',  'ana.machado@email.com',    '52998224725', '(48) 99812-4455', '1995-04-12', 'Florianópolis', 'SC', 'ativo'],
   ['Carlos Eduardo Ramos', 'carlos.ramos@email.com',   '87748248800', '(48) 99745-1122', '1988-11-03', 'São José',      'SC', 'ativo'],
   ['Mariana Duarte Lopes', 'mariana.lopes@email.com',  '11144477735', '(11) 98877-2211', '1992-07-21', 'São Paulo',     'SP', 'ativo'],
@@ -21,7 +28,7 @@ const CLIENTES = [
   ['Thiago Nunes Carvalho','thiago.carvalho@email.com','29537995000', '(48) 99222-9911', '1994-10-02', 'Florianópolis', 'SC', 'prospect'],
 ];
 
-const PRODUTOS = [
+const PRODUTOS: LinhaProduto[] = [
   ['HDS-4200', 'Headset Profissional HD 4200',   'Áudio',        459.90,  38, '/assets/produtos/headset.svg', 'Headset binaural com cancelamento de ruído, homologado para operações de call center.'],
   ['MIC-USB-9', 'Microfone USB Studio 9',        'Áudio',        329.00,  22, '/assets/produtos/microfone.svg', 'Microfone condensador com padrão cardioide, ideal para gravação de prompts de URA.'],
   ['TEL-IP-500','Telefone IP Executive 500',     'Telefonia',    899.00,  15, '/assets/produtos/telefone-ip.svg', 'Terminal SIP com display colorido, PoE e suporte a 6 contas simultâneas.'],
@@ -39,59 +46,68 @@ const PRODUTOS = [
   ['FONE-BT-PR','Fone Bluetooth Pro ANC',        'Áudio',        699.00,  31, '/assets/produtos/fone-bluetooth.svg', 'Fone over-ear com ANC híbrido e 40 h de bateria.'],
 ];
 
-const CANAIS = ['site', 'site', 'site', 'chatbot', 'chatbot', 'ura', 'whatsapp', 'telefone'];
-const STATUS = ['entregue', 'entregue', 'enviado', 'pago', 'pago', 'aguardando_pagamento', 'cancelado'];
+const CANAIS = ['site', 'site', 'site', 'chatbot', 'chatbot', 'ura', 'whatsapp', 'telefone'] as const;
+const STATUS = ['entregue', 'entregue', 'enviado', 'pago', 'pago', 'aguardando_pagamento', 'cancelado'] as const;
 
-const aleatorio = (lista) => lista[Math.floor(Math.random() * lista.length)];
-const inteiro = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+const sortear = <T,>(lista: readonly T[]): T => lista[Math.floor(Math.random() * lista.length)]!;
+const inteiro = (min: number, max: number): number =>
+  Math.floor(Math.random() * (max - min + 1)) + min;
 
-async function semear() {
+async function semear(): Promise<void> {
   console.log('🌱 Populando o banco...');
 
-  await query('TRUNCATE pedido_itens, pedidos, atendimentos, produtos, clientes RESTART IDENTITY CASCADE');
+  await executar(
+    'TRUNCATE pedido_itens, pedidos, atendimentos, produtos, clientes RESTART IDENTITY CASCADE',
+  );
 
   // --- clientes ---
-  const clientes = [];
-  for (const [nome, email, cpf, telefone, nasc, cidade, uf, status] of CLIENTES) {
-    const { rows } = await query(
+  const clientes: string[] = [];
+  for (const [nome, email, cpf, telefone, nascimento, cidade, uf, status] of CLIENTES) {
+    const linha = await consultarUm<{ id: string }>(
       `INSERT INTO clientes (nome, email, cpf, telefone, data_nascimento, cidade, uf, status, created_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8, NOW() - (random() * INTERVAL '120 days')) RETURNING id`,
-      [nome, email, cpf, telefone, nasc, cidade, uf, status]);
-    clientes.push(rows[0].id);
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8, NOW() - (random() * INTERVAL '120 days'))
+       RETURNING id`,
+      [nome, email, cpf, telefone, nascimento, cidade, uf, status],
+    );
+    if (linha) clientes.push(linha.id);
   }
   console.log(`   ✓ ${clientes.length} clientes`);
 
   // --- produtos ---
-  const produtos = [];
+  const produtos: Array<{ id: string; preco: number }> = [];
   for (const [sku, nome, categoria, preco, estoque, imagem, descricao] of PRODUTOS) {
-    const { rows } = await query(
+    const linha = await consultarUm<{ id: string; preco: number }>(
       `INSERT INTO produtos (sku, nome, categoria, preco, estoque, imagem, descricao)
        VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id, preco`,
-      [sku, nome, categoria, preco, estoque, imagem, descricao]);
-    produtos.push(rows[0]);
+      [sku, nome, categoria, preco, estoque, imagem, descricao],
+    );
+    if (linha) produtos.push(linha);
   }
   console.log(`   ✓ ${produtos.length} produtos`);
 
-  // --- pedidos históricos (60 dias) ---
+  // --- pedidos dos últimos 60 dias ---
   const elegiveis = clientes.slice(0, 11);   // o cliente inativo fica de fora
   let totalPedidos = 0;
 
   for (let i = 0; i < 46; i += 1) {
     const diasAtras = inteiro(0, 59);
-    await transaction(async (client) => {
-      const { rows: [pedido] } = await client.query(
+    await emTransacao(async (client) => {
+      const { rows: [pedido] } = await client.query<{ id: string }>(
         `INSERT INTO pedidos (cliente_id, canal, status, created_at)
          VALUES ($1, $2, $3, NOW() - ($4 || ' days')::interval) RETURNING id`,
-        [aleatorio(elegiveis), aleatorio(CANAIS), aleatorio(STATUS), diasAtras]);
+        [sortear(elegiveis), sortear(CANAIS), sortear(STATUS), diasAtras],
+      );
+      if (!pedido) return;
 
-      const escolhidos = new Set();
-      for (let j = 0; j < inteiro(1, 3); j += 1) escolhidos.add(aleatorio(produtos));
+      const escolhidos = new Set<{ id: string; preco: number }>();
+      for (let j = 0; j < inteiro(1, 3); j += 1) escolhidos.add(sortear(produtos));
 
       for (const produto of escolhidos) {
         await client.query(
           `INSERT INTO pedido_itens (pedido_id, produto_id, quantidade, preco_unitario)
            VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING`,
-          [pedido.id, produto.id, inteiro(1, 3), produto.preco]);
+          [pedido.id, produto.id, inteiro(1, 3), produto.preco],
+        );
       }
     });
     totalPedidos += 1;
@@ -99,38 +115,42 @@ async function semear() {
   console.log(`   ✓ ${totalPedidos} pedidos com itens`);
 
   // --- atendimentos de exemplo ---
-  const transcript = (linhas) => JSON.stringify(
-    linhas.map(([autor, texto]) => ({ autor, texto, em: new Date().toISOString() })));
+  const transcrever = (linhas: Array<[string, string]>): string =>
+    JSON.stringify(linhas.map(([autor, texto]) => ({ autor, texto, em: new Date().toISOString() })));
 
-  await query(
+  await executar(
     `INSERT INTO atendimentos (protocolo, cliente_id, canal, status, no_atual, transcript, created_at) VALUES
      ($1, $2, 'ura', 'resolvido', 'encerrar', $3::jsonb, NOW() - INTERVAL '2 days'),
      ($4, $5, 'chatbot', 'transferido', 'transferir', $6::jsonb, NOW() - INTERVAL '1 day'),
      ($7, NULL, 'chatbot', 'resolvido', 'encerrar', $8::jsonb, NOW() - INTERVAL '4 hours')`,
     [
       'AT-DEMO-0001', clientes[0],
-      transcript([['bot', 'Olá! Você ligou para a Elo Commerce.'], ['cliente', '1'],
-                  ['bot', 'Digite o número do seu pedido.'], ['cliente', '3'],
-                  ['bot', 'Pedido nº 3 está a caminho.'], ['cliente', '0'],
-                  ['bot', 'Obrigado por falar com a Elo Commerce.']]),
+      transcrever([['bot', 'Olá! Você ligou para a Elo Commerce.'], ['cliente', '1'],
+                   ['bot', 'Digite o número do seu pedido.'], ['cliente', '3'],
+                   ['bot', 'Pedido nº 3 está a caminho.'], ['cliente', '0'],
+                   ['bot', 'Obrigado por falar com a Elo Commerce.']]),
       'AT-DEMO-0002', clientes[2],
-      transcript([['bot', 'Olá! Em que posso ajudar?'], ['cliente', 'quero falar com um atendente'],
-                  ['bot', 'Certo! Estou transferindo você para um especialista.']]),
+      transcrever([['bot', 'Olá! Em que posso ajudar?'], ['cliente', 'quero falar com um atendente'],
+                   ['bot', 'Certo! Estou transferindo você para um especialista.']]),
       'AT-DEMO-0003',
-      transcript([['bot', 'Olá! Em que posso ajudar?'], ['cliente', 'tem alguma promoção?'],
-                  ['bot', 'Nossas melhores ofertas com pronta entrega: Microfone USB Studio 9 por R$ 329,00...'],
-                  ['cliente', 'valeu'], ['bot', 'Obrigado por falar com a Elo Commerce.']]),
-    ]);
+      transcrever([['bot', 'Olá! Em que posso ajudar?'], ['cliente', 'tem alguma promoção?'],
+                   ['bot', 'Nossas melhores ofertas: Microfone USB Studio 9 por R$ 329,00...'],
+                   ['cliente', 'valeu'], ['bot', 'Obrigado por falar com a Elo Commerce.']]),
+    ],
+  );
   console.log('   ✓ 3 atendimentos');
 
-  const { rows: [resumo] } = await query(
-    `SELECT (SELECT COUNT(*) FROM clientes) AS clientes,
-            (SELECT COUNT(*) FROM produtos) AS produtos,
-            (SELECT COUNT(*) FROM pedidos)  AS pedidos,
-            (SELECT COALESCE(SUM(total),0) FROM pedidos WHERE status <> 'cancelado') AS faturamento`);
-  console.log(`\n✅ Base pronta — faturamento simulado: R$ ${Number(resumo.faturamento).toLocaleString('pt-BR')}`);
+  const resumo = await consultarUm<{ faturamento: number }>(
+    `SELECT COALESCE(SUM(total), 0) AS faturamento FROM pedidos WHERE status <> 'cancelado'`,
+  );
+  console.log(`\n✅ Base pronta — faturamento simulado: ${
+    Number(resumo?.faturamento ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+  }`);
 }
 
 semear()
-  .catch((err) => { console.error('❌ Falha no seed:', err.message); process.exitCode = 1; })
+  .catch((erro: Error) => {
+    console.error('❌ Falha no seed:', erro.message);
+    process.exitCode = 1;
+  })
   .finally(() => pool.end());
