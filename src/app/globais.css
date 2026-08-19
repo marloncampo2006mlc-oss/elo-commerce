@@ -1,0 +1,16 @@
+/* Tokens herdados do design system da versão anterior — o visual
+   completo é reconstruído na Fase 2, junto com a separação loja/gestão. */
+:root {
+  --fundo: #0a0a12;
+  --texto: #eef0f6;
+  --violeta: #7c5cff;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--fundo);
+  color: var(--texto);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
