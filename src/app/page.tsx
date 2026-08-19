@@ -4,7 +4,12 @@ import { listarProdutosSchema } from '@/modules/catalogo/catalogo.schema';
 /**
  * Vitrine — Server Component: a consulta roda no servidor e o HTML já
  * chega pronto ao navegador, sem passar credencial de banco ao cliente.
+ *
+ * force-dynamic: sem isso o Next prerenderiza a página no build e
+ * congela o catálogo naquele instante — preço e estoque ficariam
+ * desatualizados até o próximo deploy.
  */
+export const dynamic = 'force-dynamic';
 export default async function Vitrine() {
   const filtros = listarProdutosSchema.parse({ limite: 12, ordem: 'nome' });
   const { itens, total } = await catalogoService.vitrine(filtros);
