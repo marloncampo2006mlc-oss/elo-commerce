@@ -25,6 +25,10 @@ const SECOES = [
     titulo: 'Análise',
     itens: [{ href: '/gestao/bi', icone: '◔', rotulo: 'BI / Supervisão' }],
   },
+  {
+    titulo: 'Administração',
+    itens: [{ href: '/gestao/usuarios', icone: '◍', rotulo: 'Usuários' }],
+  },
 ];
 
 export function NavegacaoGestao({ usuario }: { usuario: SessaoUsuario }) {
