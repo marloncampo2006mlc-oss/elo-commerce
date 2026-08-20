@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { catalogoService } from '@/modules/catalogo/catalogo.service';
 import { produtoUpdateSchema } from '@/modules/catalogo/catalogo.schema';
-import { exigirPapel, exigirSessao, PAPEIS_GESTAO } from '@/lib/autorizacao';
+import { exigirPrivilegio, exigirSessao } from '@/lib/autorizacao';
 import { comTratamentoDeErro } from '@/lib/erros';
 import { ok, semConteudo } from '@/lib/api';
 
@@ -14,7 +14,7 @@ export const GET = comTratamentoDeErro(async (_request: NextRequest, { params }:
 });
 
 export const PUT = comTratamentoDeErro(async (request: NextRequest, { params }: Contexto) => {
-  await exigirPapel(...PAPEIS_GESTAO);
+  await exigirPrivilegio('catalogo.editar');
   const { id } = await params;
   const dados = produtoUpdateSchema.parse(await request.json());
   return ok(await catalogoService.atualizar(id, dados));
@@ -22,7 +22,7 @@ export const PUT = comTratamentoDeErro(async (request: NextRequest, { params }: 
 
 export const DELETE = comTratamentoDeErro(async (_request: NextRequest, { params }: Contexto) => {
   // Exclusão é a operação mais destrutiva do catálogo: só administrador.
-  await exigirPapel('administrador');
+  await exigirPrivilegio('catalogo.excluir');
   const { id } = await params;
   await catalogoService.remover(id);
   return semConteudo();

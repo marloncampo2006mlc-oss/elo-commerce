@@ -2,7 +2,7 @@ import { consultar, consultarUm, executar } from '@/lib/db';
 import type { PapelUsuario } from '@/lib/sessao';
 import type { Usuario } from './usuarios.types';
 
-const CAMPOS = 'id, nome, email, papel, ativo, ultimo_acesso, created_at';
+const CAMPOS = 'id, nome, email, papel, ativo, privilegios, ultimo_acesso, created_at';
 
 export const usuariosRepository = {
   listar(): Promise<Usuario[]> {
@@ -26,28 +26,36 @@ export const usuariosRepository = {
 
   async criar(dados: {
     nome: string; email: string; papel: PapelUsuario; senhaHash: string;
+    privilegios?: string[] | null;
   }): Promise<Usuario> {
     const criado = await consultarUm<Usuario>(
-      `INSERT INTO usuarios (nome, email, papel, senha_hash)
-       VALUES ($1, $2, $3, $4) RETURNING ${CAMPOS}`,
-      [dados.nome, dados.email, dados.papel, dados.senhaHash],
+      `INSERT INTO usuarios (nome, email, papel, senha_hash, privilegios)
+       VALUES ($1, $2, $3, $4, $5::text[]) RETURNING ${CAMPOS}`,
+      [dados.nome, dados.email, dados.papel, dados.senhaHash, dados.privilegios ?? null],
     );
     if (!criado) throw new Error('Falha ao criar usuário');
     return criado;
   },
 
   atualizar(id: string, dados: {
-    nome?: string; papel?: PapelUsuario; ativo?: boolean;
+    nome?: string; email?: string; papel?: PapelUsuario; ativo?: boolean;
+    privilegios?: string[] | null;
   }): Promise<Usuario | null> {
     // COALESCE deixa o UPDATE parcial sem montar SQL dinâmico.
+    // `privilegios` precisa de tratamento próprio: null é um valor com
+    // significado (voltar a herdar do papel), não "não mexer" — por isso
+    // a flag separada em $6.
     return consultarUm<Usuario>(
       `UPDATE usuarios
           SET nome  = COALESCE($2, nome),
-              papel = COALESCE($3, papel),
-              ativo = COALESCE($4, ativo)
+              email = COALESCE($3, email),
+              papel = COALESCE($4, papel),
+              ativo = COALESCE($5, ativo),
+              privilegios = CASE WHEN $6 THEN $7::text[] ELSE privilegios END
         WHERE id = $1
       RETURNING ${CAMPOS}`,
-      [id, dados.nome ?? null, dados.papel ?? null, dados.ativo ?? null],
+      [id, dados.nome ?? null, dados.email ?? null, dados.papel ?? null, dados.ativo ?? null,
+       dados.privilegios !== undefined, dados.privilegios ?? null],
     );
   },
 

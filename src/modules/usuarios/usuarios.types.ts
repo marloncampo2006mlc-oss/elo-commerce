@@ -6,6 +6,8 @@ export interface Usuario {
   email: string;
   papel: PapelUsuario;
   ativo: boolean;
+  /** null = herda do papel; array = conjunto exato desta pessoa. */
+  privilegios: string[] | null;
   ultimo_acesso: Date | null;
   created_at: Date;
 }
@@ -57,6 +59,18 @@ export const PRIVILEGIOS: Privilegio[] = [
     papeis: ['administrador', 'gerente', 'supervisor'],
   },
   {
+    chave: 'clientes.ver',
+    rotulo: 'Ver clientes',
+    descricao: 'Consultar a base de clientes e o histórico de compras',
+    papeis: ['administrador', 'gerente', 'supervisor', 'atendente'],
+  },
+  {
+    chave: 'clientes.editar',
+    rotulo: 'Editar clientes',
+    descricao: 'Cadastrar e alterar dados de clientes',
+    papeis: ['administrador', 'gerente'],
+  },
+  {
     chave: 'atendimento.atender',
     rotulo: 'Atender clientes',
     descricao: 'Assumir conversas da fila e responder',
@@ -103,3 +117,25 @@ export const privilegiosDoPapel = (papel: PapelUsuario): Privilegio[] =>
 
 export const temPrivilegio = (papel: PapelUsuario, chave: string): boolean =>
   PRIVILEGIOS.find((privilegio) => privilegio.chave === chave)?.papeis.includes(papel) ?? false;
+
+/**
+ * Privilégios que valem de fato para a pessoa.
+ *
+ * A lista individual, quando existe, substitui a do papel por inteiro —
+ * não soma nem subtrai. Regra única evita a pergunta "este privilégio
+ * veio do papel ou da exceção?", que é onde modelos híbridos confundem.
+ */
+export function privilegiosEfetivos(usuario: {
+  papel: PapelUsuario; privilegios: string[] | null;
+}): string[] {
+  if (usuario.privilegios && usuario.privilegios.length > 0) return usuario.privilegios;
+  return privilegiosDoPapel(usuario.papel).map((privilegio) => privilegio.chave);
+}
+
+export const podeFazer = (
+  usuario: { papel: PapelUsuario; privilegios: string[] | null }, chave: string,
+): boolean => privilegiosEfetivos(usuario).includes(chave);
+
+/** Marca quem foi personalizado, para a interface sinalizar a exceção. */
+export const temPersonalizacao = (usuario: { privilegios: string[] | null }): boolean =>
+  Boolean(usuario.privilegios && usuario.privilegios.length > 0);

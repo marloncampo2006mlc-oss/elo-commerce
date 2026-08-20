@@ -1,11 +1,13 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useTransition } from 'react';
 import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart,
   ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts';
 import { moeda } from '@/lib/formato';
+import { NumeroAnimado } from '@/components/NumeroAnimado';
 import { ROTULOS } from '@/components/SeloStatus';
 import { PERIODOS, type Periodo } from '@/modules/indicadores/indicadores.schema';
 
@@ -36,11 +38,15 @@ interface Dados {
 export function PainelBI({ dados, periodo }: { dados: Dados; periodo: Periodo }) {
   const router = useRouter();
   const parametros = useSearchParams();
+  // useTransition marca a navegação como não urgente: a tela anterior
+  // continua visível e interativa enquanto os novos dados chegam, em vez
+  // de piscar em branco.
+  const [carregando, iniciarTransicao] = useTransition();
 
   const trocarPeriodo = (novo: Periodo) => {
     const query = new URLSearchParams(parametros.toString());
     query.set('periodo', novo);
-    router.replace(`/gestao/bi?${query.toString()}`);
+    iniciarTransicao(() => router.replace(`/gestao/bi?${query.toString()}`));
   };
 
   const { resumo } = dados;
@@ -60,35 +66,45 @@ export function PainelBI({ dados, periodo }: { dados: Dados; periodo: Periodo })
         {PERIODOS.map((opcao) => (
           <button key={opcao}
                   className={`btn btn--sm ${periodo === opcao ? 'btn--primario' : ''}`}
-                  onClick={() => trocarPeriodo(opcao)}>
+                  onClick={() => trocarPeriodo(opcao)}
+                  aria-pressed={periodo === opcao}>
             {NOME_PERIODO[opcao]}
           </button>
         ))}
+        {carregando && <span className="dim" style={{ fontSize: 12 }}>atualizando…</span>}
       </div>
 
-      <section className="kpis">
+      <section className={`kpis ${carregando ? 'atualizando' : ''}`}>
         <div className="kpi">
           <span className="kpi__icone">💰</span>
           <div className="kpi__rotulo">Faturamento</div>
-          <div className="kpi__valor">{moeda(resumo.faturamento)}</div>
+          <div className="kpi__valor">
+            <NumeroAnimado valor={resumo.faturamento} formatar={moeda} />
+          </div>
           <div className="kpi__nota">ticket médio {moeda(resumo.ticket_medio)}</div>
         </div>
         <div className="kpi">
           <span className="kpi__icone">🧾</span>
           <div className="kpi__rotulo">Pedidos</div>
-          <div className="kpi__valor">{resumo.pedidos}</div>
+          <div className="kpi__valor">
+            <NumeroAnimado valor={resumo.pedidos} formatar={(v) => Math.round(v).toString()} />
+          </div>
           <div className="kpi__nota">{resumo.itens_vendidos} itens · {resumo.cancelados} cancelados</div>
         </div>
         <div className="kpi">
           <span className="kpi__icone">👥</span>
           <div className="kpi__rotulo">Clientes novos</div>
-          <div className="kpi__valor">{resumo.clientes_novos}</div>
+          <div className="kpi__valor">
+            <NumeroAnimado valor={resumo.clientes_novos} formatar={(v) => Math.round(v).toString()} />
+          </div>
           <div className="kpi__nota">{resumo.clientes_total} na base total</div>
         </div>
         <div className="kpi">
           <span className="kpi__icone">🤖</span>
           <div className="kpi__rotulo">Resolvido pelo bot</div>
-          <div className="kpi__valor">{taxaBot}%</div>
+          <div className="kpi__valor">
+            <NumeroAnimado valor={taxaBot} formatar={(v) => `${Math.round(v)}%`} />
+          </div>
           <div className="kpi__nota">
             {resumo.atendimentos} atendimentos · {resumo.transferidos} transferidos
           </div>

@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { catalogoService } from '@/modules/catalogo/catalogo.service';
 import { listarProdutosSchema, produtoCreateSchema } from '@/modules/catalogo/catalogo.schema';
-import { exigirPapel, exigirSessao, PAPEIS_GESTAO } from '@/lib/autorizacao';
+import { exigirPrivilegio, exigirSessao } from '@/lib/autorizacao';
 import { comTratamentoDeErro } from '@/lib/erros';
 import { ok, parametrosDaUrl } from '@/lib/api';
 
@@ -13,7 +13,7 @@ export const GET = comTratamentoDeErro(async (request: NextRequest) => {
 });
 
 export const POST = comTratamentoDeErro(async (request: NextRequest) => {
-  await exigirPapel(...PAPEIS_GESTAO);
+  await exigirPrivilegio('catalogo.editar');
   const dados = produtoCreateSchema.parse(await request.json());
   return ok(await catalogoService.criar(dados), 201);
 });

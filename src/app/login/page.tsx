@@ -3,6 +3,8 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState, type FormEvent } from 'react';
 import { CenarioLogin } from '@/components/CenarioLogin';
+import { Olho } from '@/components/Icone';
+import { Neve } from '@/components/Neve';
 
 const DESTINO_PADRAO = '/gestao/painel';
 
@@ -66,6 +68,7 @@ function FormularioLogin() {
   return (
     <main className="acesso">
       <CenarioLogin />
+      <Neve />
 
       <div className="acesso__conteudo">
         <form className="vidro" onSubmit={entrar}>
@@ -92,7 +95,7 @@ function FormularioLogin() {
             <button type="button" className="linha__olho"
                     onClick={() => setVerSenha((atual) => !atual)}
                     aria-label={verSenha ? 'Ocultar senha' : 'Mostrar senha'}>
-              {verSenha ? '🙈' : '👁'}
+              <Olho aberto={verSenha} />
             </button>
           </div>
 

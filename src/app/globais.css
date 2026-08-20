@@ -680,3 +680,60 @@ select.filtro {
   .vidro { padding: 28px 22px 24px; border-radius: 18px; }
   .vidro__titulo { font-size: 24px; }
 }
+
+/* --------------------------- 14. NEVE ------------------------------ */
+.neve { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+/* --------------------------- 15. TRANSIÇÃO ------------------------- */
+/* Durante a troca de período o conteúdo anterior permanece, apenas
+   atenuado — some a sensação de tela piscando. */
+.atualizando { opacity: .55; transition: opacity 160ms ease; }
+
+/* --------------------------- 16. EDITOR DE ACESSO ------------------ */
+.aviso {
+  padding: 12px 14px; border-radius: 10px; font-size: 12.5px; color: var(--texto-2);
+  background: rgb(217 119 6 / .09); border: 1px solid rgb(217 119 6 / .25);
+}
+
+/* Interruptor para alternar entre pacote do perfil e escolha manual */
+.alternador {
+  display: flex; align-items: flex-start; gap: 11px; cursor: pointer;
+  margin-top: 16px; padding: 12px 13px; border-radius: 10px;
+  border: 1px solid var(--borda); background: var(--superficie-2);
+  font-size: 12.5px; transition: var(--transicao);
+}
+.alternador:hover { border-color: var(--borda-forte); }
+.alternador input { position: absolute; opacity: 0; width: 0; height: 0; }
+
+.alternador__trilho {
+  width: 36px; height: 20px; border-radius: var(--raio-full); flex: 0 0 auto;
+  background: var(--borda-forte); position: relative; transition: var(--transicao);
+  margin-top: 1px;
+}
+.alternador__trilho::after {
+  content: ''; position: absolute; top: 2px; left: 2px;
+  width: 16px; height: 16px; border-radius: 50%; background: #fff;
+  transition: var(--transicao);
+}
+.alternador input:checked + .alternador__trilho { background: var(--violeta); }
+.alternador input:checked + .alternador__trilho::after { transform: translateX(16px); }
+.alternador input:focus-visible + .alternador__trilho {
+  outline: 2px solid var(--violeta); outline-offset: 2px;
+}
+
+/* Linha de privilégio: vira clicável só quando a escolha é manual */
+.priv-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 7px 8px; border-radius: 8px; font-size: 12.5px;
+  border: 1px solid transparent; transition: var(--transicao);
+}
+.priv-item input { position: absolute; opacity: 0; width: 0; height: 0; }
+.priv-item__marca { color: var(--verde); font-weight: 700; width: 13px; flex: 0 0 auto; }
+.priv-item__rotulo { display: block; }
+.priv-item__desc { display: block; font-size: 11px; color: var(--texto-3); }
+.priv-item--nao { opacity: .45; }
+.priv-item--nao .priv-item__marca { color: var(--texto-3); }
+
+.priv-item--editavel { cursor: pointer; }
+.priv-item--editavel:hover { background: var(--superficie); border-color: var(--borda); }
+.priv-item--editavel:has(input:focus-visible) { outline: 2px solid var(--violeta); outline-offset: 1px; }

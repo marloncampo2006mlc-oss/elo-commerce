@@ -24,6 +24,7 @@ export const usuariosService = {
       email: dados.email,
       papel: dados.papel,
       senhaHash: await authService.gerarHash(dados.senha),
+      privilegios: dados.privilegios ?? null,
     });
   },
 
@@ -33,17 +34,26 @@ export const usuariosService = {
    * altera o próprio perfil ou se autobloqueia.
    */
   async atualizar(id: string, dados: {
-    nome?: string; papel?: PapelUsuario; ativo?: boolean;
+    nome?: string; email?: string; papel?: PapelUsuario; ativo?: boolean;
+    privilegios?: string[] | null;
   }, idDeQuemEdita: string): Promise<Usuario> {
     const alvo = await usuariosService.obter(id);
 
+    if (dados.email && dados.email !== alvo.email) {
+      const emUso = await usuariosRepository.emailJaUsado(dados.email);
+      if (emUso && emUso.id !== id) throw Conflito('Já existe um usuário com esse e-mail');
+    }
+
+    // Editar o próprio nome ou e-mail é permitido; mexer no próprio
+    // ACESSO não — é o que evita alguém se trancar para fora.
     const mudaProprioAcesso =
       id === idDeQuemEdita
       && ((dados.papel !== undefined && dados.papel !== alvo.papel)
-        || dados.ativo === false);
+        || dados.ativo === false
+        || dados.privilegios !== undefined);
 
     if (mudaProprioAcesso) {
-      throw Conflito('Você não pode alterar o próprio perfil nem se bloquear.');
+      throw Conflito('Você não pode alterar o próprio acesso nem se bloquear.');
     }
 
     const perderiaAdmin =

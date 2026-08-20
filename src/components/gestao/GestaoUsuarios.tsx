@@ -2,21 +2,15 @@
 
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
+import { Modal } from '@/components/Modal';
+import { EditorUsuario, COR_PAPEL, ICONE_PAPEL } from './EditorUsuario';
 import { useToast } from '@/components/Toasts';
 import { dataCurta } from '@/lib/formato';
 import {
-  DESCRICAO_PAPEL, PAPEIS, PRIVILEGIOS, privilegiosDoPapel,
-  type Usuario,
+  DESCRICAO_PAPEL, PAPEIS, PRIVILEGIOS, privilegiosDoPapel, privilegiosEfetivos,
+  temPersonalizacao, type Usuario,
 } from '@/modules/usuarios/usuarios.types';
 import type { PapelUsuario } from '@/lib/sessao';
-
-const COR_PAPEL: Record<PapelUsuario, string> = {
-  administrador: 'vermelho', gerente: 'violeta', supervisor: 'ciano', atendente: 'verde',
-};
-
-const ICONE_PAPEL: Record<PapelUsuario, string> = {
-  administrador: '🛡', gerente: '📋', supervisor: '📊', atendente: '🎧',
-};
 
 /** Senha forte sem caracteres ambíguos (l/1, O/0) para ditar sem erro. */
 function gerarSenha(): string {
@@ -80,21 +74,6 @@ export function GestaoUsuarios({ usuarios, meuId }: { usuarios: Usuario[]; meuId
       router.refresh();
     } catch (falha) {
       erro('Não foi possível criar', falha instanceof Error ? falha.message : 'Erro');
-    } finally {
-      setOcupado(false);
-    }
-  }
-
-  async function editar(mudanca: { papel?: PapelUsuario; ativo?: boolean }) {
-    if (!detalhe) return;
-    setOcupado(true);
-    try {
-      const atualizado = await chamar(`/api/gestao/usuarios/${detalhe.id}`, 'PATCH', mudanca);
-      setDetalhe(atualizado as Usuario);
-      sucesso('Acesso atualizado', (atualizado as Usuario).nome);
-      router.refresh();
-    } catch (falha) {
-      erro('Alteração recusada', falha instanceof Error ? falha.message : 'Erro');
     } finally {
       setOcupado(false);
     }
@@ -201,7 +180,7 @@ export function GestaoUsuarios({ usuarios, meuId }: { usuarios: Usuario[]; meuId
               </thead>
               <tbody>
                 {filtrados.map((usuario) => {
-                  const quantos = privilegiosDoPapel(usuario.papel).length;
+                  const quantos = privilegiosEfetivos(usuario).length;
                   return (
                     <tr key={usuario.id} style={{ opacity: usuario.ativo ? 1 : 0.5 }}>
                       <td>
@@ -222,6 +201,11 @@ export function GestaoUsuarios({ usuarios, meuId }: { usuarios: Usuario[]; meuId
                         <span className={`selo selo--${COR_PAPEL[usuario.papel]}`}>
                           {ICONE_PAPEL[usuario.papel]} {usuario.papel}
                         </span>
+                        {temPersonalizacao(usuario) && (
+                          <div className="selo selo--ambar" style={{ marginTop: 4 }}>
+                            personalizado
+                          </div>
+                        )}
                       </td>
                       <td style={{ minWidth: 130 }}>
                         <div className="dim" style={{ fontSize: 11.5 }}>
@@ -243,7 +227,7 @@ export function GestaoUsuarios({ usuarios, meuId }: { usuarios: Usuario[]; meuId
                       </td>
                       <td className="acoes">
                         <button className="btn btn--sm" onClick={() => setDetalhe(usuario)}>
-                          Gerenciar
+                          Editar
                         </button>
                       </td>
                     </tr>
@@ -257,16 +241,8 @@ export function GestaoUsuarios({ usuarios, meuId }: { usuarios: Usuario[]; meuId
 
       {/* ---------- criar ---------- */}
       {criando && (
-        <div className="modal">
-          <div className="modal__fundo" onClick={() => setCriando(false)} />
-          <div className="modal__caixa" role="dialog" aria-modal="true" aria-label="Novo usuário">
-            <header className="modal__topo">
-              <h2>Novo usuário</h2>
-              <button className="btn btn--sm btn--fantasma" style={{ marginLeft: 'auto' }}
-                      onClick={() => setCriando(false)} aria-label="Fechar">✕</button>
-            </header>
-
-            <div className="modal__corpo">
+        <Modal titulo="Novo usuário" aoFechar={() => setCriando(false)}>
+          <>
               <div className="campo">
                 <label htmlFor="nome">Nome completo</label>
                 <input id="nome" value={form.nome} maxLength={120} autoFocus
@@ -340,18 +316,14 @@ export function GestaoUsuarios({ usuarios, meuId }: { usuarios: Usuario[]; meuId
                   {ocupado ? 'Criando…' : 'Criar usuário'}
                 </button>
               </div>
-            </div>
-          </div>
-        </div>
+          </>
+        </Modal>
       )}
 
       {/* ---------- senha exibida uma vez ---------- */}
       {senhaGerada && (
-        <div className="modal">
-          <div className="modal__fundo" onClick={() => setSenhaGerada(null)} />
-          <div className="modal__caixa" role="dialog" aria-modal="true">
-            <header className="modal__topo"><h2>Guarde esta senha agora</h2></header>
-            <div className="modal__corpo">
+        <Modal titulo="Guarde esta senha agora" aoFechar={() => setSenhaGerada(null)}>
+          <>
               <p className="dim" style={{ marginBottom: 16 }}>
                 Ela não aparece de novo. Se perder, é só redefinir por aqui.
               </p>
@@ -373,115 +345,25 @@ export function GestaoUsuarios({ usuarios, meuId }: { usuarios: Usuario[]; meuId
                   Anotei
                 </button>
               </div>
-            </div>
-          </div>
-        </div>
+          </>
+        </Modal>
       )}
 
-      {/* ---------- painel de detalhes ---------- */}
+      {/* ---------- editor completo ---------- */}
       {detalhe && (
-        <div className="modal">
-          <div className="modal__fundo" onClick={() => setDetalhe(null)} />
-          <aside className="painel-lateral" role="dialog" aria-modal="true"
-                 aria-label={`Gerenciar ${detalhe.nome}`}>
-            <header className="modal__topo">
-              <div className="flex">
-                <span className="avatar">{detalhe.nome.slice(0, 2).toUpperCase()}</span>
-                <div>
-                  <h2 style={{ fontSize: 15 }}>{detalhe.nome}</h2>
-                  <p className="dim" style={{ fontSize: 12 }}>{detalhe.email}</p>
-                </div>
-              </div>
-              <button className="btn btn--sm btn--fantasma" style={{ marginLeft: 'auto' }}
-                      onClick={() => setDetalhe(null)} aria-label="Fechar">✕</button>
-            </header>
-
-            <div className="modal__corpo">
-              <div className="flex" style={{ gap: 8, marginBottom: 20 }}>
-                <span className={`selo selo--${COR_PAPEL[detalhe.papel]}`}>
-                  {ICONE_PAPEL[detalhe.papel]} {detalhe.papel}
-                </span>
-                <span className={`selo selo--${detalhe.ativo ? 'verde' : 'cinza'}`}>
-                  {detalhe.ativo ? 'ativo' : 'bloqueado'}
-                </span>
-                <span className="dim" style={{ fontSize: 12, marginLeft: 'auto' }}>
-                  desde {dataCurta(detalhe.created_at)}
-                </span>
-              </div>
-
-              <div className="campo">
-                <label>Trocar perfil</label>
-                <div className="perfis">
-                  {PAPEIS.map((papel) => (
-                    <button key={papel} type="button"
-                            className={`perfil ${detalhe.papel === papel ? 'perfil--ativo' : ''}`}
-                            disabled={detalhe.id === meuId || ocupado}
-                            onClick={() => void editar({ papel })}
-                            aria-pressed={detalhe.papel === papel}>
-                      <span className="perfil__icone">{ICONE_PAPEL[papel]}</span>
-                      <span className="perfil__nome">{papel}</span>
-                    </button>
-                  ))}
-                </div>
-                {detalhe.id === meuId && (
-                  <span className="campo__dica">
-                    Você não pode mudar o próprio perfil — é o que impede perder o acesso por engano.
-                  </span>
-                )}
-              </div>
-
-              <div className="previa-privilegios" style={{ marginTop: 18 }}>
-                <div className="lateral__grupo" style={{ padding: '0 0 8px' }}>
-                  Privilégios deste perfil
-                </div>
-                {PRIVILEGIOS.map((privilegio) => {
-                  const tem = privilegio.papeis.includes(detalhe.papel);
-                  return (
-                    <div key={privilegio.chave} className={`priv ${tem ? '' : 'priv--nao'}`}>
-                      <span className="priv__marca">{tem ? '✓' : '✕'}</span>
-                      <div>
-                        <div>{privilegio.rotulo}</div>
-                        <div className="dim" style={{ fontSize: 11 }}>{privilegio.descricao}</div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="lateral__grupo" style={{ paddingLeft: 0 }}>Ações</div>
-              <div className="flex" style={{ gap: 8, flexWrap: 'wrap' }}>
-                <button className="btn btn--sm" disabled={ocupado}
-                        onClick={() => void redefinirSenha(detalhe)}>
-                  🔑 Redefinir senha
-                </button>
-                {detalhe.id !== meuId && (
-                  <button className={`btn btn--sm ${detalhe.ativo ? 'btn--perigo' : ''}`}
-                          disabled={ocupado}
-                          onClick={() => void editar({ ativo: !detalhe.ativo })}>
-                    {detalhe.ativo ? '🚫 Bloquear acesso' : '✓ Reativar acesso'}
-                  </button>
-                )}
-              </div>
-
-              <p className="dim" style={{ fontSize: 11.5, marginTop: 14 }}>
-                Bloquear não apaga nada: o histórico da pessoa continua, ela só deixa de conseguir entrar.
-              </p>
-            </div>
-          </aside>
-        </div>
+        <EditorUsuario
+          usuario={detalhe}
+          meuId={meuId}
+          aoFechar={() => setDetalhe(null)}
+          aoSalvar={(atualizado) => { setDetalhe(atualizado); router.refresh(); }}
+          aoRedefinirSenha={(usuario) => void redefinirSenha(usuario)}
+        />
       )}
 
       {/* ---------- matriz completa ---------- */}
       {verMatriz && (
-        <div className="modal">
-          <div className="modal__fundo" onClick={() => setVerMatriz(false)} />
-          <div className="modal__caixa modal__caixa--largo" role="dialog" aria-modal="true">
-            <header className="modal__topo">
-              <h2>O que cada perfil pode fazer</h2>
-              <button className="btn btn--sm btn--fantasma" style={{ marginLeft: 'auto' }}
-                      onClick={() => setVerMatriz(false)} aria-label="Fechar">✕</button>
-            </header>
-            <div className="modal__corpo">
+        <Modal titulo="O que cada perfil pode fazer" largo aoFechar={() => setVerMatriz(false)}>
+          <>
               <div className="tabela-wrap">
                 <table>
                   <thead>
@@ -521,9 +403,8 @@ export function GestaoUsuarios({ usuarios, meuId }: { usuarios: Usuario[]; meuId
               <div className="modal__rodape">
                 <button className="btn" onClick={() => setVerMatriz(false)}>Fechar</button>
               </div>
-            </div>
-          </div>
-        </div>
+          </>
+        </Modal>
       )}
     </>
   );

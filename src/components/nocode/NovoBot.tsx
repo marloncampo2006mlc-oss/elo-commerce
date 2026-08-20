@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { Modal } from '@/components/Modal';
 import { useToast } from '@/components/Toasts';
 
 export function NovoBot() {
@@ -29,37 +30,38 @@ export function NovoBot() {
     }
   }
 
-  if (!aberto) {
-    return <button className="btn btn--primario" onClick={() => setAberto(true)}>＋ Novo chatbot</button>;
-  }
-
   return (
-    <div className="modal">
-      <div className="modal__fundo" onClick={() => setAberto(false)} />
-      <div className="modal__caixa" role="dialog" aria-modal="true" aria-label="Novo chatbot">
-        <header className="modal__topo"><h2>Novo chatbot</h2></header>
-        <div className="modal__corpo">
+    <>
+      <button className="btn btn--primario" onClick={() => setAberto(true)}>
+        ＋ Novo chatbot
+      </button>
+
+      {aberto && (
+        <Modal titulo="Novo chatbot" aoFechar={() => setAberto(false)}>
           <div className="campo">
             <label htmlFor="nome-bot">Nome</label>
             <input id="nome-bot" value={nome} maxLength={120} autoFocus
                    onChange={(evento) => setNome(evento.target.value)}
                    placeholder="Ex.: Atendimento pós-venda" />
           </div>
-          <div className="campo" style={{ marginTop: 12 }}>
+
+          <div className="campo" style={{ marginTop: 14 }}>
             <label htmlFor="desc-bot">Descrição</label>
             <input id="desc-bot" value={descricao} maxLength={500}
                    onChange={(evento) => setDescricao(evento.target.value)}
                    placeholder="Para que serve este fluxo" />
           </div>
+
           <div className="modal__rodape">
             <button className="btn" onClick={() => setAberto(false)}>Cancelar</button>
-            <button className="btn btn--primario" disabled={nome.trim().length < 3 || salvando}
+            <button className="btn btn--primario"
+                    disabled={nome.trim().length < 3 || salvando}
                     onClick={() => void criar()}>
               {salvando ? 'Criando…' : 'Criar e editar'}
             </button>
           </div>
-        </div>
-      </div>
-    </div>
+        </Modal>
+      )}
+    </>
   );
 }

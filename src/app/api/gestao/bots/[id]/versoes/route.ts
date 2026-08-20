@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { botsService } from '@/modules/bots/bots.service';
-import { exigirPapel, exigirSessao, PAPEIS_GESTAO } from '@/lib/autorizacao';
+import { exigirPrivilegio, exigirSessao } from '@/lib/autorizacao';
 import { comTratamentoDeErro } from '@/lib/erros';
 import { ok } from '@/lib/api';
 
@@ -15,7 +15,7 @@ export const GET = comTratamentoDeErro(async (_r: NextRequest, { params }: Conte
 
 /** Devolve (ou cria) o rascunho em que o editor trabalha. */
 export const POST = comTratamentoDeErro(async (_r: NextRequest, { params }: Contexto) => {
-  const sessao = await exigirPapel(...PAPEIS_GESTAO);
+  const sessao = await exigirPrivilegio('bots.editar');
   const { id } = await params;
   return ok(await botsService.rascunho(id, sessao.id));
 });

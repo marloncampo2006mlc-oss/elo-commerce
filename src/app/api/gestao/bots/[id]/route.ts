@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { botsService } from '@/modules/bots/bots.service';
 import { botCreateSchema } from '@/modules/bots/bots.schema';
-import { exigirPapel, exigirSessao, PAPEIS_GESTAO } from '@/lib/autorizacao';
+import { exigirPrivilegio, exigirSessao } from '@/lib/autorizacao';
 import { comTratamentoDeErro } from '@/lib/erros';
 import { ok, semConteudo } from '@/lib/api';
 
@@ -14,13 +14,13 @@ export const GET = comTratamentoDeErro(async (_r: NextRequest, { params }: Conte
 });
 
 export const PUT = comTratamentoDeErro(async (request: NextRequest, { params }: Contexto) => {
-  await exigirPapel(...PAPEIS_GESTAO);
+  await exigirPrivilegio('bots.editar');
   const { id } = await params;
   return ok(await botsService.atualizar(id, botCreateSchema.parse(await request.json())));
 });
 
 export const DELETE = comTratamentoDeErro(async (_r: NextRequest, { params }: Contexto) => {
-  await exigirPapel(...PAPEIS_GESTAO);
+  await exigirPrivilegio('bots.editar');
   const { id } = await params;
   await botsService.remover(id);
   return semConteudo();
