@@ -13,7 +13,14 @@ import { COOKIE_SESSAO } from './constantes';
  */
 
 export { COOKIE_SESSAO };
-const DURACAO_MS = 8 * 60 * 60 * 1000; // 8 horas
+/**
+ * Duas durações de sessão. "Lembrar de mim" não é enfeite: quando
+ * marcado, o cookie e o próprio token passam a valer 30 dias em vez de
+ * 8 horas. A validade vai assinada dentro do token, então esticar o
+ * cookie no navegador não estende o acesso.
+ */
+const DURACAO_PADRAO_MS = 8 * 60 * 60 * 1000;        // 8 horas
+const DURACAO_LEMBRAR_MS = 30 * 24 * 60 * 60 * 1000; // 30 dias
 
 export type PapelUsuario = 'administrador' | 'gerente' | 'supervisor' | 'atendente';
 
@@ -49,8 +56,8 @@ function assinaturasIguais(a: string, b: string): boolean {
   return timingSafeEqual(bufferA, bufferB);
 }
 
-export function gerarToken(usuario: SessaoUsuario): string {
-  const conteudo: ConteudoToken = { ...usuario, exp: Date.now() + DURACAO_MS };
+export function gerarToken(usuario: SessaoUsuario, duracaoMs = DURACAO_PADRAO_MS): string {
+  const conteudo: ConteudoToken = { ...usuario, exp: Date.now() + duracaoMs };
   const payload = Buffer.from(JSON.stringify(conteudo)).toString('base64url');
   return `${payload}.${assinar(payload)}`;
 }
@@ -86,14 +93,16 @@ export async function lerSessao(): Promise<SessaoUsuario | null> {
   return lerToken(armazem.get(COOKIE_SESSAO)?.value);
 }
 
-export async function criarSessao(usuario: SessaoUsuario): Promise<void> {
+export async function criarSessao(usuario: SessaoUsuario, lembrar = false): Promise<void> {
+  const duracao = lembrar ? DURACAO_LEMBRAR_MS : DURACAO_PADRAO_MS;
   const armazem = await cookies();
-  armazem.set(COOKIE_SESSAO, gerarToken(usuario), {
+
+  armazem.set(COOKIE_SESSAO, gerarToken(usuario, duracao), {
     httpOnly: true,                                   // inacessível a JavaScript
     sameSite: 'lax',                                  // mitiga CSRF
     secure: process.env.NODE_ENV === 'production',    // só trafega em HTTPS
     path: '/',
-    maxAge: Math.floor(DURACAO_MS / 1000),
+    maxAge: Math.floor(duracao / 1000),
   });
 }
 

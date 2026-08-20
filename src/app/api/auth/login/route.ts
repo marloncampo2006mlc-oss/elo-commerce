@@ -8,6 +8,6 @@ import { ok } from '@/lib/api';
 export const POST = comTratamentoDeErro(async (request: NextRequest) => {
   const entrada = loginSchema.parse(await request.json());
   const usuario = await authService.autenticar(entrada);
-  await criarSessao(usuario);
+  await criarSessao(usuario, entrada.lembrar);
   return ok(usuario);
 });

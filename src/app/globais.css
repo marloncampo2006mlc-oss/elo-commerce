@@ -492,75 +492,6 @@ select.filtro {
 .react-flow__handle { width: 9px; height: 9px; border: 2px solid var(--fundo-2); }
 .react-flow__attribution { display: none; }
 
-/* --------------------------- 11. LOGIN ----------------------------- */
-.login { display: grid; grid-template-columns: 1fr 1fr; min-height: 100vh; }
-
-.login__coluna { display: grid; place-items: center; padding: 28px; }
-
-.login__caixa {
-  width: min(400px, 100%);
-  background: var(--superficie); border: 1px solid var(--borda);
-  border-radius: var(--raio-lg); padding: 32px;
-  box-shadow: var(--sombra);
-}
-
-.login__marca { display: flex; align-items: center; gap: 11px; margin-bottom: 26px; }
-.login__logo {
-  width: 38px; height: 38px; border-radius: 10px; background: var(--grad-marca);
-  display: grid; place-items: center; color: #fff; font-size: 17px;
-}
-.login__marca strong { display: block; font-size: 14.5px; letter-spacing: -.02em; }
-.login__marca span { font-size: 11px; color: var(--texto-3); }
-
-.login__titulo { font-size: 24px; margin-bottom: 4px; }
-.login__sub { font-size: 13px; color: var(--texto-2); margin-bottom: 22px; }
-
-.login__senha { position: relative; }
-.login__senha input { padding-right: 42px; }
-.login__olho {
-  position: absolute; right: 6px; top: 50%; translate: 0 -50%;
-  background: none; border: 0; cursor: pointer; font-size: 15px;
-  padding: 6px; border-radius: 6px; line-height: 1;
-}
-.login__olho:hover { background: var(--superficie-2); }
-
-.login__erro {
-  margin-top: 14px; padding: 11px 13px; border-radius: 9px;
-  background: rgb(220 38 38 / .08); border: 1px solid rgb(220 38 38 / .25);
-}
-.login__erro strong { display: block; font-size: 13px; color: var(--vermelho); }
-.login__erro span { font-size: 11.5px; color: var(--texto-2); }
-
-.login__voltar {
-  display: block; text-align: center; margin-top: 18px;
-  font-size: 12.5px; color: var(--texto-3);
-}
-.login__voltar:hover { color: var(--texto); }
-
-.login__lado {
-  display: grid; place-items: center; padding: 40px;
-  background:
-    radial-gradient(40rem 30rem at 70% 20%, rgb(109 74 255 / .18), transparent 65%),
-    radial-gradient(34rem 26rem at 20% 80%, rgb(23 196 224 / .13), transparent 65%),
-    var(--fundo-2);
-  border-left: 1px solid var(--borda);
-}
-.login__lado-conteudo { max-width: 380px; }
-.login__lado h2 { font-size: 25px; margin-bottom: 20px; text-wrap: balance; }
-.login__lado ul { list-style: none; display: flex; flex-direction: column; gap: 13px; }
-.login__lado li {
-  font-size: 13.5px; color: var(--texto-2); padding-left: 20px; position: relative;
-}
-.login__lado li::before {
-  content: '◆'; position: absolute; left: 0; color: var(--violeta); font-size: 10px; top: 4px;
-}
-.login__lado b { color: var(--texto); font-weight: 650; }
-
-@media (max-width: 900px) {
-  .login { grid-template-columns: 1fr; }
-  .login__lado { display: none; }
-}
-
 /* --------------------------- 12. USUÁRIOS -------------------------- */
 /* Escolha de perfil como cartões: o privilégio fica visível antes de decidir,
    em vez de escondido atrás de um <select>. */
@@ -615,4 +546,137 @@ select.filtro {
 @media (max-width: 560px) {
   .painel-lateral { width: 100%; }
   .perfis { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* --------------------------- 13. ACESSO ---------------------------- */
+/* Cartão em vidro sobre um cenário noturno desenhado em SVG. */
+.acesso {
+  position: relative; min-height: 100vh;
+  display: grid; place-items: center; padding: 24px;
+  overflow: hidden; background: #150c33;
+}
+
+.cenario { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+.acesso__conteudo { position: relative; z-index: 1; width: min(410px, 100%); }
+
+.vidro {
+  display: flex; flex-direction: column;
+  padding: 34px 32px 28px; border-radius: 22px;
+  /* O desfoque é o que cria a sensação de vidro: sem ele, é só um
+     retângulo translúcido. */
+  background: rgb(255 255 255 / .09);
+  backdrop-filter: blur(22px) saturate(140%);
+  -webkit-backdrop-filter: blur(22px) saturate(140%);
+  border: 1px solid rgb(255 255 255 / .22);
+  box-shadow: 0 28px 60px -20px rgb(10 6 30 / .65), inset 0 1px 0 rgb(255 255 255 / .28);
+  color: #fff;
+}
+
+.vidro__marca { display: flex; align-items: center; gap: 11px; margin-bottom: 22px; }
+.vidro__logo {
+  width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center;
+  background: linear-gradient(135deg, #8b6bff, #22d3ee); color: #fff; font-size: 17px;
+  box-shadow: 0 6px 18px -6px rgb(139 107 255 / .8);
+}
+.vidro__marca strong { display: block; font-size: 14.5px; letter-spacing: -.02em; }
+.vidro__marca span { font-size: 11px; color: rgb(255 255 255 / .62); }
+
+.vidro__titulo {
+  font-size: 27px; font-weight: 700; letter-spacing: -.03em; margin-bottom: 22px;
+}
+
+/* Campo com rótulo flutuante: o texto sobe quando há conteúdo ou foco,
+   então o rótulo nunca some — diferente de usar só placeholder. */
+.linha { position: relative; margin-bottom: 20px; }
+
+.linha input {
+  width: 100%; padding: 14px 40px 8px 2px;
+  background: transparent; border: 0; border-bottom: 1.5px solid rgb(255 255 255 / .28);
+  color: #fff; font-size: 15px; border-radius: 0;
+  transition: border-color var(--transicao);
+}
+.linha input:focus { outline: none; border-bottom-color: #22d3ee; }
+.linha input:-webkit-autofill {
+  -webkit-text-fill-color: #fff;
+  transition: background-color 9999s;   /* impede o fundo amarelo do autofill */
+}
+
+.linha label {
+  position: absolute; left: 2px; top: 13px; pointer-events: none;
+  font-size: 15px; color: rgb(255 255 255 / .6);
+  transition: var(--transicao);
+}
+.linha input:focus + label,
+.linha input:not(:placeholder-shown) + label {
+  top: -6px; font-size: 11.5px; color: #7ee6f5; letter-spacing: .04em;
+}
+
+.linha__olho {
+  position: absolute; right: 0; top: 8px;
+  background: none; border: 0; cursor: pointer; font-size: 15px;
+  padding: 6px; border-radius: 7px; line-height: 1; opacity: .75;
+}
+.linha__olho:hover { opacity: 1; background: rgb(255 255 255 / .1); }
+
+.vidro__opcoes {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; margin: 2px 0 22px; font-size: 12.5px;
+}
+
+.marcador { display: flex; align-items: center; gap: 8px; cursor: pointer; color: rgb(255 255 255 / .8); }
+.marcador input { position: absolute; opacity: 0; width: 0; height: 0; }
+.marcador__caixa {
+  width: 17px; height: 17px; border-radius: 5px; flex: 0 0 auto;
+  border: 1.5px solid rgb(255 255 255 / .38); background: rgb(255 255 255 / .07);
+  display: grid; place-items: center; transition: var(--transicao);
+}
+.marcador input:checked + .marcador__caixa {
+  background: linear-gradient(135deg, #8b6bff, #22d3ee); border-color: transparent;
+}
+.marcador input:checked + .marcador__caixa::after {
+  content: '✓'; color: #fff; font-size: 11px; font-weight: 700;
+}
+.marcador input:focus-visible + .marcador__caixa { outline: 2px solid #22d3ee; outline-offset: 2px; }
+
+.vidro__link {
+  background: none; border: 0; cursor: pointer; padding: 0;
+  font-size: 12.5px; color: rgb(255 255 255 / .72); text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.vidro__link:hover { color: #7ee6f5; }
+
+.vidro__erro {
+  margin-bottom: 16px; padding: 11px 13px; border-radius: 11px;
+  background: rgb(255 92 92 / .16); border: 1px solid rgb(255 138 138 / .35);
+}
+.vidro__erro strong { display: block; font-size: 13px; color: #ffc9c9; }
+.vidro__erro span { font-size: 11.5px; color: rgb(255 255 255 / .68); }
+
+.vidro__botao {
+  width: 100%; padding: 14px; border: 0; border-radius: 13px; cursor: pointer;
+  background: linear-gradient(135deg, #8b6bff, #22d3ee);
+  color: #fff; font-size: 15px; font-weight: 650; letter-spacing: -.01em;
+  box-shadow: 0 12px 28px -10px rgb(139 107 255 / .85);
+  transition: var(--transicao);
+}
+.vidro__botao:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.06); }
+.vidro__botao:disabled { opacity: .65; cursor: not-allowed; }
+
+.vidro__rodape {
+  margin-top: 18px; text-align: center;
+  font-size: 12px; color: rgb(255 255 255 / .58);
+}
+.vidro__rodape a { color: rgb(255 255 255 / .82); text-decoration: underline; text-underline-offset: 3px; }
+.vidro__rodape a:hover { color: #7ee6f5; }
+
+.bloco-codigo {
+  background: var(--fundo); border: 1px solid var(--borda); border-radius: 9px;
+  padding: 11px 13px; font-family: var(--mono); font-size: 12px;
+  color: var(--texto-2); overflow-x: auto; margin-top: 8px;
+}
+
+@media (max-width: 460px) {
+  .vidro { padding: 28px 22px 24px; border-radius: 18px; }
+  .vidro__titulo { font-size: 24px; }
 }
