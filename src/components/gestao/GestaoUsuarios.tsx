@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useToast } from '@/components/Toasts';
 import { dataCurta } from '@/lib/formato';
 import {
@@ -10,11 +10,15 @@ import {
 } from '@/modules/usuarios/usuarios.types';
 import type { PapelUsuario } from '@/lib/sessao';
 
-const CorPapel: Record<PapelUsuario, string> = {
+const COR_PAPEL: Record<PapelUsuario, string> = {
   administrador: 'vermelho', gerente: 'violeta', supervisor: 'ciano', atendente: 'verde',
 };
 
-/** Senha inicial forte, sem caracteres ambíguos (l/1, O/0). */
+const ICONE_PAPEL: Record<PapelUsuario, string> = {
+  administrador: '🛡', gerente: '📋', supervisor: '📊', atendente: '🎧',
+};
+
+/** Senha forte sem caracteres ambíguos (l/1, O/0) para ditar sem erro. */
 function gerarSenha(): string {
   const alfabeto = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   const valores = crypto.getRandomValues(new Uint32Array(14));
@@ -25,36 +29,53 @@ export function GestaoUsuarios({ usuarios, meuId }: { usuarios: Usuario[]; meuId
   const router = useRouter();
   const { sucesso, erro } = useToast();
 
+  const [busca, setBusca] = useState('');
+  const [filtroPapel, setFiltroPapel] = useState<'' | PapelUsuario>('');
   const [criando, setCriando] = useState(false);
-  const [editando, setEditando] = useState<Usuario | null>(null);
-  const [verPrivilegios, setVerPrivilegios] = useState(false);
+  const [detalhe, setDetalhe] = useState<Usuario | null>(null);
+  const [verMatriz, setVerMatriz] = useState(false);
   const [senhaGerada, setSenhaGerada] = useState<{ email: string; senha: string } | null>(null);
+  const [copiado, setCopiado] = useState(false);
   const [ocupado, setOcupado] = useState(false);
 
   const [form, setForm] = useState({
     nome: '', email: '', papel: 'atendente' as PapelUsuario, senha: gerarSenha(),
   });
 
-  function abrirCriacao() {
-    setForm({ nome: '', email: '', papel: 'atendente', senha: gerarSenha() });
-    setCriando(true);
+  const filtrados = useMemo(() => {
+    const termo = busca.trim().toLowerCase();
+    return usuarios.filter((usuario) => {
+      const casaBusca = !termo
+        || usuario.nome.toLowerCase().includes(termo)
+        || usuario.email.toLowerCase().includes(termo);
+      return casaBusca && (!filtroPapel || usuario.papel === filtroPapel);
+    });
+  }, [usuarios, busca, filtroPapel]);
+
+  const ativos = usuarios.filter((usuario) => usuario.ativo).length;
+  const admins = usuarios.filter((u) => u.papel === 'administrador' && u.ativo).length;
+  const nuncaEntraram = usuarios.filter((usuario) => !usuario.ultimo_acesso).length;
+
+  async function chamar(url: string, metodo: string, corpo?: object) {
+    const resposta = await fetch(url, {
+      method: metodo,
+      headers: { 'Content-Type': 'application/json' },
+      body: corpo ? JSON.stringify(corpo) : undefined,
+    });
+    const dados = await resposta.json();
+    if (!resposta.ok) {
+      throw new Error(dados.detalhes?.[0]?.mensagem ?? dados.erro ?? 'Operação recusada');
+    }
+    return dados.data;
   }
 
   async function criar() {
     setOcupado(true);
     try {
-      const resposta = await fetch('/api/gestao/usuarios', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
-      const corpo = await resposta.json();
-      if (!resposta.ok) {
-        const detalhe = corpo.detalhes?.[0]?.mensagem;
-        throw new Error(detalhe ?? corpo.erro ?? 'Falha ao criar');
-      }
+      await chamar('/api/gestao/usuarios', 'POST', form);
       setCriando(false);
       setSenhaGerada({ email: form.email, senha: form.senha });
+      setCopiado(false);
       sucesso('Usuário criado', form.nome);
       router.refresh();
     } catch (falha) {
@@ -64,19 +85,13 @@ export function GestaoUsuarios({ usuarios, meuId }: { usuarios: Usuario[]; meuId
     }
   }
 
-  async function salvarEdicao(mudanca: { papel?: PapelUsuario; ativo?: boolean }) {
-    if (!editando) return;
+  async function editar(mudanca: { papel?: PapelUsuario; ativo?: boolean }) {
+    if (!detalhe) return;
     setOcupado(true);
     try {
-      const resposta = await fetch(`/api/gestao/usuarios/${editando.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(mudanca),
-      });
-      const corpo = await resposta.json();
-      if (!resposta.ok) throw new Error(corpo.erro ?? 'Falha ao salvar');
-      setEditando(null);
-      sucesso('Acesso atualizado');
+      const atualizado = await chamar(`/api/gestao/usuarios/${detalhe.id}`, 'PATCH', mudanca);
+      setDetalhe(atualizado as Usuario);
+      sucesso('Acesso atualizado', (atualizado as Usuario).nome);
       router.refresh();
     } catch (falha) {
       erro('Alteração recusada', falha instanceof Error ? falha.message : 'Erro');
@@ -89,14 +104,10 @@ export function GestaoUsuarios({ usuarios, meuId }: { usuarios: Usuario[]; meuId
     const nova = gerarSenha();
     setOcupado(true);
     try {
-      const resposta = await fetch(`/api/gestao/usuarios/${usuario.id}/senha`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ senha: nova }),
-      });
-      if (!resposta.ok) throw new Error((await resposta.json()).erro ?? 'Falha');
-      setEditando(null);
+      await chamar(`/api/gestao/usuarios/${usuario.id}/senha`, 'PUT', { senha: nova });
+      setDetalhe(null);
       setSenhaGerada({ email: usuario.email, senha: nova });
+      setCopiado(false);
     } catch (falha) {
       erro('Não foi possível redefinir', falha instanceof Error ? falha.message : 'Erro');
     } finally {
@@ -106,61 +117,142 @@ export function GestaoUsuarios({ usuarios, meuId }: { usuarios: Usuario[]; meuId
 
   return (
     <>
-      <div className="flex" style={{ gap: 8, marginBottom: 16 }}>
-        <button className="btn btn--primario" onClick={abrirCriacao}>＋ Novo usuário</button>
-        <button className="btn" onClick={() => setVerPrivilegios(true)}>
-          Ver privilégios de cada perfil
+      {/* ---------- panorama ---------- */}
+      <section className="kpis" style={{ marginBottom: 18 }}>
+        <div className="kpi">
+          <span className="kpi__icone">👥</span>
+          <div className="kpi__rotulo">Com acesso</div>
+          <div className="kpi__valor">{ativos}</div>
+          <div className="kpi__nota">
+            {usuarios.length - ativos > 0
+              ? `${usuarios.length - ativos} bloqueado(s)`
+              : 'nenhum bloqueado'}
+          </div>
+        </div>
+        <div className="kpi">
+          <span className="kpi__icone">🛡</span>
+          <div className="kpi__rotulo">Administradores</div>
+          <div className="kpi__valor">{admins}</div>
+          <div className="kpi__nota">
+            {admins === 1 ? 'só um — considere ter outro' : 'acesso total à plataforma'}
+          </div>
+        </div>
+        <div className="kpi">
+          <span className="kpi__icone">🔑</span>
+          <div className="kpi__rotulo">Nunca entraram</div>
+          <div className="kpi__valor">{nuncaEntraram}</div>
+          <div className="kpi__nota">aguardando o primeiro acesso</div>
+        </div>
+        <div className="kpi">
+          <span className="kpi__icone">⚙</span>
+          <div className="kpi__rotulo">Perfis disponíveis</div>
+          <div className="kpi__valor">{PAPEIS.length}</div>
+          <div className="kpi__nota">
+            <button className="btn btn--sm btn--fantasma" style={{ padding: 0 }}
+                    onClick={() => setVerMatriz(true)}>
+              ver o que cada um pode →
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------- barra de ferramentas ---------- */}
+      <div className="filtros">
+        <div className="busca">
+          <input value={busca} onChange={(evento) => setBusca(evento.target.value)}
+                 placeholder="Buscar por nome ou e-mail…" aria-label="Buscar usuário" />
+        </div>
+
+        <select className="filtro" value={filtroPapel} aria-label="Filtrar por perfil"
+                onChange={(evento) => setFiltroPapel(evento.target.value as '' | PapelUsuario)}>
+          <option value="">Todos os perfis</option>
+          {PAPEIS.map((papel) => (
+            <option key={papel} value={papel}>
+              {papel} ({usuarios.filter((u) => u.papel === papel).length})
+            </option>
+          ))}
+        </select>
+
+        <button className="btn btn--primario" style={{ marginLeft: 'auto' }}
+                onClick={() => {
+                  setForm({ nome: '', email: '', papel: 'atendente', senha: gerarSenha() });
+                  setCriando(true);
+                }}>
+          ＋ Novo usuário
         </button>
       </div>
 
+      {/* ---------- tabela ---------- */}
       <div className="cartao">
-        <div className="tabela-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Pessoa</th><th>Perfil</th><th>Privilégios</th>
-                <th>Situação</th><th>Último acesso</th><th />
-              </tr>
-            </thead>
-            <tbody>
-              {usuarios.map((usuario) => (
-                <tr key={usuario.id} style={{ opacity: usuario.ativo ? 1 : 0.55 }}>
-                  <td>
-                    <div className="flex">
-                      <span className="avatar">{usuario.nome.slice(0, 2).toUpperCase()}</span>
-                      <div>
-                        <div style={{ fontWeight: 550 }}>
-                          {usuario.nome}
-                          {usuario.id === meuId && (
-                            <span className="dim" style={{ fontWeight: 400 }}> · você</span>
-                          )}
-                        </div>
-                        <div className="dim" style={{ fontSize: 11.5 }}>{usuario.email}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td><span className={`selo selo--${CorPapel[usuario.papel]}`}>{usuario.papel}</span></td>
-                  <td className="dim" style={{ fontSize: 12 }}>
-                    {privilegiosDoPapel(usuario.papel).length} de {PRIVILEGIOS.length}
-                  </td>
-                  <td>
-                    <span className={`selo selo--${usuario.ativo ? 'verde' : 'cinza'}`}>
-                      {usuario.ativo ? 'ativo' : 'bloqueado'}
-                    </span>
-                  </td>
-                  <td className="dim">
-                    {usuario.ultimo_acesso ? dataCurta(usuario.ultimo_acesso) : 'nunca entrou'}
-                  </td>
-                  <td className="acoes">
-                    <button className="btn btn--sm" onClick={() => setEditando(usuario)}>
-                      Gerenciar
-                    </button>
-                  </td>
+        {filtrados.length === 0 ? (
+          <div className="vazio">
+            <div className="vazio__icone">🔎</div>
+            <strong>Ninguém encontrado</strong>
+            <p style={{ marginTop: 6 }}>Ajuste a busca ou o filtro de perfil.</p>
+          </div>
+        ) : (
+          <div className="tabela-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Pessoa</th><th>Perfil</th><th>Pode fazer</th>
+                  <th>Situação</th><th>Último acesso</th><th />
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {filtrados.map((usuario) => {
+                  const quantos = privilegiosDoPapel(usuario.papel).length;
+                  return (
+                    <tr key={usuario.id} style={{ opacity: usuario.ativo ? 1 : 0.5 }}>
+                      <td>
+                        <div className="flex">
+                          <span className="avatar">{usuario.nome.slice(0, 2).toUpperCase()}</span>
+                          <div>
+                            <div style={{ fontWeight: 550 }}>
+                              {usuario.nome}
+                              {usuario.id === meuId && (
+                                <span className="selo selo--cinza" style={{ marginLeft: 6 }}>você</span>
+                              )}
+                            </div>
+                            <div className="dim" style={{ fontSize: 11.5 }}>{usuario.email}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span className={`selo selo--${COR_PAPEL[usuario.papel]}`}>
+                          {ICONE_PAPEL[usuario.papel]} {usuario.papel}
+                        </span>
+                      </td>
+                      <td style={{ minWidth: 130 }}>
+                        <div className="dim" style={{ fontSize: 11.5 }}>
+                          {quantos} de {PRIVILEGIOS.length} privilégios
+                        </div>
+                        <div className="barra-prog" style={{ maxWidth: 110 }}>
+                          <i style={{ width: `${(quantos / PRIVILEGIOS.length) * 100}%` }} />
+                        </div>
+                      </td>
+                      <td>
+                        <span className={`selo selo--${usuario.ativo ? 'verde' : 'cinza'}`}>
+                          {usuario.ativo ? 'ativo' : 'bloqueado'}
+                        </span>
+                      </td>
+                      <td className="dim">
+                        {usuario.ultimo_acesso
+                          ? dataCurta(usuario.ultimo_acesso)
+                          : <span className="selo selo--ambar">nunca entrou</span>}
+                      </td>
+                      <td className="acoes">
+                        <button className="btn btn--sm" onClick={() => setDetalhe(usuario)}>
+                          Gerenciar
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* ---------- criar ---------- */}
@@ -168,7 +260,12 @@ export function GestaoUsuarios({ usuarios, meuId }: { usuarios: Usuario[]; meuId
         <div className="modal">
           <div className="modal__fundo" onClick={() => setCriando(false)} />
           <div className="modal__caixa" role="dialog" aria-modal="true" aria-label="Novo usuário">
-            <header className="modal__topo"><h2>Novo usuário</h2></header>
+            <header className="modal__topo">
+              <h2>Novo usuário</h2>
+              <button className="btn btn--sm btn--fantasma" style={{ marginLeft: 'auto' }}
+                      onClick={() => setCriando(false)} aria-label="Fechar">✕</button>
+            </header>
+
             <div className="modal__corpo">
               <div className="campo">
                 <label htmlFor="nome">Nome completo</label>
@@ -177,60 +274,68 @@ export function GestaoUsuarios({ usuarios, meuId }: { usuarios: Usuario[]; meuId
                        placeholder="Ex.: Ana Beatriz Lima" />
               </div>
 
-              <div className="campo" style={{ marginTop: 12 }}>
+              <div className="campo" style={{ marginTop: 14 }}>
                 <label htmlFor="email">E-mail de acesso</label>
                 <input id="email" type="email" value={form.email} maxLength={160}
                        onChange={(evento) => setForm({ ...form, email: evento.target.value })}
                        placeholder="ana@empresa.com" />
+                <span className="campo__dica">É com este e-mail que a pessoa faz login.</span>
               </div>
 
-              <div className="campo" style={{ marginTop: 12 }}>
-                <label htmlFor="papel">Perfil de acesso</label>
-                <select id="papel" value={form.papel}
-                        onChange={(evento) =>
-                          setForm({ ...form, papel: evento.target.value as PapelUsuario })}>
-                  {PAPEIS.map((papel) => <option key={papel} value={papel}>{papel}</option>)}
-                </select>
+              <div className="campo" style={{ marginTop: 16 }}>
+                <label>Perfil de acesso</label>
+                <div className="perfis">
+                  {PAPEIS.map((papel) => (
+                    <button key={papel} type="button"
+                            className={`perfil ${form.papel === papel ? 'perfil--ativo' : ''}`}
+                            onClick={() => setForm({ ...form, papel })}
+                            aria-pressed={form.papel === papel}>
+                      <span className="perfil__icone">{ICONE_PAPEL[papel]}</span>
+                      <span className="perfil__nome">{papel}</span>
+                      <span className="perfil__qtd">
+                        {privilegiosDoPapel(papel).length}/{PRIVILEGIOS.length}
+                      </span>
+                    </button>
+                  ))}
+                </div>
                 <span className="campo__dica">{DESCRICAO_PAPEL[form.papel]}</span>
               </div>
 
-              <div style={{
-                marginTop: 12, padding: 12, borderRadius: 9,
-                background: 'var(--superficie-2)', border: '1px solid var(--borda)',
-              }}>
-                <div className="lateral__grupo" style={{ padding: '0 0 6px' }}>
-                  O que este perfil poderá fazer
+              <div className="previa-privilegios">
+                <div className="lateral__grupo" style={{ padding: '0 0 8px' }}>
+                  Esta pessoa poderá
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-                  {privilegiosDoPapel(form.papel).map((privilegio) => (
-                    <span key={privilegio.chave} className="selo selo--cinza">
-                      {privilegio.rotulo}
-                    </span>
-                  ))}
-                </div>
+                {PRIVILEGIOS.map((privilegio) => {
+                  const tem = privilegio.papeis.includes(form.papel);
+                  return (
+                    <div key={privilegio.chave} className={`priv ${tem ? '' : 'priv--nao'}`}>
+                      <span className="priv__marca">{tem ? '✓' : '✕'}</span>
+                      <span>{privilegio.rotulo}</span>
+                    </div>
+                  );
+                })}
               </div>
 
-              <div className="campo" style={{ marginTop: 12 }}>
+              <div className="campo" style={{ marginTop: 16 }}>
                 <label htmlFor="senha">Senha inicial</label>
                 <div style={{ display: 'flex', gap: 6 }}>
                   <input id="senha" value={form.senha} className="mono" maxLength={200}
                          onChange={(evento) => setForm({ ...form, senha: evento.target.value })} />
                   <button className="btn btn--sm" type="button"
                           onClick={() => setForm({ ...form, senha: gerarSenha() })}>
-                    Gerar
+                    ↻ Gerar
                   </button>
                 </div>
                 <span className="campo__dica">
-                  Mostrada uma única vez após criar. Combine com a pessoa para ela trocar depois.
+                  Exibida uma única vez após criar — o banco guarda só o hash.
                 </span>
               </div>
 
               <div className="modal__rodape">
                 <button className="btn" onClick={() => setCriando(false)}>Cancelar</button>
-                <button className="btn btn--primario" disabled={ocupado
-                          || form.nome.trim().length < 3
-                          || !form.email.includes('@')
-                          || form.senha.length < 8}
+                <button className="btn btn--primario"
+                        disabled={ocupado || form.nome.trim().length < 3
+                          || !form.email.includes('@') || form.senha.length < 8}
                         onClick={() => void criar()}>
                   {ocupado ? 'Criando…' : 'Criar usuário'}
                 </button>
@@ -245,21 +350,24 @@ export function GestaoUsuarios({ usuarios, meuId }: { usuarios: Usuario[]; meuId
         <div className="modal">
           <div className="modal__fundo" onClick={() => setSenhaGerada(null)} />
           <div className="modal__caixa" role="dialog" aria-modal="true">
-            <header className="modal__topo"><h2>Guarde esta senha</h2></header>
+            <header className="modal__topo"><h2>Guarde esta senha agora</h2></header>
             <div className="modal__corpo">
-              <p className="dim" style={{ marginBottom: 14 }}>
-                Ela não será exibida novamente — o banco guarda apenas o hash.
-                Se perder, é só redefinir.
+              <p className="dim" style={{ marginBottom: 16 }}>
+                Ela não aparece de novo. Se perder, é só redefinir por aqui.
               </p>
-              <div style={{
-                padding: 14, borderRadius: 9, background: 'var(--superficie-2)',
-                border: '1px solid var(--borda)',
-              }}>
+
+              <div className="senha-caixa">
                 <div className="dim" style={{ fontSize: 12 }}>{senhaGerada.email}</div>
-                <div className="mono" style={{ fontSize: 19, marginTop: 6, letterSpacing: '.04em' }}>
-                  {senhaGerada.senha}
-                </div>
+                <div className="senha-caixa__valor">{senhaGerada.senha}</div>
+                <button className="btn btn--sm"
+                        onClick={async () => {
+                          await navigator.clipboard.writeText(senhaGerada.senha);
+                          setCopiado(true);
+                        }}>
+                  {copiado ? '✓ Copiado' : 'Copiar senha'}
+                </button>
               </div>
+
               <div className="modal__rodape">
                 <button className="btn btn--primario" onClick={() => setSenhaGerada(null)}>
                   Anotei
@@ -270,81 +378,118 @@ export function GestaoUsuarios({ usuarios, meuId }: { usuarios: Usuario[]; meuId
         </div>
       )}
 
-      {/* ---------- gerenciar acesso ---------- */}
-      {editando && (
+      {/* ---------- painel de detalhes ---------- */}
+      {detalhe && (
         <div className="modal">
-          <div className="modal__fundo" onClick={() => setEditando(null)} />
-          <div className="modal__caixa" role="dialog" aria-modal="true">
-            <header className="modal__topo"><h2>{editando.nome}</h2></header>
+          <div className="modal__fundo" onClick={() => setDetalhe(null)} />
+          <aside className="painel-lateral" role="dialog" aria-modal="true"
+                 aria-label={`Gerenciar ${detalhe.nome}`}>
+            <header className="modal__topo">
+              <div className="flex">
+                <span className="avatar">{detalhe.nome.slice(0, 2).toUpperCase()}</span>
+                <div>
+                  <h2 style={{ fontSize: 15 }}>{detalhe.nome}</h2>
+                  <p className="dim" style={{ fontSize: 12 }}>{detalhe.email}</p>
+                </div>
+              </div>
+              <button className="btn btn--sm btn--fantasma" style={{ marginLeft: 'auto' }}
+                      onClick={() => setDetalhe(null)} aria-label="Fechar">✕</button>
+            </header>
+
             <div className="modal__corpo">
-              <p className="dim" style={{ marginBottom: 16 }}>{editando.email}</p>
+              <div className="flex" style={{ gap: 8, marginBottom: 20 }}>
+                <span className={`selo selo--${COR_PAPEL[detalhe.papel]}`}>
+                  {ICONE_PAPEL[detalhe.papel]} {detalhe.papel}
+                </span>
+                <span className={`selo selo--${detalhe.ativo ? 'verde' : 'cinza'}`}>
+                  {detalhe.ativo ? 'ativo' : 'bloqueado'}
+                </span>
+                <span className="dim" style={{ fontSize: 12, marginLeft: 'auto' }}>
+                  desde {dataCurta(detalhe.created_at)}
+                </span>
+              </div>
 
               <div className="campo">
-                <label htmlFor="novo-papel">Perfil de acesso</label>
-                <select id="novo-papel" defaultValue={editando.papel}
-                        disabled={editando.id === meuId}
-                        onChange={(evento) =>
-                          void salvarEdicao({ papel: evento.target.value as PapelUsuario })}>
-                  {PAPEIS.map((papel) => <option key={papel} value={papel}>{papel}</option>)}
-                </select>
-                {editando.id === meuId && (
+                <label>Trocar perfil</label>
+                <div className="perfis">
+                  {PAPEIS.map((papel) => (
+                    <button key={papel} type="button"
+                            className={`perfil ${detalhe.papel === papel ? 'perfil--ativo' : ''}`}
+                            disabled={detalhe.id === meuId || ocupado}
+                            onClick={() => void editar({ papel })}
+                            aria-pressed={detalhe.papel === papel}>
+                      <span className="perfil__icone">{ICONE_PAPEL[papel]}</span>
+                      <span className="perfil__nome">{papel}</span>
+                    </button>
+                  ))}
+                </div>
+                {detalhe.id === meuId && (
                   <span className="campo__dica">
-                    Você não pode alterar o próprio perfil — evita perder o acesso por engano.
+                    Você não pode mudar o próprio perfil — é o que impede perder o acesso por engano.
                   </span>
                 )}
               </div>
 
-              <div style={{
-                marginTop: 14, padding: 12, borderRadius: 9,
-                background: 'var(--superficie-2)', border: '1px solid var(--borda)',
-              }}>
-                <div className="lateral__grupo" style={{ padding: '0 0 6px' }}>Privilégios atuais</div>
+              <div className="previa-privilegios" style={{ marginTop: 18 }}>
+                <div className="lateral__grupo" style={{ padding: '0 0 8px' }}>
+                  Privilégios deste perfil
+                </div>
                 {PRIVILEGIOS.map((privilegio) => {
-                  const tem = privilegio.papeis.includes(editando.papel);
+                  const tem = privilegio.papeis.includes(detalhe.papel);
                   return (
-                    <div key={privilegio.chave} className="flex entre"
-                         style={{ padding: '4px 0', fontSize: 12.5, opacity: tem ? 1 : 0.45 }}>
-                      <span>{tem ? '✓' : '✕'} {privilegio.rotulo}</span>
+                    <div key={privilegio.chave} className={`priv ${tem ? '' : 'priv--nao'}`}>
+                      <span className="priv__marca">{tem ? '✓' : '✕'}</span>
+                      <div>
+                        <div>{privilegio.rotulo}</div>
+                        <div className="dim" style={{ fontSize: 11 }}>{privilegio.descricao}</div>
+                      </div>
                     </div>
                   );
                 })}
               </div>
 
-              <div className="flex" style={{ gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
+              <div className="lateral__grupo" style={{ paddingLeft: 0 }}>Ações</div>
+              <div className="flex" style={{ gap: 8, flexWrap: 'wrap' }}>
                 <button className="btn btn--sm" disabled={ocupado}
-                        onClick={() => void redefinirSenha(editando)}>
-                  Redefinir senha
+                        onClick={() => void redefinirSenha(detalhe)}>
+                  🔑 Redefinir senha
                 </button>
-                {editando.id !== meuId && (
-                  <button className={`btn btn--sm ${editando.ativo ? 'btn--perigo' : ''}`}
+                {detalhe.id !== meuId && (
+                  <button className={`btn btn--sm ${detalhe.ativo ? 'btn--perigo' : ''}`}
                           disabled={ocupado}
-                          onClick={() => void salvarEdicao({ ativo: !editando.ativo })}>
-                    {editando.ativo ? 'Bloquear acesso' : 'Reativar acesso'}
+                          onClick={() => void editar({ ativo: !detalhe.ativo })}>
+                    {detalhe.ativo ? '🚫 Bloquear acesso' : '✓ Reativar acesso'}
                   </button>
                 )}
               </div>
 
-              <div className="modal__rodape">
-                <button className="btn" onClick={() => setEditando(null)}>Fechar</button>
-              </div>
+              <p className="dim" style={{ fontSize: 11.5, marginTop: 14 }}>
+                Bloquear não apaga nada: o histórico da pessoa continua, ela só deixa de conseguir entrar.
+              </p>
             </div>
-          </div>
+          </aside>
         </div>
       )}
 
-      {/* ---------- matriz de privilégios ---------- */}
-      {verPrivilegios && (
+      {/* ---------- matriz completa ---------- */}
+      {verMatriz && (
         <div className="modal">
-          <div className="modal__fundo" onClick={() => setVerPrivilegios(false)} />
+          <div className="modal__fundo" onClick={() => setVerMatriz(false)} />
           <div className="modal__caixa modal__caixa--largo" role="dialog" aria-modal="true">
-            <header className="modal__topo"><h2>O que cada perfil pode fazer</h2></header>
+            <header className="modal__topo">
+              <h2>O que cada perfil pode fazer</h2>
+              <button className="btn btn--sm btn--fantasma" style={{ marginLeft: 'auto' }}
+                      onClick={() => setVerMatriz(false)} aria-label="Fechar">✕</button>
+            </header>
             <div className="modal__corpo">
               <div className="tabela-wrap">
                 <table>
                   <thead>
                     <tr>
                       <th>Privilégio</th>
-                      {PAPEIS.map((papel) => <th key={papel} className="num">{papel}</th>)}
+                      {PAPEIS.map((papel) => (
+                        <th key={papel} className="num">{ICONE_PAPEL[papel]} {papel}</th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody>
@@ -367,14 +512,14 @@ export function GestaoUsuarios({ usuarios, meuId }: { usuarios: Usuario[]; meuId
                 </table>
               </div>
 
-              <p className="dim" style={{ fontSize: 12, marginTop: 14 }}>
-                Estes privilégios são verificados no servidor, em cada rota da API.
-                Esconder um botão na tela não impede nada — quem chamar a API direto
-                sem o perfil correto recebe <code>403</code>.
+              <p className="dim" style={{ fontSize: 12, marginTop: 16 }}>
+                Estes privilégios são verificados <strong>no servidor</strong>, em cada rota da API.
+                Esconder um botão não impede nada: quem chamar a API sem o perfil correto
+                recebe <code>403</code>.
               </p>
 
               <div className="modal__rodape">
-                <button className="btn" onClick={() => setVerPrivilegios(false)}>Fechar</button>
+                <button className="btn" onClick={() => setVerMatriz(false)}>Fechar</button>
               </div>
             </div>
           </div>

@@ -1,12 +1,30 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useState, type FormEvent } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useState, type FormEvent } from 'react';
 
-export default function Login() {
+const DESTINO_PADRAO = '/gestao/painel';
+
+/**
+ * Só aceitamos destinos internos.
+ *
+ * Sem esta checagem, alguém poderia mandar um link com
+ * ?proximo=https://site-falso.com e usar a nossa tela de login para
+ * jogar a pessoa em outro domínio depois de autenticar — o clássico
+ * open redirect. Barrar "//" cobre o caso de URL protocolo-relativa.
+ */
+function destinoSeguro(valor: string | null): string {
+  if (!valor) return DESTINO_PADRAO;
+  if (!valor.startsWith('/') || valor.startsWith('//')) return DESTINO_PADRAO;
+  return valor;
+}
+
+function FormularioLogin() {
   const router = useRouter();
+  const parametros = useSearchParams();
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
+  const [verSenha, setVerSenha] = useState(false);
 
   async function entrar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
@@ -14,58 +32,101 @@ export default function Login() {
     setErro(null);
 
     const dados = new FormData(evento.currentTarget);
-    const resposta = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: dados.get('email'), senha: dados.get('senha') }),
-    });
 
-    if (resposta.ok) {
-      // refresh() faz os Server Components relerem a sessão do cookie
-      router.replace('/painel');
-      router.refresh();
-      return;
+    try {
+      const resposta = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: dados.get('email'), senha: dados.get('senha') }),
+      });
+
+      if (!resposta.ok) {
+        const corpo = await resposta.json().catch(() => ({}));
+        setErro(corpo.erro ?? 'Não foi possível entrar');
+        setEnviando(false);
+        return;
+      }
+
+      // Volta para onde a pessoa tentou ir antes de ser barrada.
+      router.replace(destinoSeguro(parametros.get('proximo')));
+      router.refresh();   // faz os Server Components relerem a sessão
+    } catch {
+      setErro('Servidor não respondeu. Verifique se a aplicação está rodando.');
+      setEnviando(false);
     }
-
-    const corpo = await resposta.json().catch(() => ({}));
-    setErro(corpo.erro ?? 'Não foi possível entrar');
-    setEnviando(false);
   }
 
   return (
-    <main style={{ display: 'grid', placeItems: 'center', minHeight: '100vh', padding: 20 }}>
-      <form onSubmit={entrar} style={{
-        width: 'min(380px, 100%)', display: 'flex', flexDirection: 'column', gap: 14,
-        border: '1px solid rgba(255,255,255,.1)', borderRadius: 16, padding: 28,
-      }}>
-        <h1 style={{ fontSize: 20 }}>Elo Platform</h1>
-        <p style={{ opacity: 0.6, fontSize: 13, marginBottom: 6 }}>Acesso da equipe interna</p>
+    <main className="login">
+      <div className="login__coluna">
+        <form className="login__caixa" onSubmit={entrar}>
+          <div className="login__marca">
+            <span className="login__logo" aria-hidden="true">◆</span>
+            <div>
+              <strong>Elo Platform</strong>
+              <span>área de gestão</span>
+            </div>
+          </div>
 
-        <label style={{ fontSize: 12, opacity: 0.8 }} htmlFor="email">E-mail</label>
-        <input id="email" name="email" type="email" required autoComplete="username"
-               style={campo} placeholder="voce@elo.dev" />
+          <h1 className="login__titulo">Entrar</h1>
+          <p className="login__sub">Use o e-mail cadastrado pelo administrador.</p>
 
-        <label style={{ fontSize: 12, opacity: 0.8 }} htmlFor="senha">Senha</label>
-        <input id="senha" name="senha" type="password" required autoComplete="current-password"
-               style={campo} placeholder="••••••••" />
+          <div className="campo">
+            <label htmlFor="email">E-mail</label>
+            <input id="email" name="email" type="email" required autoFocus
+                   autoComplete="username" placeholder="voce@empresa.com" />
+          </div>
 
-        {erro && <p role="alert" style={{ color: '#f87171', fontSize: 13 }}>{erro}</p>}
+          <div className="campo" style={{ marginTop: 14 }}>
+            <label htmlFor="senha">Senha</label>
+            <div className="login__senha">
+              <input id="senha" name="senha" type={verSenha ? 'text' : 'password'}
+                     required autoComplete="current-password" placeholder="••••••••" />
+              <button type="button" className="login__olho"
+                      onClick={() => setVerSenha((atual) => !atual)}
+                      aria-label={verSenha ? 'Ocultar senha' : 'Mostrar senha'}>
+                {verSenha ? '🙈' : '👁'}
+              </button>
+            </div>
+          </div>
 
-        <button type="submit" disabled={enviando} style={botao}>
-          {enviando ? 'Entrando…' : 'Entrar'}
-        </button>
-      </form>
+          {erro && (
+            <div className="login__erro" role="alert">
+              <strong>{erro}</strong>
+              <span>Confira o e-mail e a senha. Se persistir, peça ao administrador para redefinir.</span>
+            </div>
+          )}
+
+          <button className="btn btn--primario btn--bloco" type="submit"
+                  style={{ marginTop: 18 }} disabled={enviando}>
+            {enviando ? 'Entrando…' : 'Entrar'}
+          </button>
+
+          <a href="/" className="login__voltar">← Voltar para a loja</a>
+        </form>
+      </div>
+
+      <aside className="login__lado" aria-hidden="true">
+        <div className="login__lado-conteudo">
+          <h2>Uma plataforma, cinco frentes</h2>
+          <ul>
+            <li><b>Loja</b> — vitrine, carrinho e checkout</li>
+            <li><b>Gestão</b> — produtos, pedidos e clientes</li>
+            <li><b>No-Code</b> — monte o chatbot arrastando blocos</li>
+            <li><b>Atendimento</b> — fila e transferência do bot para humano</li>
+            <li><b>BI</b> — indicadores da operação em tempo real</li>
+          </ul>
+        </div>
+      </aside>
     </main>
   );
 }
 
-const campo: React.CSSProperties = {
-  padding: '10px 12px', borderRadius: 10, background: '#0a0a12',
-  border: '1px solid rgba(255,255,255,.12)', color: 'inherit', font: 'inherit',
-};
-
-const botao: React.CSSProperties = {
-  padding: '11px 16px', borderRadius: 10, border: 0, cursor: 'pointer',
-  background: 'linear-gradient(135deg,#7c5cff,#22d3ee)', color: '#fff',
-  fontWeight: 600, marginTop: 8,
-};
+export default function Login() {
+  // useSearchParams exige fronteira de Suspense no App Router.
+  return (
+    <Suspense fallback={<main className="login" />}>
+      <FormularioLogin />
+    </Suspense>
+  );
+}

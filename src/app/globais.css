@@ -491,3 +491,128 @@ select.filtro {
 .react-flow__edge.selected .react-flow__edge-path { stroke: var(--violeta); }
 .react-flow__handle { width: 9px; height: 9px; border: 2px solid var(--fundo-2); }
 .react-flow__attribution { display: none; }
+
+/* --------------------------- 11. LOGIN ----------------------------- */
+.login { display: grid; grid-template-columns: 1fr 1fr; min-height: 100vh; }
+
+.login__coluna { display: grid; place-items: center; padding: 28px; }
+
+.login__caixa {
+  width: min(400px, 100%);
+  background: var(--superficie); border: 1px solid var(--borda);
+  border-radius: var(--raio-lg); padding: 32px;
+  box-shadow: var(--sombra);
+}
+
+.login__marca { display: flex; align-items: center; gap: 11px; margin-bottom: 26px; }
+.login__logo {
+  width: 38px; height: 38px; border-radius: 10px; background: var(--grad-marca);
+  display: grid; place-items: center; color: #fff; font-size: 17px;
+}
+.login__marca strong { display: block; font-size: 14.5px; letter-spacing: -.02em; }
+.login__marca span { font-size: 11px; color: var(--texto-3); }
+
+.login__titulo { font-size: 24px; margin-bottom: 4px; }
+.login__sub { font-size: 13px; color: var(--texto-2); margin-bottom: 22px; }
+
+.login__senha { position: relative; }
+.login__senha input { padding-right: 42px; }
+.login__olho {
+  position: absolute; right: 6px; top: 50%; translate: 0 -50%;
+  background: none; border: 0; cursor: pointer; font-size: 15px;
+  padding: 6px; border-radius: 6px; line-height: 1;
+}
+.login__olho:hover { background: var(--superficie-2); }
+
+.login__erro {
+  margin-top: 14px; padding: 11px 13px; border-radius: 9px;
+  background: rgb(220 38 38 / .08); border: 1px solid rgb(220 38 38 / .25);
+}
+.login__erro strong { display: block; font-size: 13px; color: var(--vermelho); }
+.login__erro span { font-size: 11.5px; color: var(--texto-2); }
+
+.login__voltar {
+  display: block; text-align: center; margin-top: 18px;
+  font-size: 12.5px; color: var(--texto-3);
+}
+.login__voltar:hover { color: var(--texto); }
+
+.login__lado {
+  display: grid; place-items: center; padding: 40px;
+  background:
+    radial-gradient(40rem 30rem at 70% 20%, rgb(109 74 255 / .18), transparent 65%),
+    radial-gradient(34rem 26rem at 20% 80%, rgb(23 196 224 / .13), transparent 65%),
+    var(--fundo-2);
+  border-left: 1px solid var(--borda);
+}
+.login__lado-conteudo { max-width: 380px; }
+.login__lado h2 { font-size: 25px; margin-bottom: 20px; text-wrap: balance; }
+.login__lado ul { list-style: none; display: flex; flex-direction: column; gap: 13px; }
+.login__lado li {
+  font-size: 13.5px; color: var(--texto-2); padding-left: 20px; position: relative;
+}
+.login__lado li::before {
+  content: '◆'; position: absolute; left: 0; color: var(--violeta); font-size: 10px; top: 4px;
+}
+.login__lado b { color: var(--texto); font-weight: 650; }
+
+@media (max-width: 900px) {
+  .login { grid-template-columns: 1fr; }
+  .login__lado { display: none; }
+}
+
+/* --------------------------- 12. USUÁRIOS -------------------------- */
+/* Escolha de perfil como cartões: o privilégio fica visível antes de decidir,
+   em vez de escondido atrás de um <select>. */
+.perfis { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 8px; }
+
+.perfil {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 3px;
+  padding: 11px 12px; border-radius: 10px; cursor: pointer; text-align: left;
+  border: 1.5px solid var(--borda); background: var(--superficie);
+  transition: var(--transicao);
+}
+.perfil:hover:not(:disabled) { border-color: var(--borda-forte); transform: translateY(-1px); }
+.perfil:disabled { opacity: .5; cursor: not-allowed; }
+.perfil--ativo {
+  border-color: var(--violeta);
+  background: linear-gradient(135deg, rgb(109 74 255 / .12), transparent);
+  box-shadow: 0 0 0 3px rgb(109 74 255 / .12);
+}
+.perfil__icone { font-size: 15px; }
+.perfil__nome { font-size: 12.5px; font-weight: 600; text-transform: capitalize; }
+.perfil__qtd { font-size: 10.5px; color: var(--texto-3); font-variant-numeric: tabular-nums; }
+
+.previa-privilegios {
+  margin-top: 14px; padding: 13px 14px; border-radius: 10px;
+  background: var(--superficie-2); border: 1px solid var(--borda);
+}
+
+.priv { display: flex; align-items: flex-start; gap: 9px; padding: 4px 0; font-size: 12.5px; }
+.priv__marca { color: var(--verde); font-weight: 700; width: 12px; flex: 0 0 auto; }
+.priv--nao { opacity: .42; }
+.priv--nao .priv__marca { color: var(--texto-3); }
+
+.senha-caixa {
+  padding: 16px; border-radius: 10px; text-align: center;
+  background: var(--superficie-2); border: 1px dashed var(--borda-forte);
+}
+.senha-caixa__valor {
+  font-family: var(--mono); font-size: 21px; letter-spacing: .05em;
+  margin: 8px 0 12px; word-break: break-all;
+}
+
+/* Painel lateral: mantém a lista visível enquanto se gerencia uma pessoa */
+.painel-lateral {
+  position: fixed; right: 0; top: 0; bottom: 0; z-index: 1;
+  width: min(440px, 100%); display: flex; flex-direction: column;
+  background: var(--fundo-2); border-left: 1px solid var(--borda-forte);
+  box-shadow: var(--sombra-lg);
+  animation: entrar-lateral 220ms cubic-bezier(.2, .9, .3, 1.02);
+}
+@keyframes entrar-lateral { from { transform: translateX(28px); opacity: 0; } }
+
+@media (max-width: 560px) {
+  .painel-lateral { width: 100%; }
+  .perfis { grid-template-columns: repeat(2, 1fr); }
+}
