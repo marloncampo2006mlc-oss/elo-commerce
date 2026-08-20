@@ -2,12 +2,15 @@ import { catalogoService } from '@/modules/catalogo/catalogo.service';
 import { listarProdutosSchema } from '@/modules/catalogo/catalogo.schema';
 import { BarraGestao } from '@/components/BarraGestao';
 import { TabelaProdutos } from '@/components/gestao/TabelaProdutos';
+import { exigirAcesso } from '@/lib/guardaPagina';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ProdutosGestao({
   searchParams,
 }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  await exigirAcesso('catalogo.ver');
+
   const parametros = await searchParams;
   const filtros = listarProdutosSchema.parse({
     busca: parametros.busca,

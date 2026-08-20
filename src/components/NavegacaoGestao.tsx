@@ -2,38 +2,24 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { GRUPOS, paginasPermitidas } from '@/lib/paginas';
 import type { SessaoUsuario } from '@/lib/sessao';
 
-const SECOES = [
-  {
-    titulo: 'Operação',
-    itens: [
-      { href: '/gestao/painel',   icone: '◈', rotulo: 'Painel' },
-      { href: '/gestao/produtos', icone: '▤', rotulo: 'Produtos' },
-      { href: '/gestao/pedidos',  icone: '▦', rotulo: 'Pedidos' },
-      { href: '/gestao/clientes', icone: '◍', rotulo: 'Clientes' },
-    ],
-  },
-  {
-    titulo: 'Atendimento',
-    itens: [
-      { href: '/gestao/no-code',     icone: '⬡', rotulo: 'No-Code' },
-      { href: '/gestao/atendimento', icone: '◐', rotulo: 'Atendimento' },
-    ],
-  },
-  {
-    titulo: 'Análise',
-    itens: [{ href: '/gestao/bi', icone: '◔', rotulo: 'BI / Supervisão' }],
-  },
-  {
-    titulo: 'Administração',
-    itens: [{ href: '/gestao/usuarios', icone: '◍', rotulo: 'Usuários' }],
-  },
-];
-
-export function NavegacaoGestao({ usuario }: { usuario: SessaoUsuario }) {
+/**
+ * Menu da gestão, montado a partir dos privilégios efetivos da pessoa.
+ *
+ * Esconder um item aqui é conveniência, não segurança: quem digitar a
+ * URL direto ainda é barrado pela guarda da própria página. Mas mostrar
+ * um menu que leva a um bloqueio é uma experiência ruim — o menu deve
+ * refletir o que a pessoa realmente alcança.
+ */
+export function NavegacaoGestao({ usuario, privilegios }: {
+  usuario: SessaoUsuario;
+  privilegios: string[];
+}) {
   const caminho = usePathname();
   const router = useRouter();
+  const permitidas = paginasPermitidas(privilegios);
 
   async function sair() {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -43,7 +29,7 @@ export function NavegacaoGestao({ usuario }: { usuario: SessaoUsuario }) {
 
   return (
     <aside className="lateral">
-      <Link href="/gestao/painel" className="lateral__marca">
+      <Link href={permitidas[0]?.href ?? '/'} className="lateral__marca">
         <span className="avatar" aria-hidden="true">◆</span>
         <span>
           <strong>Elo Platform</strong>
@@ -52,22 +38,27 @@ export function NavegacaoGestao({ usuario }: { usuario: SessaoUsuario }) {
       </Link>
 
       <nav className="lateral__nav" aria-label="Navegação da gestão">
-        {SECOES.map((secao) => (
-          <div key={secao.titulo}>
-            <div className="lateral__grupo">{secao.titulo}</div>
-            {secao.itens.map((item) => {
-              const ativo = caminho === item.href || caminho.startsWith(`${item.href}/`);
-              return (
-                <Link key={item.href} href={item.href}
-                      className={`lateral__item ${ativo ? 'lateral__item--ativo' : ''}`}
-                      aria-current={ativo ? 'page' : undefined}>
-                  <span className="lateral__icone" aria-hidden="true">{item.icone}</span>
-                  {item.rotulo}
-                </Link>
-              );
-            })}
-          </div>
-        ))}
+        {GRUPOS.map((grupo) => {
+          const itens = permitidas.filter((pagina) => pagina.grupo === grupo);
+          if (itens.length === 0) return null;   // grupo vazio não vira título órfão
+
+          return (
+            <div key={grupo}>
+              <div className="lateral__grupo">{grupo}</div>
+              {itens.map((pagina) => {
+                const ativo = caminho === pagina.href || caminho.startsWith(`${pagina.href}/`);
+                return (
+                  <Link key={pagina.href} href={pagina.href}
+                        className={`lateral__item ${ativo ? 'lateral__item--ativo' : ''}`}
+                        aria-current={ativo ? 'page' : undefined}>
+                    <span className="lateral__icone" aria-hidden="true">{pagina.icone}</span>
+                    {pagina.rotulo}
+                  </Link>
+                );
+              })}
+            </div>
+          );
+        })}
       </nav>
 
       <div className="lateral__rodape">
@@ -78,7 +69,9 @@ export function NavegacaoGestao({ usuario }: { usuario: SessaoUsuario }) {
 
         <div style={{ padding: '8px 11px' }}>
           <div style={{ fontSize: 12.5, fontWeight: 600 }}>{usuario.nome}</div>
-          <div className="dim" style={{ fontSize: 11 }}>{usuario.papel}</div>
+          <div className="dim" style={{ fontSize: 11 }}>
+            {usuario.papel} · {privilegios.length} privilégio(s)
+          </div>
         </div>
 
         <button className="btn btn--sm" onClick={() => void sair()}>Sair</button>

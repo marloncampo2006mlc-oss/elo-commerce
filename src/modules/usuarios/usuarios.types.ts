@@ -32,7 +32,7 @@ export const PRIVILEGIOS: Privilegio[] = [
     chave: 'catalogo.ver',
     rotulo: 'Ver catálogo',
     descricao: 'Consultar produtos, preços e estoque',
-    papeis: ['administrador', 'gerente', 'supervisor', 'atendente'],
+    papeis: ['administrador', 'gerente', 'supervisor'],
   },
   {
     chave: 'catalogo.editar',
@@ -50,7 +50,7 @@ export const PRIVILEGIOS: Privilegio[] = [
     chave: 'pedidos.ver',
     rotulo: 'Ver pedidos',
     descricao: 'Consultar pedidos e seus itens',
-    papeis: ['administrador', 'gerente', 'supervisor', 'atendente'],
+    papeis: ['administrador', 'gerente', 'supervisor'],
   },
   {
     chave: 'pedidos.avancar',
@@ -62,7 +62,7 @@ export const PRIVILEGIOS: Privilegio[] = [
     chave: 'clientes.ver',
     rotulo: 'Ver clientes',
     descricao: 'Consultar a base de clientes e o histórico de compras',
-    papeis: ['administrador', 'gerente', 'supervisor', 'atendente'],
+    papeis: ['administrador', 'gerente', 'supervisor'],
   },
   {
     chave: 'clientes.editar',
@@ -79,8 +79,8 @@ export const PRIVILEGIOS: Privilegio[] = [
   {
     chave: 'bots.editar',
     rotulo: 'Editar chatbots',
-    descricao: 'Montar fluxos no No-Code e salvar rascunhos',
-    papeis: ['administrador', 'gerente'],
+    descricao: 'Montar fluxos no No-Code, salvar rascunhos e testar',
+    papeis: ['administrador', 'gerente', 'atendente'],
   },
   {
     chave: 'bots.publicar',
@@ -106,7 +106,7 @@ export const DESCRICAO_PAPEL: Record<PapelUsuario, string> = {
   administrador: 'Acesso completo, incluindo gestão de usuários',
   gerente: 'Opera a loja e os chatbots, mas não gerencia pessoas',
   supervisor: 'Acompanha indicadores e atende, sem alterar o catálogo',
-  atendente: 'Atende clientes na fila e consulta informações',
+  atendente: 'Atende a fila e monta fluxos; não vê faturamento nem cadastros',
 };
 
 export const PAPEIS: PapelUsuario[] = ['administrador', 'gerente', 'supervisor', 'atendente'];

@@ -3,6 +3,7 @@ import { listarClientesSchema } from '@/modules/clientes/clientes.schema';
 import { BarraGestao } from '@/components/BarraGestao';
 import { moeda } from '@/lib/formato';
 import { SeloStatus } from '@/components/SeloStatus';
+import { exigirAcesso } from '@/lib/guardaPagina';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,6 +11,8 @@ const cpfFormatado = (cpf: string) =>
   cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
 
 export default async function ClientesGestao() {
+  await exigirAcesso('clientes.ver');
+
   const pagina = await clientesService.listar(
     listarClientesSchema.parse({ limite: 30, ordem: 'gasto' }),
   );

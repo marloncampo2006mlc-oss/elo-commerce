@@ -2,12 +2,15 @@ import { indicadoresService } from '@/modules/indicadores/indicadores.service';
 import { filtroSchema, intervaloSql } from '@/modules/indicadores/indicadores.schema';
 import { BarraGestao } from '@/components/BarraGestao';
 import { PainelBI } from '@/components/gestao/PainelBI';
+import { exigirAcesso } from '@/lib/guardaPagina';
 
 export const dynamic = 'force-dynamic';
 
 export default async function BI({
   searchParams,
 }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  await exigirAcesso('bi.ver');
+
   const parametros = await searchParams;
   const { periodo } = filtroSchema.parse({ periodo: parametros.periodo });
 

@@ -1,11 +1,15 @@
 import { redirect } from 'next/navigation';
+import { carregarAcesso } from '@/lib/guardaPagina';
+import { primeiraPaginaPermitida } from '@/lib/paginas';
 
 /**
- * /gestao não é uma tela — é a porta de entrada da área.
+ * /gestao é a porta de entrada, não uma tela.
  *
- * Sem isto, quem digita apenas "/gestao" recebe 404, que é exatamente o
- * caminho que uma pessoa tenta primeiro.
+ * O destino depende do perfil: mandar todo mundo para o painel jogaria
+ * um atendente — que não tem `bi.ver` — direto num bloqueio logo após o
+ * login.
  */
-export default function EntradaGestao() {
-  redirect('/gestao/painel');
+export default async function EntradaGestao() {
+  const { privilegios } = await carregarAcesso();
+  redirect(primeiraPaginaPermitida(privilegios) ?? '/gestao/sem-acesso');
 }

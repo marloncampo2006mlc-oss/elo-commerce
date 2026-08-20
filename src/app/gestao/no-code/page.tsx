@@ -2,10 +2,13 @@ import Link from 'next/link';
 import { botsService } from '@/modules/bots/bots.service';
 import { BarraGestao } from '@/components/BarraGestao';
 import { NovoBot } from '@/components/nocode/NovoBot';
+import { exigirAcesso } from '@/lib/guardaPagina';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ListaBots() {
+  await exigirAcesso('bots.editar');
+
   const bots = await botsService.listar();
 
   return (

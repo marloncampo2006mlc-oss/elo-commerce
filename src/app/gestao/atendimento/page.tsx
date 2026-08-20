@@ -1,10 +1,13 @@
 import { atendimentoService } from '@/modules/atendimento/atendimento.service';
 import { BarraGestao } from '@/components/BarraGestao';
 import { Desk } from '@/components/gestao/Desk';
+import { exigirAcesso } from '@/lib/guardaPagina';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Atendimento() {
+  await exigirAcesso('atendimento.atender');
+
   const [fila, historico] = await Promise.all([
     atendimentoService.fila(),
     atendimentoService.historico(20),

@@ -6,10 +6,13 @@ import { atendimentoService } from '@/modules/atendimento/atendimento.service';
 import { BarraGestao } from '@/components/BarraGestao';
 import { moeda } from '@/lib/formato';
 import { SeloStatus } from '@/components/SeloStatus';
+import { exigirAcesso } from '@/lib/guardaPagina';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Painel() {
+  await exigirAcesso('bi.ver');
+
   const [dados, pedidos, fila] = await Promise.all([
     indicadoresService.completo('30dias'),
     pedidosService.listar(listarPedidosSchema.parse({ limite: 6 })),
