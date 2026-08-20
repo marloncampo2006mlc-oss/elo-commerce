@@ -6,6 +6,13 @@ Construída sobre Next.js, TypeScript e PostgreSQL, sem ORM: todo SQL é escrito
 
 > Esta é a branch `elo-platform`. A branch `main` mantém a versão anterior (Express + JavaScript puro), publicada e funcionando.
 
+## Documentação
+
+| Documento | Para quê |
+|---|---|
+| [Arquitetura](docs/ARQUITETURA.md) | como o projeto está organizado e por que cada decisão foi tomada |
+| [Guia de apresentação](docs/APRESENTACAO.md) | roteiro de demo, defesa do código e perguntas prováveis |
+
 ## O ciclo que o projeto demonstra
 
 ```
@@ -104,6 +111,7 @@ Acesse **http://localhost:3000**. O comando `db:usuarios` imprime as senhas gera
 | `npm run db:migrate` | aplica migrations pendentes |
 | `npm run db:reset` | recria tudo do zero (recusa rodar contra banco remoto) |
 | `npm run db:bot` | cria e publica o chatbot inicial |
+| `npm run db:senha -- email senha` | redefine a senha de um usuário |
 | `npm test` | roda a suíte de testes |
 | `npm run typecheck` | verificação de tipos |
 
