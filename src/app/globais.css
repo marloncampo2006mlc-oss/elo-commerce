@@ -180,79 +180,6 @@ td.acoes { text-align: right; white-space: nowrap; }
 }
 @keyframes brilhar { to { background-position: -200% 0; } }
 
-/* --------------------------- 5. GESTÃO ----------------------------- */
-.gestao { display: grid; grid-template-columns: 236px 1fr; min-height: 100vh; }
-
-.lateral {
-  position: sticky; top: 0; height: 100vh; overflow-y: auto;
-  display: flex; flex-direction: column; padding: 20px 14px;
-  background: var(--fundo-2); border-right: 1px solid var(--borda); z-index: 40;
-}
-.lateral__marca { display: flex; align-items: center; gap: 11px; padding: 4px 8px 22px; }
-.lateral__marca strong { font-size: 14.5px; letter-spacing: -.02em; display: block; }
-.lateral__marca span { font-size: 10.5px; color: var(--texto-3); }
-
-.lateral__nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
-.lateral__grupo {
-  font-size: 10px; text-transform: uppercase; letter-spacing: .13em;
-  color: var(--texto-3); padding: 16px 10px 6px; font-weight: 700;
-}
-.lateral__item {
-  display: flex; align-items: center; gap: 10px; padding: 9px 11px; border-radius: 8px;
-  color: var(--texto-2); font-weight: 500; font-size: 13.5px; transition: var(--transicao);
-  position: relative;
-}
-.lateral__item:hover { background: var(--superficie-2); color: var(--texto); }
-.lateral__item--ativo {
-  background: linear-gradient(90deg, rgb(109 74 255 / .16), rgb(109 74 255 / .03));
-  color: var(--texto); font-weight: 600;
-}
-.lateral__item--ativo::after {
-  content: ''; position: absolute; left: -14px; top: 50%; translate: 0 -50%;
-  width: 3px; height: 18px; border-radius: 0 3px 3px 0; background: var(--violeta);
-}
-.lateral__icone { width: 18px; text-align: center; font-size: 14px; opacity: .85; }
-.lateral__rodape { border-top: 1px solid var(--borda); padding-top: 14px; display: flex; flex-direction: column; gap: 8px; }
-
-.conteudo { display: flex; flex-direction: column; min-width: 0; }
-
-.barra {
-  position: sticky; top: 0; z-index: 30;
-  display: flex; align-items: center; gap: 16px; padding: 16px 26px;
-  background: color-mix(in srgb, var(--fundo) 85%, transparent);
-  backdrop-filter: blur(14px); border-bottom: 1px solid var(--borda);
-}
-.barra h1 { font-size: 19px; }
-.barra p { font-size: 12.5px; color: var(--texto-3); }
-.barra__acoes { margin-left: auto; display: flex; align-items: center; gap: 10px; }
-
-.pagina { padding: 24px 26px 80px; max-width: 1440px; width: 100%; }
-
-.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
-.kpi { position: relative; overflow: hidden; padding: 17px 18px; border-radius: var(--raio); border: 1px solid var(--borda); background: var(--superficie); }
-.kpi::after { content: ''; position: absolute; inset: 0 auto auto 0; width: 100%; height: 2px; background: var(--grad-marca); opacity: .8; }
-.kpi__rotulo { font-size: 11px; color: var(--texto-3); text-transform: uppercase; letter-spacing: .08em; font-weight: 700; }
-.kpi__valor { font-size: 26px; font-weight: 700; letter-spacing: -.03em; margin: 5px 0 2px; font-variant-numeric: tabular-nums; }
-.kpi__nota { font-size: 12px; color: var(--texto-2); }
-.kpi__icone { position: absolute; right: 14px; top: 14px; font-size: 20px; opacity: .18; }
-
-.lista { display: flex; flex-direction: column; }
-.lista__item { display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-bottom: 1px solid var(--borda); }
-.lista__item:last-child { border-bottom: 0; }
-.lista__txt { flex: 1; min-width: 0; }
-.lista__txt strong { display: block; font-size: 13px; font-weight: 550; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.lista__txt span { font-size: 11.5px; color: var(--texto-3); }
-.lista__valor { font-size: 13px; font-weight: 650; font-variant-numeric: tabular-nums; }
-
-.mini {
-  width: 40px; height: 40px; border-radius: 9px; overflow: hidden; flex: 0 0 auto;
-  border: 1px solid var(--borda); background: var(--superficie-2); display: grid; place-items: center;
-}
-.mini img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.3); }
-
-.barra-prog { height: 5px; border-radius: var(--raio-full); background: var(--superficie-2); overflow: hidden; margin-top: 5px; }
-.barra-prog i { display: block; height: 100%; background: var(--grad-marca); }
-
 /* --------------------------- 6. MODAL / TOAST ---------------------- */
 .modal { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 20px; }
 .modal__fundo { position: absolute; inset: 0; background: rgb(8 11 20 / .55); backdrop-filter: blur(3px); }
@@ -872,3 +799,269 @@ select.filtro:hover { border-color: var(--borda-forte); }
   .loja__conteudo { padding: 20px 18px 80px; }
   .filtro-botao { margin-left: 0; }
 }
+
+/* ===================================================================
+   18. GESTÃO — estrutura
+   =================================================================== */
+.gestao {
+  display: grid; grid-template-columns: 248px 1fr; min-height: 100vh;
+  background:
+    radial-gradient(46rem 30rem at 78% -6%, rgb(109 74 255 / .10), transparent 62%),
+    var(--fundo);
+}
+
+/* --------------------------- lateral ------------------------------- */
+.lateral {
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  display: flex; flex-direction: column; padding: 20px 14px 18px;
+  background: var(--fundo-2); border-right: 1px solid var(--borda); z-index: 40;
+}
+
+.lateral__marca { display: flex; align-items: center; gap: 11px; padding: 4px 8px 24px; }
+.lateral__logo {
+  width: 36px; height: 36px; border-radius: 11px; flex: 0 0 auto;
+  display: grid; place-items: center; color: #fff; font-size: 15px;
+  background: var(--grad-marca);
+  box-shadow: 0 6px 18px -7px rgb(109 74 255 / .8);
+}
+.lateral__marca strong { display: block; font-size: 14px; letter-spacing: -.02em; }
+.lateral__marca span span { font-size: 10.5px; color: var(--texto-3); }
+
+.lateral__nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.lateral__grupo {
+  font-size: 10px; text-transform: uppercase; letter-spacing: .14em;
+  color: var(--texto-3); padding: 18px 10px 7px; font-weight: 700;
+}
+
+.lateral__item {
+  position: relative; display: flex; align-items: center; gap: 11px;
+  padding: 9px 11px; border-radius: 9px;
+  color: var(--texto-2); font-weight: 500; font-size: 13.5px;
+  transition: var(--transicao);
+}
+.lateral__item:hover { background: var(--superficie-2); color: var(--texto); }
+.lateral__item--ativo {
+  background: linear-gradient(90deg, rgb(109 74 255 / .18), rgb(109 74 255 / .03));
+  color: var(--texto); font-weight: 600;
+}
+/* Faixa lateral marca a página aberta sem depender só da cor de fundo. */
+.lateral__item--ativo::after {
+  content: ''; position: absolute; left: -14px; top: 50%; translate: 0 -50%;
+  width: 3px; height: 20px; border-radius: 0 3px 3px 0; background: var(--grad-marca);
+}
+.lateral__icone { display: grid; place-items: center; width: 20px; flex: 0 0 auto; opacity: .9; }
+.lateral__item--ativo .lateral__icone { color: var(--violeta-claro); opacity: 1; }
+
+.lateral__rodape {
+  border-top: 1px solid var(--borda); padding-top: 14px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.lateral__perfil { display: flex; align-items: center; gap: 10px; padding: 6px 8px; }
+.lateral__avatar {
+  width: 32px; height: 32px; border-radius: 9px; flex: 0 0 auto;
+  display: grid; place-items: center; color: #fff;
+  font-size: 11.5px; font-weight: 700; background: var(--grad-marca);
+}
+.lateral__perfil-texto { min-width: 0; }
+.lateral__perfil-texto strong {
+  display: block; font-size: 12.5px; font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.lateral__perfil-texto span { font-size: 10.5px; color: var(--texto-3); }
+
+/* --------------------------- barra e página ------------------------ */
+.conteudo { display: flex; flex-direction: column; min-width: 0; }
+
+.barra {
+  position: sticky; top: 0; z-index: 30;
+  display: flex; align-items: center; gap: 16px; padding: 18px 28px;
+  background: color-mix(in srgb, var(--fundo) 84%, transparent);
+  backdrop-filter: blur(16px); border-bottom: 1px solid var(--borda);
+}
+.barra h1 { font-size: 21px; letter-spacing: -.025em; }
+.barra p { font-size: 12.5px; color: var(--texto-3); margin-top: 2px; }
+.barra__acoes { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+
+.pagina { padding: 26px 28px 90px; max-width: 1500px; width: 100%; }
+
+/* --------------------------- indicadores --------------------------- */
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(226px, 1fr)); gap: 16px; }
+
+.indicador {
+  position: relative; overflow: hidden;
+  padding: 18px 19px 19px; border-radius: var(--raio-lg);
+  border: 1px solid var(--borda); background: var(--superficie);
+  transition: var(--transicao);
+}
+.indicador:hover { border-color: var(--borda-forte); transform: translateY(-2px); }
+
+/* Faixa superior colorida: identifica o indicador de relance, e o tom
+   diferencia sem depender de ler o rótulo. */
+.indicador::before {
+  content: ''; position: absolute; inset: 0 0 auto 0; height: 3px;
+  background: var(--tom-faixa, var(--grad-marca));
+}
+/* Brilho suave no canto, ecoando o tratamento da vitrine. */
+.indicador::after {
+  content: ''; position: absolute; right: -30px; top: -30px;
+  width: 120px; height: 120px; border-radius: 50%;
+  background: var(--tom-brilho, rgb(109 74 255 / .1)); filter: blur(20px);
+  pointer-events: none;
+}
+
+.indicador--violeta  { --tom-faixa: linear-gradient(90deg, #6d4aff, #a78bfa); --tom-brilho: rgb(109 74 255 / .12); }
+.indicador--ciano    { --tom-faixa: linear-gradient(90deg, #17c4e0, #6ee7f5); --tom-brilho: rgb(23 196 224 / .12); }
+.indicador--verde    { --tom-faixa: linear-gradient(90deg, #16a34a, #4ade80); --tom-brilho: rgb(22 163 74 / .12); }
+.indicador--ambar    { --tom-faixa: linear-gradient(90deg, #d97706, #fbbf24); --tom-brilho: rgb(217 119 6 / .12); }
+.indicador--vermelho { --tom-faixa: linear-gradient(90deg, #dc2626, #f87171); --tom-brilho: rgb(220 38 38 / .12); }
+
+.indicador__topo { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.indicador__rotulo {
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: .11em;
+  color: var(--texto-3); font-weight: 700;
+}
+.indicador__icone {
+  margin-left: auto; display: grid; place-items: center;
+  width: 32px; height: 32px; border-radius: 9px;
+  background: var(--superficie-2); border: 1px solid var(--borda); color: var(--texto-2);
+}
+.indicador__valor {
+  font-size: 27px; font-weight: 700; letter-spacing: -.035em;
+  font-variant-numeric: tabular-nums; line-height: 1.1;
+}
+.indicador__nota { font-size: 12px; color: var(--texto-2); margin-top: 5px; }
+
+/* --------------------------- listas e cartões ---------------------- */
+.cartao {
+  background: var(--superficie); border: 1px solid var(--borda);
+  border-radius: var(--raio-lg);
+}
+.cartao--pad { padding: 22px; }
+
+.cartao__topo {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 20px; border-bottom: 1px solid var(--borda);
+}
+.cartao__topo h3 { font-size: 14.5px; letter-spacing: -.015em; }
+.cartao__topo p { font-size: 12px; color: var(--texto-3); margin-top: 1px; }
+.cartao__topo .direita { margin-left: auto; }
+
+.lista { display: flex; flex-direction: column; }
+.lista__item {
+  display: flex; align-items: center; gap: 13px;
+  padding: 13px 20px; border-bottom: 1px solid var(--borda);
+  transition: background var(--transicao);
+}
+.lista__item:last-child { border-bottom: 0; }
+.lista__item:hover { background: var(--superficie-2); }
+.lista__txt { flex: 1; min-width: 0; }
+.lista__txt strong {
+  display: block; font-size: 13px; font-weight: 550;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.lista__txt span { font-size: 11.5px; color: var(--texto-3); }
+.lista__valor { font-size: 13.5px; font-weight: 650; font-variant-numeric: tabular-nums; }
+
+.mini {
+  width: 42px; height: 42px; border-radius: 10px; overflow: hidden; flex: 0 0 auto;
+  border: 1px solid var(--borda); display: grid; place-items: center;
+  background: radial-gradient(circle at 50% 42%, rgb(190 205 255 / .16), transparent 70%);
+}
+.mini img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.28); }
+
+.barra-prog { height: 5px; border-radius: var(--raio-full); background: var(--superficie-2); overflow: hidden; margin-top: 6px; }
+.barra-prog i { display: block; height: 100%; background: var(--grad-marca); border-radius: inherit; }
+
+@media (max-width: 900px) {
+  .gestao { grid-template-columns: 1fr; }
+  .lateral {
+    position: fixed; left: 0; top: 0; width: 248px; translate: -100% 0;
+    transition: translate var(--transicao);
+  }
+  .lateral--aberta { translate: 0 0; box-shadow: var(--sombra-lg); }
+  .pagina, .barra { padding-left: 18px; padding-right: 18px; }
+}
+
+/* Link em forma de botão, para usar dentro de textos de indicador */
+.ligacao {
+  background: none; border: 0; padding: 0; cursor: pointer;
+  font: inherit; color: var(--violeta-claro); text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.ligacao:hover { color: var(--ciano); }
+
+/* ===================================================================
+   19. GESTÃO — tabelas, vazios e filtros
+   =================================================================== */
+.tabela-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+
+thead th {
+  text-align: left; padding: 13px 20px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--texto-3); white-space: nowrap;
+  background: var(--superficie-2); border-bottom: 1px solid var(--borda);
+}
+thead th:first-child { border-top-left-radius: var(--raio-lg); }
+thead th:last-child { border-top-right-radius: var(--raio-lg); }
+
+tbody td { padding: 14px 20px; border-bottom: 1px solid var(--borda); font-size: 13.5px; vertical-align: middle; }
+tbody tr:last-child td { border-bottom: 0; }
+tbody tr { transition: background var(--transicao); }
+tbody tr:hover { background: var(--superficie-2); }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+td.acoes { text-align: right; white-space: nowrap; }
+
+/* Avatar com cor derivada do nome, para diferenciar linhas de relance */
+.avatar {
+  width: 36px; height: 36px; border-radius: 10px; flex: 0 0 auto;
+  display: grid; place-items: center; color: #fff;
+  font-size: 12px; font-weight: 700; letter-spacing: -.01em;
+  background: var(--grad-marca);
+}
+
+.vazio { text-align: center; padding: 58px 24px; color: var(--texto-3); }
+.vazio__icone {
+  width: 56px; height: 56px; margin: 0 auto 14px;
+  display: grid; place-items: center; border-radius: 16px;
+  background: var(--superficie-2); border: 1px solid var(--borda);
+  color: var(--texto-3);
+}
+.vazio strong { display: block; font-size: 14.5px; color: var(--texto); }
+.vazio p { font-size: 12.5px; margin-top: 5px; }
+
+.filtros { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 20px; }
+
+/* ===================================================================
+   20. NO-CODE — lista de fluxos
+   =================================================================== */
+.grade-bots { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 18px; }
+
+.bot-cartao {
+  position: relative; overflow: hidden; display: block;
+  padding: 20px; border-radius: var(--raio-lg);
+  border: 1px solid var(--borda); background: var(--superficie);
+  transition: var(--transicao);
+}
+.bot-cartao:hover {
+  transform: translateY(-3px); border-color: var(--borda-forte);
+  box-shadow: 0 18px 38px -22px rgb(0 0 0 / .7);
+}
+.bot-cartao::after {
+  content: ''; position: absolute; right: -34px; top: -34px;
+  width: 120px; height: 120px; border-radius: 50%;
+  background: rgb(109 74 255 / .1); filter: blur(22px); pointer-events: none;
+}
+
+.bot-cartao__topo { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+.bot-cartao__icone {
+  width: 40px; height: 40px; border-radius: 11px; flex: 0 0 auto;
+  display: grid; place-items: center; color: #fff; background: var(--grad-marca);
+  box-shadow: 0 6px 16px -7px rgb(109 74 255 / .85);
+}
+.bot-cartao__nome { font-size: 15px; font-weight: 650; letter-spacing: -.015em; }
+.bot-cartao__desc {
+  font-size: 12.5px; color: var(--texto-3); line-height: 1.5; min-height: 38px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.bot-cartao__selos { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 14px; }

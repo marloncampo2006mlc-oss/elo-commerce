@@ -3,6 +3,10 @@
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { Modal } from '@/components/Modal';
+import { Indicador } from './Indicador';
+import {
+  IconeBuscaG, IconeChave, IconeEngrenagem, IconeEscudoCheck, IconeMais, IconeUsuarios,
+} from '@/components/Icones';
 import { EditorUsuario, COR_PAPEL, ICONE_PAPEL } from './EditorUsuario';
 import { useToast } from '@/components/Toasts';
 import { dataCurta } from '@/lib/formato';
@@ -97,47 +101,37 @@ export function GestaoUsuarios({ usuarios, meuId }: { usuarios: Usuario[]; meuId
   return (
     <>
       {/* ---------- panorama ---------- */}
-      <section className="kpis" style={{ marginBottom: 18 }}>
-        <div className="kpi">
-          <span className="kpi__icone">👥</span>
-          <div className="kpi__rotulo">Com acesso</div>
-          <div className="kpi__valor">{ativos}</div>
-          <div className="kpi__nota">
-            {usuarios.length - ativos > 0
-              ? `${usuarios.length - ativos} bloqueado(s)`
-              : 'nenhum bloqueado'}
-          </div>
-        </div>
-        <div className="kpi">
-          <span className="kpi__icone">🛡</span>
-          <div className="kpi__rotulo">Administradores</div>
-          <div className="kpi__valor">{admins}</div>
-          <div className="kpi__nota">
-            {admins === 1 ? 'só um — considere ter outro' : 'acesso total à plataforma'}
-          </div>
-        </div>
-        <div className="kpi">
-          <span className="kpi__icone">🔑</span>
-          <div className="kpi__rotulo">Nunca entraram</div>
-          <div className="kpi__valor">{nuncaEntraram}</div>
-          <div className="kpi__nota">aguardando o primeiro acesso</div>
-        </div>
-        <div className="kpi">
-          <span className="kpi__icone">⚙</span>
-          <div className="kpi__rotulo">Perfis disponíveis</div>
-          <div className="kpi__valor">{PAPEIS.length}</div>
-          <div className="kpi__nota">
-            <button className="btn btn--sm btn--fantasma" style={{ padding: 0 }}
-                    onClick={() => setVerMatriz(true)}>
+      <section className="kpis" style={{ marginBottom: 20 }}>
+        <Indicador
+          rotulo="Com acesso" tom="violeta" icone={<IconeUsuarios tamanho={20} />}
+          valor={ativos}
+          nota={usuarios.length - ativos > 0
+            ? `${usuarios.length - ativos} bloqueado(s)`
+            : 'nenhum bloqueado'} />
+
+        <Indicador
+          rotulo="Administradores" tom={admins === 1 ? 'ambar' : 'verde'}
+          icone={<IconeEscudoCheck />} valor={admins}
+          nota={admins === 1 ? 'só um — considere ter outro' : 'acesso total à plataforma'} />
+
+        <Indicador
+          rotulo="Nunca entraram" tom="ciano" icone={<IconeChave />}
+          valor={nuncaEntraram} nota="aguardando o primeiro acesso" />
+
+        <Indicador
+          rotulo="Perfis disponíveis" tom="verde" icone={<IconeEngrenagem />}
+          valor={PAPEIS.length}
+          nota={
+            <button className="ligacao" onClick={() => setVerMatriz(true)}>
               ver o que cada um pode →
             </button>
-          </div>
-        </div>
+          } />
       </section>
 
       {/* ---------- barra de ferramentas ---------- */}
       <div className="filtros">
-        <div className="busca">
+        <div className="campo-busca">
+          <span className="campo-busca__icone"><IconeBuscaG /></span>
           <input value={busca} onChange={(evento) => setBusca(evento.target.value)}
                  placeholder="Buscar por nome ou e-mail…" aria-label="Buscar usuário" />
         </div>
@@ -157,7 +151,7 @@ export function GestaoUsuarios({ usuarios, meuId }: { usuarios: Usuario[]; meuId
                   setForm({ nome: '', email: '', papel: 'atendente', senha: gerarSenha() });
                   setCriando(true);
                 }}>
-          ＋ Novo usuário
+          <IconeMais /> Novo usuário
         </button>
       </div>
 
@@ -165,7 +159,7 @@ export function GestaoUsuarios({ usuarios, meuId }: { usuarios: Usuario[]; meuId
       <div className="cartao">
         {filtrados.length === 0 ? (
           <div className="vazio">
-            <div className="vazio__icone">🔎</div>
+            <div className="vazio__icone"><IconeBuscaG tamanho={26} /></div>
             <strong>Ninguém encontrado</strong>
             <p style={{ marginTop: 6 }}>Ajuste a busca ou o filtro de perfil.</p>
           </div>

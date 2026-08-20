@@ -6,6 +6,10 @@ import { atendimentoService } from '@/modules/atendimento/atendimento.service';
 import { BarraGestao } from '@/components/BarraGestao';
 import { moeda } from '@/lib/formato';
 import { SeloStatus } from '@/components/SeloStatus';
+import { Indicador } from '@/components/gestao/Indicador';
+import {
+  IconeAlerta, IconeAtendimento, IconeCaixaAberta, IconeClientes, IconeDinheiro,
+} from '@/components/Icones';
 import { exigirAcesso } from '@/lib/guardaPagina';
 
 export const dynamic = 'force-dynamic';
@@ -28,32 +32,26 @@ export default async function Painel() {
 
       <div className="pagina">
         <section className="kpis">
-          <div className="kpi">
-            <span className="kpi__icone">💰</span>
-            <div className="kpi__rotulo">Faturamento</div>
-            <div className="kpi__valor">{moeda(resumo.faturamento)}</div>
-            <div className="kpi__nota">{resumo.pedidos} pedidos · ticket {moeda(resumo.ticket_medio)}</div>
-          </div>
-          <div className="kpi">
-            <span className="kpi__icone">📦</span>
-            <div className="kpi__rotulo">Itens vendidos</div>
-            <div className="kpi__valor">{resumo.itens_vendidos}</div>
-            <div className="kpi__nota">{resumo.cancelados} pedido(s) cancelado(s)</div>
-          </div>
-          <div className="kpi">
-            <span className="kpi__icone">👥</span>
-            <div className="kpi__rotulo">Clientes</div>
-            <div className="kpi__valor">{resumo.clientes_total}</div>
-            <div className="kpi__nota">{resumo.clientes_novos} novos no período</div>
-          </div>
-          <div className="kpi">
-            <span className="kpi__icone">🎧</span>
-            <div className="kpi__rotulo">Fila de atendimento</div>
-            <div className="kpi__valor">{aguardando}</div>
-            <div className="kpi__nota">
-              {aguardando > 0 ? 'aguardando atendente agora' : 'nenhum cliente esperando'}
-            </div>
-          </div>
+          <Indicador
+            rotulo="Faturamento" tom="violeta" icone={<IconeDinheiro />}
+            valor={moeda(resumo.faturamento)}
+            nota={`${resumo.pedidos} pedidos · ticket ${moeda(resumo.ticket_medio)}`} />
+
+          <Indicador
+            rotulo="Itens vendidos" tom="ciano" icone={<IconeCaixaAberta />}
+            valor={resumo.itens_vendidos}
+            nota={`${resumo.cancelados} pedido(s) cancelado(s)`} />
+
+          <Indicador
+            rotulo="Clientes" tom="verde" icone={<IconeClientes tamanho={20} />}
+            valor={resumo.clientes_total}
+            nota={`${resumo.clientes_novos} novos no período`} />
+
+          <Indicador
+            rotulo="Fila de atendimento" tom={aguardando > 0 ? 'ambar' : 'verde'}
+            icone={aguardando > 0 ? <IconeAlerta /> : <IconeAtendimento tamanho={20} />}
+            valor={aguardando}
+            nota={aguardando > 0 ? 'aguardando atendente agora' : 'nenhum cliente esperando'} />
         </section>
 
         <section style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 16, marginTop: 16 }}>

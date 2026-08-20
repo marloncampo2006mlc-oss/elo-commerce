@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { moeda } from '@/lib/formato';
 import { SeloStatus } from '@/components/SeloStatus';
 import { useToast } from '@/components/Toasts';
+import { IconeAtendimento } from '@/components/Icones';
 
 interface ItemFila {
   id: string; protocolo: string; status: string; canal: string;
@@ -111,7 +112,7 @@ export function Desk({ filaInicial, historicoInicial }: {
         <div style={{ overflowY: 'auto', flex: 1 }}>
           {lista.length === 0 ? (
             <div className="vazio">
-              <div className="vazio__icone">◐</div>
+              <div className="vazio__icone"><IconeAtendimento tamanho={26} /></div>
               <strong>Fila vazia</strong>
               <p style={{ fontSize: 12, marginTop: 4 }}>
                 Peça um atendente no chat da loja para ver a conversa aparecer aqui.
@@ -144,7 +145,7 @@ export function Desk({ filaInicial, historicoInicial }: {
       <section className="cartao" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {!conversa ? (
           <div className="vazio" style={{ margin: 'auto' }}>
-            <div className="vazio__icone">💬</div>
+            <div className="vazio__icone"><IconeAtendimento tamanho={26} /></div>
             <strong>Selecione uma conversa</strong>
           </div>
         ) : (

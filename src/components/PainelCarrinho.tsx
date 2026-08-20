@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { moeda } from '@/lib/formato';
 import { useCarrinho } from './Carrinho';
 import { useToast } from './Toasts';
+import { IconeCarrinho } from './loja/IconesLoja';
 
 interface ClienteOpcao { id: string; nome: string; email: string }
 
@@ -70,7 +71,7 @@ export function PainelCarrinho({ clientes }: { clientes: ClienteOpcao[] }) {
     return (
       <div className="cartao">
         <div className="vazio">
-          <div className="vazio__icone">🛒</div>
+          <div className="vazio__icone"><IconeCarrinho tamanho={26} /></div>
           <strong>Seu carrinho está vazio</strong>
           <p style={{ marginTop: 6 }}>Adicione produtos da vitrine para continuar.</p>
           <Link href="/" className="btn" style={{ marginTop: 16 }}>Ver produtos</Link>

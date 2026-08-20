@@ -3,6 +3,7 @@ import { listarProdutosSchema } from '@/modules/catalogo/catalogo.schema';
 import { CardProduto } from '@/components/CardProduto';
 import { FiltrosVitrine } from '@/components/FiltrosVitrine';
 import { HeroLoja } from '@/components/loja/HeroLoja';
+import { IconeBusca } from '@/components/loja/IconesLoja';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,7 +47,7 @@ export default async function Vitrine({
       {visiveis.length === 0 ? (
         <div className="cartao">
           <div className="vazio">
-            <div className="vazio__icone">🔎</div>
+            <div className="vazio__icone"><IconeBusca tamanho={26} /></div>
             <strong>Nada encontrado</strong>
             <p>Tente outra busca ou categoria.</p>
           </div>

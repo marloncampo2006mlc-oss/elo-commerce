@@ -2,16 +2,31 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import type { ReactNode } from 'react';
 import { GRUPOS, paginasPermitidas } from '@/lib/paginas';
 import type { SessaoUsuario } from '@/lib/sessao';
+import {
+  IconeAtendimento, IconeClientes, IconeFluxo, IconeGrafico, IconeLoja,
+  IconePainel, IconePedidos, IconeProdutos, IconeSair, IconeUsuarios,
+} from './Icones';
+
+/** Cada rota tem seu ícone; a chave é o href, que já é único. */
+const ICONES: Record<string, ReactNode> = {
+  '/gestao/painel': <IconePainel />,
+  '/gestao/produtos': <IconeProdutos />,
+  '/gestao/pedidos': <IconePedidos />,
+  '/gestao/clientes': <IconeClientes />,
+  '/gestao/no-code': <IconeFluxo />,
+  '/gestao/atendimento': <IconeAtendimento />,
+  '/gestao/bi': <IconeGrafico />,
+  '/gestao/usuarios': <IconeUsuarios />,
+};
 
 /**
  * Menu da gestão, montado a partir dos privilégios efetivos da pessoa.
  *
  * Esconder um item aqui é conveniência, não segurança: quem digitar a
- * URL direto ainda é barrado pela guarda da própria página. Mas mostrar
- * um menu que leva a um bloqueio é uma experiência ruim — o menu deve
- * refletir o que a pessoa realmente alcança.
+ * URL direto ainda é barrado pela guarda da própria página.
  */
 export function NavegacaoGestao({ usuario, privilegios }: {
   usuario: SessaoUsuario;
@@ -27,10 +42,13 @@ export function NavegacaoGestao({ usuario, privilegios }: {
     router.refresh();
   }
 
+  const iniciais = usuario.nome.split(/\s+/).slice(0, 2)
+    .map((parte) => parte[0]).join('').toUpperCase();
+
   return (
     <aside className="lateral">
       <Link href={permitidas[0]?.href ?? '/'} className="lateral__marca">
-        <span className="avatar" aria-hidden="true">◆</span>
+        <span className="lateral__logo" aria-hidden="true">◆</span>
         <span>
           <strong>Elo Platform</strong>
           <span>gestão</span>
@@ -51,7 +69,7 @@ export function NavegacaoGestao({ usuario, privilegios }: {
                   <Link key={pagina.href} href={pagina.href}
                         className={`lateral__item ${ativo ? 'lateral__item--ativo' : ''}`}
                         aria-current={ativo ? 'page' : undefined}>
-                    <span className="lateral__icone" aria-hidden="true">{pagina.icone}</span>
+                    <span className="lateral__icone">{ICONES[pagina.href]}</span>
                     {pagina.rotulo}
                   </Link>
                 );
@@ -63,18 +81,21 @@ export function NavegacaoGestao({ usuario, privilegios }: {
 
       <div className="lateral__rodape">
         <Link href="/" className="lateral__item">
-          <span className="lateral__icone" aria-hidden="true">◉</span>
+          <span className="lateral__icone"><IconeLoja /></span>
           Ver a loja
         </Link>
 
-        <div style={{ padding: '8px 11px' }}>
-          <div style={{ fontSize: 12.5, fontWeight: 600 }}>{usuario.nome}</div>
-          <div className="dim" style={{ fontSize: 11 }}>
-            {usuario.papel} · {privilegios.length} privilégio(s)
-          </div>
+        <div className="lateral__perfil">
+          <span className="lateral__avatar">{iniciais}</span>
+          <span className="lateral__perfil-texto">
+            <strong>{usuario.nome}</strong>
+            <span>{usuario.papel} · {privilegios.length} privilégio(s)</span>
+          </span>
         </div>
 
-        <button className="btn btn--sm" onClick={() => void sair()}>Sair</button>
+        <button className="btn btn--sm btn--bloco" onClick={() => void sair()}>
+          <IconeSair /> Sair
+        </button>
       </div>
     </aside>
   );

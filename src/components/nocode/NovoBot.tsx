@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Modal } from '@/components/Modal';
 import { useToast } from '@/components/Toasts';
+import { IconeMais } from '@/components/Icones';
 
 export function NovoBot() {
   const [aberto, setAberto] = useState(false);
@@ -33,7 +34,7 @@ export function NovoBot() {
   return (
     <>
       <button className="btn btn--primario" onClick={() => setAberto(true)}>
-        ＋ Novo chatbot
+        <IconeMais /> Novo chatbot
       </button>
 
       {aberto && (

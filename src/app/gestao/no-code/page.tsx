@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { botsService } from '@/modules/bots/bots.service';
 import { BarraGestao } from '@/components/BarraGestao';
 import { NovoBot } from '@/components/nocode/NovoBot';
+import { IconeFluxo } from '@/components/Icones';
 import { exigirAcesso } from '@/lib/guardaPagina';
 
 export const dynamic = 'force-dynamic';
@@ -21,24 +22,30 @@ export default async function ListaBots() {
         {bots.length === 0 ? (
           <div className="cartao">
             <div className="vazio">
-              <div className="vazio__icone">⬡</div>
+              <div className="vazio__icone"><IconeFluxo tamanho={26} /></div>
               <strong>Nenhum chatbot ainda</strong>
-              <p style={{ marginTop: 6 }}>Crie o primeiro fluxo para o assistente da loja.</p>
+              <p>Crie o primeiro fluxo para o assistente da loja.</p>
             </div>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
+          <div className="grade-bots">
             {bots.map((bot) => (
-              <Link key={bot.id} href={`/gestao/no-code/${bot.id}`} className="cartao cartao--pad"
-                    style={{ display: 'block' }}>
-                <div className="flex entre" style={{ marginBottom: 8 }}>
-                  <strong style={{ fontSize: 15 }}>{bot.nome}</strong>
-                  {bot.ativo_na_loja && <span className="selo selo--verde">na loja</span>}
+              <Link key={bot.id} href={`/gestao/no-code/${bot.id}`} className="bot-cartao">
+                <div className="bot-cartao__topo">
+                  <span className="bot-cartao__icone"><IconeFluxo tamanho={20} /></span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="bot-cartao__nome">{bot.nome}</div>
+                    {bot.ativo_na_loja && (
+                      <span className="selo selo--verde" style={{ marginTop: 5 }}>
+                        atendendo a loja
+                      </span>
+                    )}
+                  </div>
                 </div>
 
-                <p className="dim" style={{ fontSize: 12.5, minHeight: 34 }}>{bot.descricao}</p>
+                <p className="bot-cartao__desc">{bot.descricao}</p>
 
-                <div className="flex" style={{ gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+                <div className="bot-cartao__selos">
                   {bot.versao_publicada !== null && (
                     <span className="selo selo--violeta">v{bot.versao_publicada} publicada</span>
                   )}

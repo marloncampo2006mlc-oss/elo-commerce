@@ -8,6 +8,8 @@ import {
 } from 'recharts';
 import { moeda } from '@/lib/formato';
 import { NumeroAnimado } from '@/components/NumeroAnimado';
+import { Indicador } from './Indicador';
+import { IconeClientes, IconeDinheiro, IconePedidos, IconeRobo } from '@/components/Icones';
 import { ROTULOS } from '@/components/SeloStatus';
 import { PERIODOS, type Periodo } from '@/modules/indicadores/indicadores.schema';
 
@@ -75,40 +77,25 @@ export function PainelBI({ dados, periodo }: { dados: Dados; periodo: Periodo })
       </div>
 
       <section className={`kpis ${carregando ? 'atualizando' : ''}`}>
-        <div className="kpi">
-          <span className="kpi__icone">💰</span>
-          <div className="kpi__rotulo">Faturamento</div>
-          <div className="kpi__valor">
-            <NumeroAnimado valor={resumo.faturamento} formatar={moeda} />
-          </div>
-          <div className="kpi__nota">ticket médio {moeda(resumo.ticket_medio)}</div>
-        </div>
-        <div className="kpi">
-          <span className="kpi__icone">🧾</span>
-          <div className="kpi__rotulo">Pedidos</div>
-          <div className="kpi__valor">
-            <NumeroAnimado valor={resumo.pedidos} formatar={(v) => Math.round(v).toString()} />
-          </div>
-          <div className="kpi__nota">{resumo.itens_vendidos} itens · {resumo.cancelados} cancelados</div>
-        </div>
-        <div className="kpi">
-          <span className="kpi__icone">👥</span>
-          <div className="kpi__rotulo">Clientes novos</div>
-          <div className="kpi__valor">
-            <NumeroAnimado valor={resumo.clientes_novos} formatar={(v) => Math.round(v).toString()} />
-          </div>
-          <div className="kpi__nota">{resumo.clientes_total} na base total</div>
-        </div>
-        <div className="kpi">
-          <span className="kpi__icone">🤖</span>
-          <div className="kpi__rotulo">Resolvido pelo bot</div>
-          <div className="kpi__valor">
-            <NumeroAnimado valor={taxaBot} formatar={(v) => `${Math.round(v)}%`} />
-          </div>
-          <div className="kpi__nota">
-            {resumo.atendimentos} atendimentos · {resumo.transferidos} transferidos
-          </div>
-        </div>
+        <Indicador
+          rotulo="Faturamento" tom="violeta" icone={<IconeDinheiro />}
+          valor={<NumeroAnimado valor={resumo.faturamento} formatar={moeda} />}
+          nota={`ticket médio ${moeda(resumo.ticket_medio)}`} />
+
+        <Indicador
+          rotulo="Pedidos" tom="ciano" icone={<IconePedidos tamanho={20} />}
+          valor={<NumeroAnimado valor={resumo.pedidos} formatar={(v) => Math.round(v).toString()} />}
+          nota={`${resumo.itens_vendidos} itens · ${resumo.cancelados} cancelados`} />
+
+        <Indicador
+          rotulo="Clientes novos" tom="verde" icone={<IconeClientes tamanho={20} />}
+          valor={<NumeroAnimado valor={resumo.clientes_novos} formatar={(v) => Math.round(v).toString()} />}
+          nota={`${resumo.clientes_total} na base total`} />
+
+        <Indicador
+          rotulo="Resolvido pelo bot" tom={taxaBot >= 50 ? 'verde' : 'ambar'} icone={<IconeRobo />}
+          valor={<NumeroAnimado valor={taxaBot} formatar={(v) => `${Math.round(v)}%`} />}
+          nota={`${resumo.atendimentos} atendimentos · ${resumo.transferidos} transferidos`} />
       </section>
 
       <section style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 16, marginTop: 16 }}>
