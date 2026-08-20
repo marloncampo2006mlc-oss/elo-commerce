@@ -7,21 +7,22 @@ import { moeda } from '@/lib/formato';
 import { useCarrinho } from './Carrinho';
 import { useToast } from './Toasts';
 import { IconeCarrinho } from './loja/IconesLoja';
+import { AcessoCliente } from './loja/AcessoCliente';
+import { Pagamento } from './loja/Pagamento';
 
-interface ClienteOpcao { id: string; nome: string; email: string }
+interface ClienteSessao { id: string; nome: string; email: string }
 
-export function PainelCarrinho({ clientes }: { clientes: ClienteOpcao[] }) {
+export function PainelCarrinho({ cliente }: { cliente: ClienteSessao | null }) {
   const { itens, total, alterarQtd, remover, limpar } = useCarrinho();
-  const { sucesso, erro } = useToast();
+  const { erro } = useToast();
   const router = useRouter();
 
-  const [clienteId, setClienteId] = useState(clientes[0]?.id ?? '');
   const [observacao, setObservacao] = useState('');
   const [enviando, setEnviando] = useState(false);
-  const [pedidoFeito, setPedidoFeito] = useState<{ numero: number; total: number } | null>(null);
+  const [pedido, setPedido] = useState<{ id: string; numero: number; total: number } | null>(null);
 
   async function finalizar() {
-    if (!clienteId || itens.length === 0) return;
+    if (itens.length === 0) return;
     setEnviando(true);
 
     try {
@@ -29,8 +30,6 @@ export function PainelCarrinho({ clientes }: { clientes: ClienteOpcao[] }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          cliente_id: clienteId,
-          canal: 'site',
           observacao: observacao || null,
           itens: itens.map((item) => ({ produto_id: item.id, quantidade: item.qtd })),
         }),
@@ -39,30 +38,21 @@ export function PainelCarrinho({ clientes }: { clientes: ClienteOpcao[] }) {
       const corpo = await resposta.json();
       if (!resposta.ok) throw new Error(corpo.erro ?? 'Não foi possível finalizar');
 
-      setPedidoFeito({ numero: corpo.data.numero, total: corpo.data.total });
+      setPedido({ id: corpo.data.id, numero: corpo.data.numero, total: corpo.data.total });
       limpar();
-      sucesso('Compra realizada!', `Pedido #${corpo.data.numero}`);
       router.refresh();   // a vitrine recalcula o estoque
     } catch (falha) {
-      erro('Não foi possível finalizar', falha instanceof Error ? falha.message : 'Erro inesperado');
+      erro('Não foi possível finalizar', falha instanceof Error ? falha.message : 'Erro');
     } finally {
       setEnviando(false);
     }
   }
 
-  if (pedidoFeito) {
+  /* Pedido criado: segue para o pagamento. */
+  if (pedido) {
     return (
-      <div className="cartao cartao--pad" style={{ maxWidth: 560, margin: '40px auto', textAlign: 'center' }}>
-        <div style={{ fontSize: 40, marginBottom: 10 }}>🎉</div>
-        <h1 style={{ fontSize: 22, marginBottom: 6 }}>Pedido confirmado</h1>
-        <p className="dim" style={{ marginBottom: 18 }}>
-          Pedido <strong>#{pedidoFeito.numero}</strong> · {moeda(pedidoFeito.total)}
-        </p>
-        <p className="dim" style={{ fontSize: 13, marginBottom: 22 }}>
-          O estoque já foi baixado e o pedido aparece na gestão. Você pode consultar o andamento
-          pelo assistente virtual, informando o número do pedido.
-        </p>
-        <Link href="/" className="btn btn--primario">Voltar à vitrine</Link>
+      <div className="caixa-etapa">
+        <Pagamento pedidoId={pedido.id} numero={pedido.numero} total={pedido.total} />
       </div>
     );
   }
@@ -73,7 +63,7 @@ export function PainelCarrinho({ clientes }: { clientes: ClienteOpcao[] }) {
         <div className="vazio">
           <div className="vazio__icone"><IconeCarrinho tamanho={26} /></div>
           <strong>Seu carrinho está vazio</strong>
-          <p style={{ marginTop: 6 }}>Adicione produtos da vitrine para continuar.</p>
+          <p>Adicione produtos da vitrine para continuar.</p>
           <Link href="/" className="btn" style={{ marginTop: 16 }}>Ver produtos</Link>
         </div>
       </div>
@@ -81,7 +71,7 @@ export function PainelCarrinho({ clientes }: { clientes: ClienteOpcao[] }) {
   }
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 320px', gap: 20, alignItems: 'start' }}>
+    <div className="checkout">
       <div className="cartao cartao--pad">
         <h1 style={{ fontSize: 20, marginBottom: 14 }}>Seu carrinho</h1>
 
@@ -114,7 +104,7 @@ export function PainelCarrinho({ clientes }: { clientes: ClienteOpcao[] }) {
         ))}
       </div>
 
-      <aside className="cartao cartao--pad" style={{ position: 'sticky', top: 90 }}>
+      <aside className="cartao cartao--pad checkout__lado">
         <h2 style={{ fontSize: 15, marginBottom: 14 }}>Resumo</h2>
 
         <div className="total-linha"><span>Subtotal</span><span>{moeda(total)}</span></div>
@@ -125,26 +115,37 @@ export function PainelCarrinho({ clientes }: { clientes: ClienteOpcao[] }) {
           <span>Total</span><span>{moeda(total)}</span>
         </div>
 
-        <div className="campo" style={{ marginTop: 18 }}>
-          <label htmlFor="cliente">Comprando como</label>
-          <select id="cliente" value={clienteId} onChange={(evento) => setClienteId(evento.target.value)}>
-            {clientes.map((cliente) => (
-              <option key={cliente.id} value={cliente.id}>{cliente.nome}</option>
-            ))}
-          </select>
-        </div>
+        {cliente ? (
+          <>
+            <div className="checkout__cliente">
+              <span className="avatar">{cliente.nome.slice(0, 2).toUpperCase()}</span>
+              <span>
+                <strong>{cliente.nome}</strong>
+                <span className="dim" style={{ display: 'block', fontSize: 11.5 }}>
+                  {cliente.email}
+                </span>
+              </span>
+            </div>
 
-        <div className="campo" style={{ marginTop: 12 }}>
-          <label htmlFor="obs">Observação</label>
-          <input id="obs" value={observacao} maxLength={500}
-                 onChange={(evento) => setObservacao(evento.target.value)}
-                 placeholder="Ex.: entregar à tarde" />
-        </div>
+            <div className="campo" style={{ marginTop: 14 }}>
+              <label htmlFor="obs">Observação</label>
+              <input id="obs" value={observacao} maxLength={500}
+                     onChange={(evento) => setObservacao(evento.target.value)}
+                     placeholder="Ex.: entregar à tarde" />
+            </div>
 
-        <button className="btn btn--primario btn--bloco" style={{ marginTop: 18 }}
-                onClick={() => void finalizar()} disabled={enviando || !clienteId}>
-          {enviando ? 'Processando…' : 'Finalizar compra'}
-        </button>
+            <button className="btn btn--primario btn--bloco" style={{ marginTop: 18 }}
+                    onClick={() => void finalizar()} disabled={enviando}>
+              {enviando ? 'Processando…' : 'Ir para o pagamento'}
+            </button>
+          </>
+        ) : (
+          /* Sem sessão, o checkout vira a tela de acesso. Pedir login só
+             na hora de pagar evita barrar quem ainda está navegando. */
+          <div style={{ marginTop: 18 }}>
+            <AcessoCliente />
+          </div>
+        )}
       </aside>
     </div>
   );

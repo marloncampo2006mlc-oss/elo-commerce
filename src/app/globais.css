@@ -1065,3 +1065,130 @@ td.acoes { text-align: right; white-space: nowrap; }
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .bot-cartao__selos { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 14px; }
+
+/* ===================================================================
+   21. LOJA — acesso do cliente e pagamento
+   =================================================================== */
+.checkout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 20px; align-items: start; }
+.checkout__lado { position: sticky; top: 88px; }
+
+.checkout__cliente {
+  display: flex; align-items: center; gap: 11px; margin-top: 16px;
+  padding: 11px 12px; border-radius: 10px;
+  background: var(--superficie-2); border: 1px solid var(--borda);
+}
+.checkout__cliente strong { font-size: 13px; }
+
+.caixa-etapa { max-width: 520px; margin: 24px auto; }
+
+.acesso-loja, .pagamento, .pagamento__resultado {
+  display: flex; flex-direction: column;
+}
+.acesso-loja__titulo { font-size: 19px; letter-spacing: -.02em; margin-bottom: 6px; }
+.acesso-loja__sub { font-size: 13px; color: var(--texto-2); margin-bottom: 18px; }
+
+.opcao-acesso {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 15px; margin-bottom: 10px; width: 100%;
+  border-radius: 11px; border: 1px solid var(--borda); background: var(--superficie);
+  cursor: pointer; font-size: 14px; font-weight: 550; transition: var(--transicao);
+}
+.opcao-acesso:hover { border-color: var(--borda-forte); transform: translateY(-1px); }
+.opcao-acesso__icone { display: grid; place-items: center; width: 22px; flex: 0 0 auto; }
+.opcao-acesso--google { background: #fff; color: #1f1f1f; border-color: #dadce0; }
+.opcao-acesso--google:hover { background: #f8f9fa; }
+
+.acesso-loja__divisor {
+  display: flex; align-items: center; gap: 12px;
+  margin: 18px 0 14px; color: var(--texto-3); font-size: 11.5px;
+}
+.acesso-loja__divisor::before, .acesso-loja__divisor::after {
+  content: ''; flex: 1; height: 1px; background: var(--borda);
+}
+
+.acesso-loja__voltar, .acesso-loja__link {
+  background: none; border: 0; padding: 0; cursor: pointer; text-align: left;
+  font: inherit; font-size: 12.5px; color: var(--texto-3);
+  text-decoration: underline; text-underline-offset: 3px;
+}
+.acesso-loja__voltar { margin-bottom: 14px; }
+.acesso-loja__link { margin-top: 14px; text-align: center; }
+.acesso-loja__voltar:hover, .acesso-loja__link:hover { color: var(--violeta-claro); }
+
+.acesso-loja__erro {
+  margin-top: 14px; padding: 10px 12px; border-radius: 9px; font-size: 12.5px;
+  color: var(--vermelho); background: rgb(220 38 38 / .08); border: 1px solid rgb(220 38 38 / .25);
+}
+
+.campo-senha { position: relative; }
+.campo-senha input { padding-right: 40px; }
+.campo-senha__olho {
+  position: absolute; right: 6px; top: 50%; translate: 0 -50%;
+  background: none; border: 0; cursor: pointer; padding: 6px;
+  border-radius: 7px; line-height: 1; color: var(--texto-3);
+}
+.campo-senha__olho:hover { background: var(--superficie-2); color: var(--texto); }
+
+/* --------------------------- pagamento ----------------------------- */
+.formas { display: flex; flex-direction: column; gap: 10px; }
+
+.forma {
+  display: flex; align-items: center; gap: 13px;
+  padding: 14px 15px; border-radius: 12px; cursor: pointer; text-align: left;
+  border: 1.5px solid var(--borda); background: var(--superficie);
+  transition: var(--transicao);
+}
+.forma:hover { border-color: var(--borda-forte); }
+.forma--ativa {
+  border-color: var(--violeta);
+  background: linear-gradient(135deg, rgb(109 74 255 / .1), transparent);
+  box-shadow: 0 0 0 3px rgb(109 74 255 / .12);
+}
+.forma__icone {
+  width: 40px; height: 40px; border-radius: 11px; flex: 0 0 auto;
+  display: grid; place-items: center; color: var(--violeta-claro);
+  background: var(--superficie-2); border: 1px solid var(--borda);
+}
+.forma--ativa .forma__icone { background: var(--grad-marca); color: #fff; border-color: transparent; }
+.forma__texto { flex: 1; min-width: 0; }
+.forma__texto strong { display: block; font-size: 14px; }
+.forma__texto span { font-size: 11.5px; color: var(--texto-3); }
+.forma__marca { color: var(--violeta); font-size: 15px; }
+
+.pagamento__resultado { align-items: center; text-align: center; }
+.pagamento__resultado h2 { font-size: 20px; margin-bottom: 6px; }
+
+.pagamento__selo {
+  width: 54px; height: 54px; border-radius: 50%; margin-bottom: 14px;
+  display: grid; place-items: center; font-size: 26px; color: #fff;
+  background: linear-gradient(135deg, #16a34a, #4ade80);
+}
+
+.pagamento__qr {
+  margin: 18px 0 12px; padding: 12px; border-radius: 14px;
+  background: #fff; line-height: 0;
+  box-shadow: 0 10px 30px -14px rgb(0 0 0 / .5);
+}
+.pagamento__qr svg { display: block; width: 232px; height: 232px; }
+
+.pagamento__codigo {
+  width: 100%; margin: 14px 0 12px; padding: 12px 13px;
+  border-radius: 10px; background: var(--superficie-2); border: 1px solid var(--borda);
+  max-height: 92px; overflow-y: auto;
+}
+.pagamento__codigo code {
+  font-family: var(--mono); font-size: 10.5px; line-height: 1.5;
+  color: var(--texto-2); word-break: break-all;
+}
+
+.aviso-demo {
+  width: 100%; margin-top: 14px; padding: 12px 14px; border-radius: 10px; text-align: left;
+  background: rgb(217 119 6 / .1); border: 1px solid rgb(217 119 6 / .28);
+}
+.aviso-demo strong { display: block; font-size: 12.5px; color: var(--ambar); margin-bottom: 3px; }
+.aviso-demo span { font-size: 11.5px; color: var(--texto-2); line-height: 1.5; }
+
+@media (max-width: 860px) {
+  .checkout { grid-template-columns: 1fr; }
+  .checkout__lado { position: static; }
+}

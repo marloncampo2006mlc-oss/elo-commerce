@@ -6,3 +6,6 @@
  * dois lados compartilham mora aqui, num módulo neutro.
  */
 export const COOKIE_SESSAO = 'elo_sessao';
+
+/** Cookie da sessão do cliente da loja — separado do da equipe. */
+export const COOKIE_CLIENTE = 'elo_cliente';
