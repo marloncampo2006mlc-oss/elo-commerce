@@ -20,6 +20,8 @@ interface Conversa {
  * o cliente digita. Todo o conteúdo vem da versão publicada no No-Code —
  * é isso que faz "publicar" mudar o chat da loja de verdade.
  */
+const CHAVE_CONVERSA = 'elo-conversa';
+
 export function WidgetChat() {
   const [aberto, setAberto] = useState(false);
   const [conversa, setConversa] = useState<Conversa | null>(null);
@@ -31,6 +33,32 @@ export function WidgetChat() {
   useEffect(() => {
     fimRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [conversa?.mensagens.length, carregando]);
+
+  /**
+   * Retoma a conversa anterior ao montar.
+   *
+   * Sem isto, sair da loja para outra página desmontava o widget e a
+   * conversa se perdia: ao voltar, abria uma nova e a resposta do
+   * atendente ficava numa conversa que ninguém mais via. Guardar o id
+   * permite continuar de onde parou, inclusive depois de recarregar.
+   */
+  useEffect(() => {
+    const salvo = localStorage.getItem(CHAVE_CONVERSA);
+    if (!salvo) return;
+
+    void (async () => {
+      const resposta = await fetch(`/api/chat/${salvo}/mensagens`);
+      if (!resposta.ok) { localStorage.removeItem(CHAVE_CONVERSA); return; }
+
+      const { data } = await resposta.json();
+      // Conversa encerrada não é retomada: a próxima abertura começa limpa.
+      if (data.atendimento.status === 'finalizado') {
+        localStorage.removeItem(CHAVE_CONVERSA);
+        return;
+      }
+      setConversa(data as Conversa);
+    })();
+  }, []);
 
   async function iniciar() {
     setCarregando(true);
@@ -44,6 +72,7 @@ export function WidgetChat() {
       const corpo = await resposta.json();
       if (!resposta.ok) throw new Error(corpo.erro ?? 'Falha ao abrir o atendimento');
       setConversa(corpo.data as Conversa);
+      localStorage.setItem(CHAVE_CONVERSA, corpo.data.atendimento.id);
     } catch (falha) {
       setErro(falha instanceof Error ? falha.message : 'Erro inesperado');
     } finally {
@@ -88,19 +117,31 @@ export function WidgetChat() {
    * a alternativa correta é consultar periodicamente — e só enquanto a
    * janela está aberta e a conversa está com um humano.
    */
+  /**
+   * Enquanto houver humano do outro lado, consulta periodicamente.
+   *
+   * Roda mesmo com o painel fechado — assim a resposta do atendente já
+   * está lá quando a pessoa reabre o chat. Serverless não mantém
+   * WebSocket aberto, então consultar é o caminho honesto aqui.
+   *
+   * A dependência é só o id e o status, e não o objeto inteiro: usar a
+   * conversa recriaria o intervalo a cada resposta recebida.
+   */
+  const conversaId = conversa?.atendimento.id;
+  const statusConversa = conversa?.atendimento.status;
+
   useEffect(() => {
-    const status = conversa?.atendimento.status;
-    if (!aberto || !conversa || !['aguardando_atendente', 'em_atendimento'].includes(status ?? '')) {
+    if (!conversaId || !['aguardando_atendente', 'em_atendimento'].includes(statusConversa ?? '')) {
       return;
     }
 
     const intervalo = setInterval(async () => {
-      const resposta = await fetch(`/api/chat/${conversa.atendimento.id}/mensagens`);
+      const resposta = await fetch(`/api/chat/${conversaId}/mensagens`);
       if (resposta.ok) setConversa((await resposta.json()).data as Conversa);
     }, 4000);
 
     return () => clearInterval(intervalo);
-  }, [aberto, conversa]);
+  }, [conversaId, statusConversa]);
 
   const ultima = conversa?.mensagens.at(-1);
   const opcoes = ultima?.opcoes ?? [];
@@ -161,7 +202,8 @@ export function WidgetChat() {
 
       {encerrada ? (
         <div style={{ padding: 14, borderTop: '1px solid var(--borda)' }}>
-          <button className="btn btn--primario btn--bloco" onClick={() => void iniciar()}>
+          <button className="btn btn--primario btn--bloco"
+                  onClick={() => { localStorage.removeItem(CHAVE_CONVERSA); void iniciar(); }}>
             Iniciar nova conversa
           </button>
         </div>

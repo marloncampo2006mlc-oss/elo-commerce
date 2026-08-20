@@ -3,9 +3,17 @@
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useCarrinho } from '@/components/Carrinho';
-import { IconeCarrinho, IconeGestao } from './IconesLoja';
+import { IconeCarrinho } from './IconesLoja';
 
 const CATEGORIAS_MENU = ['Áudio', 'Telefonia', 'Redes'];
+
+/**
+ * A loja não expõe atalho para a gestão.
+ *
+ * Quem trabalha na operação chega por /gestao ou pelo favorito; o
+ * cliente final nunca deveria ver que existe uma área interna. Misturar
+ * as duas audiências no mesmo cabeçalho confunde a mais numerosa.
+ */
 
 export function CabecalhoLoja() {
   const { quantidade } = useCarrinho();
@@ -48,10 +56,6 @@ export function CabecalhoLoja() {
             {quantidade > 0 && <span className="botao-topo__contador">{quantidade}</span>}
           </Link>
 
-          <Link href="/gestao" className="botao-topo botao-topo--largo">
-            <IconeGestao />
-            <span>Área da gestão</span>
-          </Link>
         </div>
       </div>
     </header>

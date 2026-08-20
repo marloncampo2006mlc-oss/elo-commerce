@@ -20,7 +20,9 @@
     "test:watch": "vitest",
     "legado:start": "node src/server.js",
     "db:bot": "tsx src/db/seed-bot.ts",
-    "db:senha": "tsx src/db/redefinir-senha.ts"
+    "db:senha": "tsx src/db/redefinir-senha.ts",
+    "db:bootstrap": "tsx src/db/bootstrap.ts",
+    "vercel-build": "tsx src/db/migrate.ts && tsx src/db/bootstrap.ts && next build"
   },
   "dependencies": {
     "@xyflow/react": "^12.11.3",
