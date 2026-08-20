@@ -180,95 +180,6 @@ td.acoes { text-align: right; white-space: nowrap; }
 }
 @keyframes brilhar { to { background-position: -200% 0; } }
 
-/* --------------------------- 4. LOJA ------------------------------- */
-.loja { min-height: 100vh; display: flex; flex-direction: column; }
-
-.loja__topo {
-  position: sticky; top: 0; z-index: 40;
-  background: color-mix(in srgb, var(--fundo-2) 88%, transparent);
-  backdrop-filter: blur(14px);
-  border-bottom: 1px solid var(--borda);
-}
-.loja__topo-interno {
-  max-width: 1220px; margin: 0 auto; padding: 14px 22px;
-  display: flex; align-items: center; gap: 18px;
-}
-.loja__marca { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: -.02em; }
-.loja__logo {
-  width: 34px; height: 34px; border-radius: 9px; background: var(--grad-marca);
-  display: grid; place-items: center; color: #fff; font-size: 16px;
-}
-.loja__nav { display: flex; gap: 4px; margin-left: 12px; }
-.loja__nav a {
-  padding: 7px 12px; border-radius: 8px; font-size: 13.5px; color: var(--texto-2);
-  transition: var(--transicao);
-}
-.loja__nav a:hover { background: var(--superficie-2); color: var(--texto); }
-.loja__acoes { margin-left: auto; display: flex; align-items: center; gap: 10px; }
-
-.loja__conteudo { flex: 1; max-width: 1220px; width: 100%; margin: 0 auto; padding: 28px 22px 80px; }
-
-.hero {
-  border-radius: var(--raio-lg); padding: 40px 34px; margin-bottom: 26px;
-  background: linear-gradient(120deg, rgb(109 74 255 / .13), rgb(23 196 224 / .09));
-  border: 1px solid var(--borda);
-}
-.hero h1 { font-size: clamp(24px, 4vw, 34px); margin-bottom: 8px; text-wrap: balance; }
-.hero p { color: var(--texto-2); max-width: 60ch; }
-
-.vitrine { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 16px; }
-
-.produto {
-  display: flex; flex-direction: column; border-radius: var(--raio);
-  border: 1px solid var(--borda); background: var(--superficie);
-  overflow: hidden; transition: var(--transicao);
-}
-.produto:hover { transform: translateY(-3px); box-shadow: var(--sombra); border-color: var(--borda-forte); }
-.produto__capa {
-  height: 168px; overflow: hidden; position: relative;
-  background: linear-gradient(135deg, rgb(109 74 255 / .1), rgb(23 196 224 / .07));
-  border-bottom: 1px solid var(--borda);
-  display: grid; place-items: center;
-}
-.produto__capa img { width: 100%; height: 100%; object-fit: cover; transition: var(--transicao); }
-.produto:hover .produto__capa img { transform: scale(1.05); }
-.produto__tag { position: absolute; top: 10px; left: 10px; }
-.produto__corpo { padding: 14px 15px 16px; display: flex; flex-direction: column; gap: 7px; flex: 1; }
-.produto__nome { font-size: 13.5px; font-weight: 600; }
-.produto__desc {
-  font-size: 11.5px; color: var(--texto-3); display: -webkit-box;
-  -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-}
-.produto__rodape { margin-top: auto; display: flex; align-items: center; gap: 10px; padding-top: 8px; }
-.produto__preco { font-size: 17px; font-weight: 700; letter-spacing: -.02em; }
-.produto__preco small { display: block; font-size: 10.5px; color: var(--texto-3); font-weight: 500; }
-
-.filtros { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 20px; }
-.busca { position: relative; flex: 1; min-width: 200px; max-width: 380px; }
-.busca input {
-  width: 100%; padding: 10px 12px 10px 34px; border-radius: 9px;
-  border: 1px solid var(--borda); background: var(--fundo-2); font-size: 13.5px;
-}
-.busca::before {
-  content: '⌕'; position: absolute; left: 12px; top: 50%; translate: 0 -50%;
-  color: var(--texto-3); font-size: 15px;
-}
-select.filtro {
-  padding: 10px 12px; border-radius: 9px; border: 1px solid var(--borda);
-  background: var(--fundo-2); font-size: 13px;
-}
-
-.carrinho-linha { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--borda); }
-.qtd { display: flex; align-items: center; border: 1px solid var(--borda); border-radius: 8px; overflow: hidden; }
-.qtd button { width: 28px; height: 30px; background: var(--superficie-2); border: 0; cursor: pointer; font-size: 15px; }
-.qtd button:hover { background: var(--borda); }
-.qtd span { min-width: 32px; text-align: center; font-size: 13px; font-variant-numeric: tabular-nums; }
-.total-linha { display: flex; justify-content: space-between; padding: 9px 0; font-size: 13.5px; color: var(--texto-2); }
-.total-linha--destaque {
-  font-size: 19px; font-weight: 700; color: var(--texto);
-  border-top: 1px solid var(--borda); margin-top: 6px; padding-top: 14px;
-}
-
 /* --------------------------- 5. GESTÃO ----------------------------- */
 .gestao { display: grid; grid-template-columns: 236px 1fr; min-height: 100vh; }
 
@@ -737,3 +648,227 @@ select.filtro {
 .priv-item--editavel { cursor: pointer; }
 .priv-item--editavel:hover { background: var(--superficie); border-color: var(--borda); }
 .priv-item--editavel:has(input:focus-visible) { outline: 2px solid var(--violeta); outline-offset: 1px; }
+
+/* ===================================================================
+   17. LOJA — vitrine
+   =================================================================== */
+.loja {
+  min-height: 100vh; display: flex; flex-direction: column;
+  /* Halos frios no fundo dão profundidade ao escuro sem virar
+     gradiente chapado. */
+  background:
+    radial-gradient(50rem 34rem at 12% -8%, rgb(109 74 255 / .16), transparent 62%),
+    radial-gradient(44rem 30rem at 92% 4%, rgb(23 196 224 / .10), transparent 60%),
+    var(--fundo);
+}
+
+/* --------------------------- cabeçalho ----------------------------- */
+.topo {
+  position: sticky; top: 0; z-index: 40;
+  background: color-mix(in srgb, var(--fundo) 82%, transparent);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--borda);
+}
+.topo__interno {
+  max-width: 1320px; margin: 0 auto; padding: 13px 26px;
+  display: flex; align-items: center; gap: 30px;
+}
+
+.topo__marca { display: flex; align-items: center; gap: 11px; font-weight: 700; font-size: 17px; letter-spacing: -.02em; }
+.topo__logo {
+  width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center;
+  background: var(--grad-marca); color: #fff; font-size: 16px;
+  box-shadow: 0 6px 18px -6px rgb(109 74 255 / .75);
+}
+
+.topo__nav { display: flex; gap: 4px; }
+.topo__link {
+  position: relative; padding: 8px 13px; border-radius: 8px;
+  font-size: 14px; color: var(--texto-2); transition: var(--transicao);
+}
+.topo__link:hover { color: var(--texto); }
+/* Sublinhado só na categoria aberta: mostra onde a pessoa está sem
+   depender de cor, que sozinha não é acessível. */
+.topo__link--ativo { color: var(--texto); font-weight: 600; }
+.topo__link--ativo::after {
+  content: ''; position: absolute; left: 13px; right: 13px; bottom: -14px;
+  height: 2px; border-radius: 2px 2px 0 0; background: var(--grad-marca);
+}
+
+.topo__acoes { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+
+.botao-topo {
+  position: relative; display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 13px; border-radius: 10px;
+  border: 1px solid var(--borda); background: var(--superficie);
+  color: var(--texto-2); font-size: 13.5px; font-weight: 550;
+  transition: var(--transicao);
+}
+.botao-topo:hover { border-color: var(--borda-forte); color: var(--texto); transform: translateY(-1px); }
+.botao-topo--largo { padding-right: 15px; }
+
+.botao-topo__contador {
+  min-width: 20px; height: 20px; padding: 0 5px; border-radius: var(--raio-full);
+  background: var(--grad-marca); color: #fff;
+  font-size: 11.5px; font-weight: 700; line-height: 20px; text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------- conteúdo ------------------------------ */
+.loja__conteudo { flex: 1; max-width: 1320px; width: 100%; margin: 0 auto; padding: 26px 26px 90px; }
+
+/* --------------------------- hero ---------------------------------- */
+.hero {
+  position: relative; overflow: hidden;
+  display: flex; align-items: center; gap: 34px;
+  padding: 36px 40px; margin-bottom: 26px;
+  border-radius: var(--raio-lg);
+  background: linear-gradient(108deg, #4c2fb8 0%, #4636c9 38%, #2f5ae0 72%, #2f74e6 100%);
+  box-shadow: 0 22px 50px -24px rgb(60 42 180 / .8);
+}
+
+.hero__onda { position: absolute; inset: 0 0 0 auto; width: 46%; height: 100%; pointer-events: none; }
+
+.hero__arte-caixa {
+  flex: 0 0 auto; width: 132px; height: 132px; border-radius: 20px;
+  display: grid; place-items: center;
+  background: rgb(255 255 255 / .1);
+  border: 1px solid rgb(255 255 255 / .18);
+  backdrop-filter: blur(6px);
+}
+.hero__arte { width: 108px; height: 108px; }
+
+.hero__texto { position: relative; z-index: 1; min-width: 0; }
+.hero h1 {
+  font-size: clamp(24px, 3.2vw, 33px); color: #fff;
+  letter-spacing: -.03em; margin-bottom: 12px; text-wrap: balance;
+}
+.hero p { color: rgb(255 255 255 / .82); font-size: 14.5px; max-width: 62ch; line-height: 1.6; }
+
+.hero__destaques {
+  list-style: none; display: flex; flex-wrap: wrap; gap: 12px 34px; margin-top: 22px;
+}
+.hero__destaques li { display: flex; align-items: center; gap: 11px; }
+.hero__icone {
+  width: 38px; height: 38px; border-radius: 11px; flex: 0 0 auto;
+  display: grid; place-items: center; color: #fff;
+  background: rgb(255 255 255 / .13); border: 1px solid rgb(255 255 255 / .2);
+}
+.hero__destaques strong { display: block; font-size: 13px; color: #fff; font-weight: 600; }
+.hero__destaques span span { font-size: 11.5px; color: rgb(255 255 255 / .68); }
+
+/* --------------------------- filtros ------------------------------- */
+.filtros { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 22px; }
+
+.campo-busca { position: relative; flex: 1; min-width: 230px; max-width: 400px; }
+.campo-busca input {
+  width: 100%; padding: 12px 14px 12px 42px; border-radius: 11px;
+  border: 1px solid var(--borda); background: var(--superficie);
+  font-size: 14px; transition: var(--transicao);
+}
+.campo-busca input:focus {
+  outline: none; border-color: var(--violeta); box-shadow: 0 0 0 3px rgb(109 74 255 / .14);
+}
+.campo-busca__icone {
+  position: absolute; left: 14px; top: 50%; translate: 0 -50%;
+  color: var(--texto-3); display: grid; place-items: center;
+}
+
+select.filtro {
+  padding: 12px 14px; border-radius: 11px; min-width: 190px;
+  border: 1px solid var(--borda); background: var(--superficie);
+  font-size: 13.5px; color: var(--texto-2); cursor: pointer;
+  transition: var(--transicao);
+}
+select.filtro:hover { border-color: var(--borda-forte); }
+
+.filtro-botao { margin-left: auto; padding: 12px 16px; border-radius: 11px; font-size: 13.5px; }
+.filtro-botao--ativo { border-color: var(--violeta); color: var(--texto); }
+
+.filtros-avancados {
+  display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+  padding: 15px 18px; margin-bottom: 22px;
+  border: 1px solid var(--borda); border-radius: var(--raio); background: var(--superficie);
+}
+.filtros-avancados__grupo { display: flex; flex-direction: column; gap: 8px; }
+.filtros-avancados__rotulo {
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: .12em;
+  color: var(--texto-3); font-weight: 700;
+}
+
+/* --------------------------- vitrine ------------------------------- */
+.vitrine { display: grid; grid-template-columns: repeat(auto-fill, minmax(268px, 1fr)); gap: 20px; }
+
+.produto {
+  display: flex; flex-direction: column; overflow: hidden;
+  border-radius: var(--raio-lg); border: 1px solid var(--borda);
+  background: var(--superficie); transition: var(--transicao);
+}
+.produto:hover {
+  transform: translateY(-4px); border-color: var(--borda-forte);
+  box-shadow: 0 20px 40px -22px rgb(0 0 0 / .7);
+}
+
+.produto__capa {
+  position: relative; height: 186px; overflow: hidden;
+  display: grid; place-items: center;
+  background: linear-gradient(160deg, rgb(109 74 255 / .12), rgb(12 16 28 / .5));
+  border-bottom: 1px solid var(--borda);
+}
+/* Halo por trás da peça: separa o produto do fundo escuro sem precisar
+   recortar a imagem. */
+.produto__halo {
+  position: absolute; width: 168px; height: 168px; border-radius: 50%;
+  background: radial-gradient(circle, rgb(190 205 255 / .3) 0%, transparent 68%);
+  filter: blur(6px);
+}
+.produto__capa img {
+  position: relative; width: 100%; height: 100%; object-fit: cover;
+  transition: transform var(--transicao);
+}
+.produto:hover .produto__capa img { transform: scale(1.05); }
+.produto__emoji { position: relative; font-size: 46px; }
+.produto__tag { position: absolute; top: 12px; left: 12px; }
+
+.produto__corpo { padding: 16px 17px 18px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.produto__nome { font-size: 15px; font-weight: 650; letter-spacing: -.01em; }
+.produto__desc {
+  font-size: 12.5px; color: var(--texto-3); line-height: 1.5;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+.produto__rodape {
+  margin-top: auto; padding-top: 12px;
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 12px;
+}
+.produto__preco { font-size: 19px; font-weight: 700; letter-spacing: -.02em; }
+.produto__preco small {
+  display: block; font-size: 11px; color: var(--texto-3); font-weight: 500; margin-top: 2px;
+}
+.produto__acao { padding: 9px 14px; border-radius: 10px; font-size: 13px; }
+
+/* --------------------------- carrinho ------------------------------ */
+.carrinho-linha {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 0; border-bottom: 1px solid var(--borda);
+}
+.qtd { display: flex; align-items: center; border: 1px solid var(--borda); border-radius: 9px; overflow: hidden; }
+.qtd button { width: 30px; height: 32px; background: var(--superficie-2); border: 0; cursor: pointer; font-size: 15px; }
+.qtd button:hover { background: var(--borda); }
+.qtd span { min-width: 34px; text-align: center; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+
+.total-linha { display: flex; justify-content: space-between; padding: 9px 0; font-size: 13.5px; color: var(--texto-2); }
+.total-linha--destaque {
+  font-size: 20px; font-weight: 700; color: var(--texto);
+  border-top: 1px solid var(--borda); margin-top: 6px; padding-top: 15px;
+}
+
+@media (max-width: 900px) {
+  .hero { flex-direction: column; align-items: flex-start; padding: 28px 24px; gap: 22px; }
+  .hero__onda { display: none; }
+  .topo__nav { display: none; }
+  .topo__interno { gap: 16px; padding: 12px 18px; }
+  .botao-topo--largo span { display: none; }
+  .loja__conteudo { padding: 20px 18px 80px; }
+  .filtro-botao { margin-left: 0; }
+}

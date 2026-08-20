@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { IconeAssistente } from './loja/IconesLoja';
 
 interface Opcao { id: string; rotulo: string }
 interface Mensagem {
@@ -108,7 +109,9 @@ export function WidgetChat() {
   if (!aberto) {
     return (
       <button className="fab" onClick={() => { setAberto(true); if (!conversa) void iniciar(); }}
-              aria-label="Abrir atendimento">💬</button>
+              aria-label="Abrir atendimento">
+        <IconeAssistente />
+      </button>
     );
   }
 

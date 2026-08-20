@@ -1,10 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Gateway VoIP de 8 portas">
   <defs>
-    <radialGradient id="bg" cx="50%" cy="40%" r="75%"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#dde1ee"/></radialGradient>
+    <radialGradient id="halo" cx="50%" cy="46%" r="58%">
+      <stop offset="0%" stop-color="#dce6ff" stop-opacity=".88"/>
+      <stop offset="55%" stop-color="#aab9e8" stop-opacity=".34"/>
+      <stop offset="100%" stop-color="#aab9e8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="200" cy="140" rx="185" ry="140" fill="url(#halo)"/>
+  <defs>
     <linearGradient id="chassi" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#5a6270"/><stop offset="18%" stop-color="#3a404c"/><stop offset="100%" stop-color="#1b1f27"/></linearGradient>
     <linearGradient id="topo" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#6b7381"/><stop offset="100%" stop-color="#454c59"/></linearGradient>
   </defs>
-  <rect width="400" height="300" fill="url(#bg)"/>
+  
   <ellipse cx="200" cy="232" rx="140" ry="13" fill="#0b1020" opacity=".16"/>
   <path d="M52 116 L348 116 L332 100 L68 100 Z" fill="url(#topo)"/>
   <rect x="52" y="116" width="296" height="102" rx="7" fill="url(#chassi)"/>

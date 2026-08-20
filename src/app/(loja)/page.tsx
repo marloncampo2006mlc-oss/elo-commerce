@@ -2,6 +2,7 @@ import { catalogoService } from '@/modules/catalogo/catalogo.service';
 import { listarProdutosSchema } from '@/modules/catalogo/catalogo.schema';
 import { CardProduto } from '@/components/CardProduto';
 import { FiltrosVitrine } from '@/components/FiltrosVitrine';
+import { HeroLoja } from '@/components/loja/HeroLoja';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,20 +27,23 @@ export default async function Vitrine({
     catalogoService.categorias(),
   ]);
 
+  // Faixa de preço é filtro de apresentação: aplicá-lo aqui evita
+  // inflar o schema do catálogo com um parâmetro que só a vitrine usa.
+  const faixa = typeof parametros.faixa === 'string' ? parametros.faixa : '';
+  const [minimo, maximo] = faixa.split('-');
+  const visiveis = faixa
+    ? itens.filter((produto) =>
+        produto.preco >= Number(minimo || 0)
+        && produto.preco <= Number(maximo || Number.MAX_SAFE_INTEGER))
+    : itens;
+
   return (
     <>
-      <section className="hero">
-        <h1>Equipe sua operação de ponta a ponta</h1>
-        <p>
-          Headsets, telefonia IP, redes e videoconferência com pronta entrega.
-          Precisa de ajuda? Fale com nosso assistente no canto da tela — ele consulta
-          seu pedido e busca produtos no catálogo.
-        </p>
-      </section>
+      <HeroLoja />
 
       <FiltrosVitrine categorias={categorias.map((categoria) => categoria.categoria)} />
 
-      {itens.length === 0 ? (
+      {visiveis.length === 0 ? (
         <div className="cartao">
           <div className="vazio">
             <div className="vazio__icone">🔎</div>
@@ -49,7 +53,7 @@ export default async function Vitrine({
         </div>
       ) : (
         <div className="vitrine">
-          {itens.map((produto) => <CardProduto key={produto.id} produto={produto} />)}
+          {visiveis.map((produto) => <CardProduto key={produto.id} produto={produto} />)}
         </div>
       )}
     </>

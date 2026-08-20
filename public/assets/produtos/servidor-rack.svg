@@ -1,9 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Servidor de rack 1U">
   <defs>
-    <radialGradient id="bg" cx="50%" cy="40%" r="75%"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#dde1ee"/></radialGradient>
+    <radialGradient id="halo" cx="50%" cy="46%" r="58%">
+      <stop offset="0%" stop-color="#dce6ff" stop-opacity=".88"/>
+      <stop offset="55%" stop-color="#aab9e8" stop-opacity=".34"/>
+      <stop offset="100%" stop-color="#aab9e8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="200" cy="140" rx="185" ry="140" fill="url(#halo)"/>
+  <defs>
     <linearGradient id="chassi" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6f7787"/><stop offset="14%" stop-color="#454c5a"/><stop offset="100%" stop-color="#1c202a"/></linearGradient>
   </defs>
-  <rect width="400" height="300" fill="url(#bg)"/>
+  
   <ellipse cx="200" cy="222" rx="156" ry="12" fill="#0b1020" opacity=".16"/>
   <path d="M28 124 L372 124 L356 108 L44 108 Z" fill="#79818f"/>
   <rect x="28" y="124" width="344" height="86" rx="5" fill="url(#chassi)"/>

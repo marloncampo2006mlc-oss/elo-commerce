@@ -1,10 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Monitor 27 polegadas QHD">
   <defs>
-    <radialGradient id="bg" cx="50%" cy="40%" r="75%"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#dde1ee"/></radialGradient>
+    <radialGradient id="halo" cx="50%" cy="46%" r="58%">
+      <stop offset="0%" stop-color="#dce6ff" stop-opacity=".88"/>
+      <stop offset="55%" stop-color="#aab9e8" stop-opacity=".34"/>
+      <stop offset="100%" stop-color="#aab9e8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="200" cy="140" rx="185" ry="140" fill="url(#halo)"/>
+  <defs>
     <linearGradient id="tela" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1b1f4a"/><stop offset="45%" stop-color="#4c2fae"/><stop offset="100%" stop-color="#12a5c9"/></linearGradient>
     <linearGradient id="moldura" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#404653"/><stop offset="100%" stop-color="#1c2028"/></linearGradient>
   </defs>
-  <rect width="400" height="300" fill="url(#bg)"/>
+  
   <ellipse cx="200" cy="262" rx="94" ry="11" fill="#0b1020" opacity=".16"/>
   <rect x="46" y="52" width="308" height="182" rx="9" fill="url(#moldura)"/>
   <rect x="54" y="60" width="292" height="160" rx="4" fill="url(#tela)"/>

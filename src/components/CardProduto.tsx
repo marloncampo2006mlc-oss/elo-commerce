@@ -3,6 +3,7 @@
 import { moeda } from '@/lib/formato';
 import { useCarrinho } from './Carrinho';
 import { useToast } from './Toasts';
+import { IconeCarrinho } from './loja/IconesLoja';
 
 export interface ProdutoVitrine {
   id: string; nome: string; descricao: string | null; categoria: string;
@@ -18,9 +19,13 @@ export function CardProduto({ produto }: { produto: ProdutoVitrine }) {
   return (
     <article className="produto">
       <div className="produto__capa">
+        {/* Halo atrás do produto: destaca a peça sem precisar recortar
+            a imagem nem usar fundo branco no card escuro. */}
+        <span className="produto__halo" aria-hidden="true" />
         {temImagem
           ? <img src={produto.imagem!} alt={produto.nome} loading="lazy" />
-          : <span style={{ fontSize: 42 }}>{produto.imagem ?? '📦'}</span>}
+          : <span className="produto__emoji">{produto.imagem ?? '📦'}</span>}
+
         {produto.estoque <= 5 && (
           <span className="produto__tag">
             <span className="selo selo--ambar">últimas unidades</span>
@@ -32,7 +37,8 @@ export function CardProduto({ produto }: { produto: ProdutoVitrine }) {
         <span className="selo selo--violeta" style={{ alignSelf: 'flex-start' }}>
           {produto.categoria}
         </span>
-        <div className="produto__nome">{produto.nome}</div>
+
+        <h3 className="produto__nome">{produto.nome}</h3>
         <p className="produto__desc">{produto.descricao}</p>
 
         <div className="produto__rodape">
@@ -40,9 +46,9 @@ export function CardProduto({ produto }: { produto: ProdutoVitrine }) {
             {moeda(produto.preco)}
             <small>em até 10x sem juros</small>
           </div>
+
           <button
-            className="btn btn--primario btn--sm"
-            style={{ marginLeft: 'auto' }}
+            className="btn btn--primario produto__acao"
             onClick={() => {
               const coube = adicionar({
                 id: produto.id, nome: produto.nome, preco: produto.preco,
@@ -52,7 +58,7 @@ export function CardProduto({ produto }: { produto: ProdutoVitrine }) {
               else erro('Estoque insuficiente', `Só temos ${produto.estoque} unidade(s).`);
             }}
           >
-            Adicionar
+            Adicionar <IconeCarrinho tamanho={15} />
           </button>
         </div>
       </div>
