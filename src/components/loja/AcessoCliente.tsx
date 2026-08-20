@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useToast } from '@/components/Toasts';
 import { Olho } from '@/components/Icone';
 
@@ -28,6 +28,29 @@ export function AcessoCliente({ aoEntrar, proximo }: {
   const [verSenha, setVerSenha] = useState(false);
   const [falha, setFalha] = useState<string | null>(null);
   const [cpf, setCpf] = useState('');
+
+  /**
+   * O callback do Google volta por redirecionamento, não por fetch —
+   * então o motivo da falha chega na URL, e é aqui que ele vira aviso.
+   */
+  useEffect(() => {
+    const motivo = new URLSearchParams(window.location.search).get('erro');
+    if (!motivo) return;
+
+    const mensagens: Record<string, [string, string]> = {
+      'google-indisponivel': ['Login com Google indisponível',
+        'Faltam as credenciais OAuth no servidor. Use e-mail e senha.'],
+      'state-invalido': ['Sessão de login expirada', 'Tente entrar novamente.'],
+      'login-cancelado': ['Login cancelado', 'Você voltou sem concluir no Google.'],
+      'google-falhou': ['O Google recusou a autenticação', 'Tente novamente ou use e-mail e senha.'],
+    };
+
+    const [titulo, detalhe] = mensagens[motivo] ?? ['Não foi possível entrar', 'Tente novamente.'];
+    erro(titulo, detalhe);
+
+    // Limpa a URL para o aviso não reaparecer a cada recarga.
+    window.history.replaceState({}, '', window.location.pathname);
+  }, [erro]);
 
   async function enviar(evento: FormEvent<HTMLFormElement>, rota: string) {
     evento.preventDefault();
@@ -68,10 +91,7 @@ export function AcessoCliente({ aoEntrar, proximo }: {
           Precisamos identificar você para registrar o pedido e acompanhar a entrega.
         </p>
 
-        <button className="opcao-acesso opcao-acesso--google" type="button"
-                onClick={() => erro(
-                  'Login com Google indisponível',
-                  'Falta configurar as credenciais OAuth no Google Cloud — veja o README.')}>
+        <a className="opcao-acesso opcao-acesso--google" href="/api/loja/auth/google">
           <span className="opcao-acesso__icone" aria-hidden="true">
             {/* Marca do Google em suas quatro cores oficiais */}
             <svg width="19" height="19" viewBox="0 0 48 48">
@@ -82,7 +102,7 @@ export function AcessoCliente({ aoEntrar, proximo }: {
             </svg>
           </span>
           Entrar com Google
-        </button>
+        </a>
 
         <button className="opcao-acesso" type="button" onClick={() => setEtapa('entrar')}>
           <span className="opcao-acesso__icone" aria-hidden="true">✉</span>
