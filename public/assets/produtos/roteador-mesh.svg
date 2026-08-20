@@ -1,9 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Roteador mesh tri-band">
   <defs>
-    <radialGradient id="bg" cx="50%" cy="40%" r="75%"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#dde1ee"/></radialGradient>
+    <radialGradient id="halo" cx="50%" cy="46%" r="58%">
+      <stop offset="0%" stop-color="#dce6ff" stop-opacity=".88"/>
+      <stop offset="55%" stop-color="#aab9e8" stop-opacity=".34"/>
+      <stop offset="100%" stop-color="#aab9e8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="200" cy="140" rx="185" ry="140" fill="url(#halo)"/>
+  <defs>
     <linearGradient id="corpo" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#c7ccda"/><stop offset="30%" stop-color="#fbfcff"/><stop offset="72%" stop-color="#eceef6"/><stop offset="100%" stop-color="#b7bdcd"/></linearGradient>
   </defs>
-  <rect width="400" height="300" fill="url(#bg)"/>
+  
   <ellipse cx="200" cy="252" rx="72" ry="11" fill="#0b1020" opacity=".17"/>
   <g opacity=".5">
     <path d="M126 118 a92 92 0 0 1 148 0" fill="none" stroke="#7c5cff" stroke-width="3" opacity=".28"/>

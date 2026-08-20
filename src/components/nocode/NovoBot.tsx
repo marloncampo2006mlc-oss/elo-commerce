@@ -1,0 +1,68 @@
+'use client';
+
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { Modal } from '@/components/Modal';
+import { useToast } from '@/components/Toasts';
+import { IconeMais } from '@/components/Icones';
+
+export function NovoBot() {
+  const [aberto, setAberto] = useState(false);
+  const [nome, setNome] = useState('');
+  const [descricao, setDescricao] = useState('');
+  const [salvando, setSalvando] = useState(false);
+  const router = useRouter();
+  const { erro } = useToast();
+
+  async function criar() {
+    setSalvando(true);
+    try {
+      const resposta = await fetch('/api/gestao/bots', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome, descricao: descricao || null }),
+      });
+      const corpo = await resposta.json();
+      if (!resposta.ok) throw new Error(corpo.erro ?? 'Falha ao criar');
+      router.push(`/gestao/no-code/${corpo.data.id}`);
+    } catch (falha) {
+      erro('Não foi possível criar', falha instanceof Error ? falha.message : 'Erro');
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <>
+      <button className="btn btn--primario" onClick={() => setAberto(true)}>
+        <IconeMais /> Novo chatbot
+      </button>
+
+      {aberto && (
+        <Modal titulo="Novo chatbot" aoFechar={() => setAberto(false)}>
+          <div className="campo">
+            <label htmlFor="nome-bot">Nome</label>
+            <input id="nome-bot" value={nome} maxLength={120} autoFocus
+                   onChange={(evento) => setNome(evento.target.value)}
+                   placeholder="Ex.: Atendimento pós-venda" />
+          </div>
+
+          <div className="campo" style={{ marginTop: 14 }}>
+            <label htmlFor="desc-bot">Descrição</label>
+            <input id="desc-bot" value={descricao} maxLength={500}
+                   onChange={(evento) => setDescricao(evento.target.value)}
+                   placeholder="Para que serve este fluxo" />
+          </div>
+
+          <div className="modal__rodape">
+            <button className="btn" onClick={() => setAberto(false)}>Cancelar</button>
+            <button className="btn btn--primario"
+                    disabled={nome.trim().length < 3 || salvando}
+                    onClick={() => void criar()}>
+              {salvando ? 'Criando…' : 'Criar e editar'}
+            </button>
+          </div>
+        </Modal>
+      )}
+    </>
+  );
+}

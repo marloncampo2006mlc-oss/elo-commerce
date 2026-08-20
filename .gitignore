@@ -6,3 +6,12 @@ node_modules/
 .vercel
 .env*
 supabase/.temp
+
+# Next.js
+.next/
+next-env.d.ts
+tsconfig.tsbuildinfo
+
+# gerados automaticamente pelo Next para assistentes de IA
+AGENTS.md
+CLAUDE.md

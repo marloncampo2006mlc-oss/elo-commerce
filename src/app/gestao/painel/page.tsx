@@ -1,0 +1,110 @@
+import Link from 'next/link';
+import { indicadoresService } from '@/modules/indicadores/indicadores.service';
+import { pedidosService } from '@/modules/pedidos/pedidos.service';
+import { listarPedidosSchema } from '@/modules/pedidos/pedidos.schema';
+import { atendimentoService } from '@/modules/atendimento/atendimento.service';
+import { BarraGestao } from '@/components/BarraGestao';
+import { moeda } from '@/lib/formato';
+import { SeloStatus } from '@/components/SeloStatus';
+import { Indicador } from '@/components/gestao/Indicador';
+import {
+  IconeAlerta, IconeAtendimento, IconeCaixaAberta, IconeClientes, IconeDinheiro,
+} from '@/components/Icones';
+import { exigirAcesso } from '@/lib/guardaPagina';
+
+export const dynamic = 'force-dynamic';
+
+export default async function Painel() {
+  await exigirAcesso('bi.ver');
+
+  const [dados, pedidos, fila] = await Promise.all([
+    indicadoresService.completo('30dias'),
+    pedidosService.listar(listarPedidosSchema.parse({ limite: 6 })),
+    atendimentoService.fila(),
+  ]);
+
+  const { resumo, estoque } = dados;
+  const aguardando = fila.filter((item) => item.status === 'aguardando_atendente').length;
+
+  return (
+    <>
+      <BarraGestao titulo="Painel" subtitulo="Visão geral da operação nos últimos 30 dias" />
+
+      <div className="pagina">
+        <section className="kpis">
+          <Indicador
+            rotulo="Faturamento" tom="violeta" icone={<IconeDinheiro />}
+            valor={moeda(resumo.faturamento)}
+            nota={`${resumo.pedidos} pedidos · ticket ${moeda(resumo.ticket_medio)}`} />
+
+          <Indicador
+            rotulo="Itens vendidos" tom="ciano" icone={<IconeCaixaAberta />}
+            valor={resumo.itens_vendidos}
+            nota={`${resumo.cancelados} pedido(s) cancelado(s)`} />
+
+          <Indicador
+            rotulo="Clientes" tom="verde" icone={<IconeClientes tamanho={20} />}
+            valor={resumo.clientes_total}
+            nota={`${resumo.clientes_novos} novos no período`} />
+
+          <Indicador
+            rotulo="Fila de atendimento" tom={aguardando > 0 ? 'ambar' : 'verde'}
+            icone={aguardando > 0 ? <IconeAlerta /> : <IconeAtendimento tamanho={20} />}
+            valor={aguardando}
+            nota={aguardando > 0 ? 'aguardando atendente agora' : 'nenhum cliente esperando'} />
+        </section>
+
+        <section style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 16, marginTop: 16 }}>
+          <div className="cartao">
+            <div className="cartao__topo">
+              <div><h3>Últimos pedidos</h3></div>
+              <Link href="/gestao/pedidos" className="btn btn--sm btn--fantasma direita">ver todos</Link>
+            </div>
+            <div className="lista">
+              {pedidos.itens.map((pedido) => (
+                <div key={pedido.id} className="lista__item">
+                  <span className="avatar">{pedido.cliente_nome.slice(0, 2).toUpperCase()}</span>
+                  <div className="lista__txt">
+                    <strong>#{pedido.numero} · {pedido.cliente_nome}</strong>
+                    <span>{new Date(pedido.created_at).toLocaleString('pt-BR', {
+                      day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+                    })} · {pedido.canal}</span>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div className="lista__valor">{moeda(pedido.total)}</div>
+                    <SeloStatus valor={pedido.status} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="cartao">
+            <div className="cartao__topo">
+              <div><h3>Alertas de estoque</h3><p>5 unidades ou menos</p></div>
+            </div>
+            <div className="lista">
+              {estoque.length === 0 ? (
+                <p className="dim" style={{ padding: 20 }}>Estoque saudável em todos os itens ✅</p>
+              ) : estoque.map((produto) => (
+                <div key={produto.id} className="lista__item">
+                  <span className="mini">
+                    {produto.imagem?.startsWith('/')
+                      ? <img src={produto.imagem} alt="" /> : <span>📦</span>}
+                  </span>
+                  <div className="lista__txt">
+                    <strong>{produto.nome}</strong>
+                    <span className="mono">{produto.sku}</span>
+                  </div>
+                  <span className={`selo selo--${produto.estoque === 0 ? 'vermelho' : 'ambar'}`}>
+                    {produto.estoque} un.
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </div>
+    </>
+  );
+}

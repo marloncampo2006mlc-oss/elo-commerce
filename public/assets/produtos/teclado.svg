@@ -1,9 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Teclado mecânico TKL">
   <defs>
-    <radialGradient id="bg" cx="50%" cy="40%" r="75%"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#dde1ee"/></radialGradient>
+    <radialGradient id="halo" cx="50%" cy="46%" r="58%">
+      <stop offset="0%" stop-color="#dce6ff" stop-opacity=".88"/>
+      <stop offset="55%" stop-color="#aab9e8" stop-opacity=".34"/>
+      <stop offset="100%" stop-color="#aab9e8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="200" cy="140" rx="185" ry="140" fill="url(#halo)"/>
+  <defs>
     <linearGradient id="placa" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#535b69"/><stop offset="100%" stop-color="#252a34"/></linearGradient>
       </defs>
-  <rect width="400" height="300" fill="url(#bg)"/>
+  
   <ellipse cx="200" cy="240" rx="150" ry="12" fill="#0b1020" opacity=".16"/>
   <path d="M44 100 L356 100 L370 216 L30 216 Z" fill="url(#placa)"/>
   <path d="M44 100 L356 100 L358 110 L42 110 Z" fill="#6b7381" opacity=".7"/>

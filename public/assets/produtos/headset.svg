@@ -1,10 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Headset profissional com microfone">
   <defs>
-    <radialGradient id="bg" cx="50%" cy="40%" r="75%"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#dde1ee"/></radialGradient>
+    <radialGradient id="halo" cx="50%" cy="46%" r="58%">
+      <stop offset="0%" stop-color="#dce6ff" stop-opacity=".88"/>
+      <stop offset="55%" stop-color="#aab9e8" stop-opacity=".34"/>
+      <stop offset="100%" stop-color="#aab9e8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="200" cy="140" rx="185" ry="140" fill="url(#halo)"/>
+  <defs>
     <linearGradient id="corpo" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#4a505f"/><stop offset="55%" stop-color="#272c37"/><stop offset="100%" stop-color="#171a22"/></linearGradient>
     <linearGradient id="couro" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3d434f"/><stop offset="100%" stop-color="#14171e"/></linearGradient>
   </defs>
-  <rect width="400" height="300" fill="url(#bg)"/>
+  
   <ellipse cx="200" cy="256" rx="104" ry="13" fill="#0b1020" opacity=".16"/>
   <path d="M126 186 C126 78 274 78 274 186" fill="none" stroke="url(#corpo)" stroke-width="17" stroke-linecap="round"/>
   <path d="M130 170 C130 94 270 94 270 170" fill="none" stroke="#7c5cff" stroke-width="2.4" opacity=".55"/>
