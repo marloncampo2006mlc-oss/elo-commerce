@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useCarrinho } from '@/components/Carrinho';
 import { IconeCarrinho } from './IconesLoja';
+import { BotaoTema } from '@/components/BotaoTema';
 
 const CATEGORIAS_MENU = ['Áudio', 'Telefonia', 'Redes'];
 
@@ -50,6 +51,8 @@ export function CabecalhoLoja() {
         </nav>
 
         <div className="topo__acoes">
+          <BotaoTema />
+
           <Link href="/carrinho" className="botao-topo"
                 aria-label={`Carrinho com ${quantidade} item(ns)`}>
             <IconeCarrinho />

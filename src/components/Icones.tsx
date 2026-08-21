@@ -21,6 +21,21 @@ const base = (tamanho: number) => ({
   'aria-hidden': true,
 });
 
+/* ------------------------------ tema ------------------------------ */
+
+export const IconeSol = ({ tamanho = 18 }: Props) => (
+  <svg {...base(tamanho)}>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+  </svg>
+);
+
+export const IconeLua = ({ tamanho = 18 }: Props) => (
+  <svg {...base(tamanho)}>
+    <path d="M20 14.2A8.2 8.2 0 0 1 9.8 4 8.4 8.4 0 1 0 20 14.2Z" />
+  </svg>
+);
+
 /* ------------------------------ navegação ------------------------- */
 
 export const IconePainel = ({ tamanho = 18 }: Props) => (
