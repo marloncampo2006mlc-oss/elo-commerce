@@ -16,15 +16,6 @@ import { IconeGoogle } from './IconesLoja';
  */
 type Etapa = 'escolha' | 'entrar' | 'cadastrar' | 'recuperar' | 'redefinir';
 
-/** Máscara de CPF conforme digita, mantendo só os dígitos no envio. */
-function formatarCpf(valor: string): string {
-  const digitos = valor.replace(/\D/g, '').slice(0, 11);
-  return digitos
-    .replace(/(\d{3})(\d)/, '$1.$2')
-    .replace(/(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
-    .replace(/\.(\d{3})(\d{1,2})$/, '.$1-$2');
-}
-
 export function AcessoCliente({ aoEntrar, proximo }: {
   aoEntrar?: () => void;
   proximo?: string;
@@ -36,7 +27,6 @@ export function AcessoCliente({ aoEntrar, proximo }: {
   const [enviando, setEnviando] = useState(false);
   const [verSenha, setVerSenha] = useState(false);
   const [falha, setFalha] = useState<string | null>(null);
-  const [cpf, setCpf] = useState('');
 
   /** Levado entre as etapas para a pessoa não redigitar o que já digitou. */
   const [email, setEmail] = useState('');
@@ -104,7 +94,7 @@ export function AcessoCliente({ aoEntrar, proximo }: {
       const resposta = await fetch(`/api/loja/auth/${rota}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...dados, cpf: String(dados.cpf ?? '').replace(/\D/g, '') }),
+        body: JSON.stringify(dados),
       });
 
       const corpo = await resposta.json();
@@ -407,14 +397,6 @@ export function AcessoCliente({ aoEntrar, proximo }: {
           <input id="cad-email" name="email" type="email" required maxLength={160}
                  autoComplete="email" placeholder="voce@email.com"
                  value={email} onChange={(evento) => setEmail(evento.target.value)} />
-        </div>
-
-        <div className="campo">
-          <label htmlFor="cad-cpf">CPF</label>
-          <input id="cad-cpf" name="cpf" required inputMode="numeric" value={cpf}
-                 onChange={(evento) => setCpf(formatarCpf(evento.target.value))}
-                 placeholder="000.000.000-00" />
-          <span className="campo__dica">Usado para emitir a nota do pedido.</span>
         </div>
 
         <div className="campo">

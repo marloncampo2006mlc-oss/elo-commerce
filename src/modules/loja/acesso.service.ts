@@ -22,15 +22,17 @@ export const acessoService = {
    * parte em dois cadastros.
    */
   async cadastrar(dados: EntradaCadastro): Promise<SessaoCliente> {
+    // Duplicidade verificada só pelo e-mail: CPF não é mais pedido aqui,
+    // e checar por um campo que nem existe no formulário bloquearia
+    // qualquer segunda conta que caísse na mesma linha por acaso.
     const existente = await consultarUm<ClienteAcesso>(
-      'SELECT id, nome, email, senha_hash, status FROM clientes WHERE email = $1 OR cpf = $2',
-      [dados.email, dados.cpf]);
+      'SELECT id, nome, email, senha_hash, status FROM clientes WHERE email = $1', [dados.email]);
 
     const hash = await bcrypt.hash(dados.senha, 10);
 
     if (existente) {
       if (existente.senha_hash) {
-        throw Conflito('Já existe uma conta com esse e-mail ou CPF. Faça login.');
+        throw Conflito('Já existe uma conta com esse e-mail. Faça login.');
       }
       await executar(
         `UPDATE clientes
@@ -42,9 +44,9 @@ export const acessoService = {
     }
 
     const criado = await consultarUm<{ id: string }>(
-      `INSERT INTO clientes (nome, email, cpf, telefone, senha_hash, metodo_login, status)
-       VALUES ($1, $2, $3, $4, $5, 'senha', 'ativo') RETURNING id`,
-      [dados.nome, dados.email, dados.cpf, dados.telefone ?? null, hash]);
+      `INSERT INTO clientes (nome, email, telefone, senha_hash, metodo_login, status)
+       VALUES ($1, $2, $3, $4, 'senha', 'ativo') RETURNING id`,
+      [dados.nome, dados.email, dados.telefone ?? null, hash]);
 
     if (!criado) throw new Error('Falha ao criar conta');
     return { id: criado.id, nome: dados.nome, email: dados.email };
