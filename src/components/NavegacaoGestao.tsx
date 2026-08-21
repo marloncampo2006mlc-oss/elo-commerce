@@ -9,6 +9,7 @@ import {
   IconeAtendimento, IconeClientes, IconeFluxo, IconeGrafico, IconeLoja,
   IconePainel, IconePedidos, IconeProdutos, IconeSair, IconeUsuarios,
 } from './Icones';
+import { BotaoTema } from './BotaoTema';
 
 /** Cada rota tem seu ícone; a chave é o href, que já é único. */
 const ICONES: Record<string, ReactNode> = {
@@ -80,6 +81,8 @@ export function NavegacaoGestao({ usuario, privilegios }: {
       </nav>
 
       <div className="lateral__rodape">
+        <BotaoTema variante="menu" />
+
         <Link href="/" className="lateral__item">
           <span className="lateral__icone"><IconeLoja /></span>
           Ver a loja

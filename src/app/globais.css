@@ -38,7 +38,10 @@
   --borda-forte: #cbd2e0;
   --texto: #131829;
   --texto-2: #4b5468;
-  --texto-3: #838da3;
+  /* Escurecido de #838da3: sobre branco aquele tom dava 3.33:1 de
+     contraste, abaixo do mínimo de 4.5:1 para texto pequeno — e é
+     justamente onde ficam rótulos de KPI, legendas e metadados. */
+  --texto-3: #646d86;
 }
 
 [data-tema='escuro'] {
@@ -50,7 +53,8 @@
   --borda-forte: #333c53;
   --texto: #eceffa;
   --texto-2: #a5aec5;
-  --texto-3: #6d7590;
+  /* Mesmo motivo do claro: #6d7590 rendia 3.84:1 sobre a superfície. */
+  --texto-3: #858ea9;
   --sombra: 0 8px 26px -12px rgb(0 0 0 / .5);
   --sombra-lg: 0 26px 56px -20px rgb(0 0 0 / .6);
 }
@@ -845,6 +849,12 @@ select.filtro:hover { border-color: var(--borda-forte); }
   transition: var(--transicao);
 }
 .lateral__item:hover { background: var(--superficie-2); color: var(--texto); }
+/* O seletor de tema é <button> no meio de <a>: zera o visual nativo
+   para a linha ficar idêntica às outras do menu. */
+button.lateral__item {
+  width: 100%; text-align: left; background: none; border: 0;
+  cursor: pointer; font-family: inherit;
+}
 .lateral__item--ativo {
   background: linear-gradient(90deg, rgb(109 74 255 / .18), rgb(109 74 255 / .03));
   color: var(--texto); font-weight: 600;
