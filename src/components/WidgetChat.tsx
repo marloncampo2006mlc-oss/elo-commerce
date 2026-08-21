@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { IconeAssistente } from './loja/IconesLoja';
 import { IconeEnviar, IconeFechar } from './Icones';
 import { ordinal, tempoEspera } from '@/lib/formato';
+import { useEntregaGradual } from './useEntregaGradual';
+import { RITMO_ATIVO, RITMO_OCIOSO, abaVisivel } from '@/lib/ritmoDeConsulta';
 
 interface Opcao { id: string; rotulo: string }
 interface Mensagem {
@@ -34,9 +36,12 @@ export function WidgetChat() {
   const [erro, setErro] = useState<string | null>(null);
   const fimRef = useRef<HTMLDivElement>(null);
 
+  const { visiveis, entregando, digitando, entregarSemAnimacao } =
+    useEntregaGradual(conversa?.mensagens ?? []);
+
   useEffect(() => {
     fimRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [conversa?.mensagens.length, carregando]);
+  }, [visiveis.length, carregando, digitando]);
 
   /**
    * Retoma a conversa anterior ao montar.
@@ -60,8 +65,14 @@ export function WidgetChat() {
         localStorage.removeItem(CHAVE_CONVERSA);
         return;
       }
+      // Conversa retomada aparece inteira: encenar de novo o que a
+      // pessoa já leu é fazê-la esperar por nada.
+      entregarSemAnimacao(data.mensagens.length);
       setConversa(data as Conversa);
     })();
+    // A função vem de um ref e não muda entre renders; incluí-la aqui
+    // faria a retomada rodar de novo a cada atualização da conversa.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function iniciar() {
@@ -139,15 +150,44 @@ export function WidgetChat() {
       return;
     }
 
-    const intervalo = setInterval(async () => {
-      const resposta = await fetch(`/api/chat/${conversaId}/mensagens`);
-      if (resposta.ok) setConversa((await resposta.json()).data as Conversa);
-    }, 4000);
+    let relogio: ReturnType<typeof setTimeout>;
 
-    return () => clearInterval(intervalo);
+    /**
+     * Reagenda a cada volta em vez de usar um intervalo fixo.
+     *
+     * Com setInterval, uma consulta lenta se acumularia com a próxima e
+     * o ritmo viraria uma fila de requisições sobrepostas. Agendando
+     * depois da resposta, existe sempre no máximo uma em voo — e o ritmo
+     * pode mudar de uma volta para a outra conforme a aba esteja à vista
+     * ou escondida.
+     */
+    const consultar = async () => {
+      try {
+        const resposta = await fetch(`/api/chat/${conversaId}/mensagens`);
+        if (resposta.ok) setConversa((await resposta.json()).data as Conversa);
+      } catch {
+        // Rede instável não encerra o acompanhamento: a próxima volta tenta de novo.
+      }
+      relogio = setTimeout(() => void consultar(), abaVisivel() ? RITMO_ATIVO : RITMO_OCIOSO);
+    };
+
+    relogio = setTimeout(() => void consultar(), RITMO_ATIVO);
+
+    // Voltar para a aba não deve esperar o ciclo lento terminar.
+    const aoVoltar = () => {
+      if (!abaVisivel()) return;
+      clearTimeout(relogio);
+      void consultar();
+    };
+    document.addEventListener('visibilitychange', aoVoltar);
+
+    return () => {
+      clearTimeout(relogio);
+      document.removeEventListener('visibilitychange', aoVoltar);
+    };
   }, [conversaId, statusConversa]);
 
-  const ultima = conversa?.mensagens.at(-1);
+  const ultima = visiveis.at(-1);
   const opcoes = ultima?.opcoes ?? [];
   const encerrada = conversa?.atendimento.status === 'finalizado';
 
@@ -175,13 +215,13 @@ export function WidgetChat() {
       <div className="chat__msgs">
         {erro && <div className="msg msg--sistema">{erro}</div>}
 
-        {conversa?.mensagens.map((mensagem) => (
+        {visiveis.map((mensagem) => (
           <div key={mensagem.id} className={`msg msg--${mensagem.autor}`}>
             {mensagem.conteudo}
           </div>
         ))}
 
-        {carregando && (
+        {(carregando || digitando) && (
           <div className="msg msg--bot digitando" aria-label="digitando">
             <i /><i /><i />
           </div>
@@ -212,7 +252,7 @@ export function WidgetChat() {
         <div ref={fimRef} />
       </div>
 
-      {opcoes.length > 0 && !carregando && !encerrada && (
+      {opcoes.length > 0 && !carregando && !entregando && !encerrada && (
         <div className="chat__opcoes">
           {opcoes.map((opcao) => (
             <button key={opcao.id} className="chat__opcao" onClick={() => void enviar(opcao.rotulo)}>
