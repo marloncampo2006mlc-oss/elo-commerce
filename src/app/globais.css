@@ -259,13 +259,27 @@ td.acoes { text-align: right; white-space: nowrap; }
   border-bottom-left-radius: 13px; border-bottom-right-radius: 4px;
 }
 
-.chat__opcoes { display: flex; flex-direction: column; gap: 6px; padding: 0 16px 12px; }
+/* Botões de menu do chatbot.
+   Cada opção é um cartão próprio, largura inteira e texto centrado na
+   cor da marca — o padrão que as pessoas já conhecem dos aplicativos de
+   mensagem. Antes eram itens de lista alinhados à esquerda, que se
+   confundiam com o texto da conversa em vez de se oferecerem como ação.
+   O que o gerente monta no bloco "Menu" do No-Code chega aqui. */
+.chat__opcoes { display: flex; flex-direction: column; gap: 5px; padding: 4px 16px 12px; }
 .chat__opcao {
-  text-align: left; padding: 9px 12px; border-radius: 9px; font-size: 12.5px;
-  border: 1px solid var(--borda); background: var(--superficie); cursor: pointer;
-  transition: var(--transicao);
+  width: 100%; text-align: center;
+  padding: 11px 14px; border-radius: 10px;
+  font-size: 13.5px; font-weight: 600; letter-spacing: -.01em;
+  color: var(--violeta-claro);
+  border: 1px solid var(--borda); background: var(--superficie);
+  cursor: pointer; transition: var(--transicao);
+  box-shadow: 0 1px 2px rgb(15 23 42 / .05);
 }
-.chat__opcao:hover { border-color: var(--violeta); background: var(--superficie-2); }
+.chat__opcao:hover {
+  border-color: var(--violeta);
+  background: color-mix(in srgb, var(--violeta) 8%, var(--superficie));
+}
+.chat__opcao:active { transform: scale(.985); }
 
 .chat__form { display: flex; gap: 8px; padding: 12px 14px; border-top: 1px solid var(--borda); background: var(--superficie); }
 /* Mesa de atendimento — três colunas com larguras que cediam mal.

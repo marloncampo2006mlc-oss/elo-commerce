@@ -8,6 +8,7 @@ import {
   IconeAtendimento, IconeEnviar, IconeSino, IconeSinoCortado,
 } from '@/components/Icones';
 import { tocarAlerta } from '@/lib/alertaSonoro';
+import { RITMO_ATIVO, RITMO_FILA, RITMO_OCIOSO, abaVisivel } from '@/lib/ritmoDeConsulta';
 
 const CHAVE_SOM = 'elo-alerta-fila';
 
@@ -57,6 +58,14 @@ export function Desk({ filaInicial, historicoInicial }: {
    * alguém". Só o que aparece DEPOIS da primeira carga é novidade.
    */
   const conhecidosRef = useRef<Set<string> | null>(null);
+
+  const [visivel, setVisivel] = useState(abaVisivel);
+
+  useEffect(() => {
+    const aoMudar = () => setVisivel(abaVisivel());
+    document.addEventListener('visibilitychange', aoMudar);
+    return () => document.removeEventListener('visibilitychange', aoMudar);
+  }, []);
 
   const aguardandoAgora = fila.filter(
     (item) => item.status === 'aguardando_atendente').length;
@@ -136,12 +145,28 @@ export function Desk({ filaInicial, historicoInicial }: {
   useEffect(() => () => { document.title = 'Elo Platform'; }, []);
 
   useEffect(() => {
+    /**
+     * Dois ritmos, porque as duas coisas têm urgências diferentes.
+     *
+     * A conversa aberta é alguém esperando resposta do outro lado: o
+     * atraso aqui é sentido como demora do atendente. A fila tolera
+     * alguns segundos — o cliente que acabou de chegar ainda vai
+     * esperar ser assumido de qualquer forma.
+     *
+     * Com a aba escondida os dois desaceleram: ninguém está lendo, e
+     * manter o ritmo curto só gastaria invocação de função.
+     */
     const intervalo = setInterval(() => {
       void carregarFila();
+    }, abaVisivel() ? RITMO_FILA : RITMO_OCIOSO);
+
+    const intervaloConversa = setInterval(() => {
       if (selecionado) void carregarConversa(selecionado);
-    }, 5000);
-    return () => clearInterval(intervalo);
-  }, [carregarFila, carregarConversa, selecionado]);
+    }, abaVisivel() ? RITMO_ATIVO : RITMO_OCIOSO);
+    return () => { clearInterval(intervalo); clearInterval(intervaloConversa); };
+    // `visivel` entra nas dependências para os intervalos serem
+    // recriados com o ritmo novo quando a aba muda de estado.
+  }, [carregarFila, carregarConversa, selecionado, visivel]);
 
   // Rola apenas a caixa de mensagens. scrollIntoView() arrastaria junto
   // todos os ancestrais roláveis — inclusive a página — e o cabeçalho do
@@ -288,6 +313,17 @@ export function Desk({ filaInicial, historicoInicial }: {
                       if (!texto.trim()) return;
                       const enviado = texto;
                       setTexto('');
+
+                      // Eco otimista: a fala aparece antes da ida ao
+                      // servidor. Sem isto o atendente escreve, o campo
+                      // esvazia e nada acontece até a resposta voltar —
+                      // tempo curto, mas o bastante para ele duvidar se
+                      // enviou. `acao` recarrega em seguida e o que fica
+                      // é sempre o que o servidor gravou.
+                      setMensagens((atuais) => [...atuais, {
+                        id: `local-${Date.now()}`, autor: 'atendente', conteudo: enviado,
+                      }]);
+
                       await acao('mensagens', { texto: enviado });
                     }}>
                 <input value={texto} onChange={(evento) => setTexto(evento.target.value)}
