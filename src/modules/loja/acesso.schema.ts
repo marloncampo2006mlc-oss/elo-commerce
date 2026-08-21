@@ -15,3 +15,13 @@ export const loginClienteSchema = z.object({
 });
 
 export type EntradaCadastro = z.infer<typeof cadastroSchema>;
+
+export const recuperacaoSchema = z.object({
+  email: z.string().trim().toLowerCase().email('E-mail inválido').max(160),
+});
+
+export const redefinicaoSchema = z.object({
+  email: z.string().trim().toLowerCase().email('E-mail inválido').max(160),
+  codigo: z.string().trim().regex(/^\d{6}$/, 'O código tem 6 dígitos'),
+  senha: z.string().min(8, 'A senha precisa de ao menos 8 caracteres').max(200),
+});
