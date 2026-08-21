@@ -248,6 +248,11 @@ td.acoes { text-align: right; white-space: nowrap; }
 .chat__opcao:hover { border-color: var(--violeta); background: var(--superficie-2); }
 
 .chat__form { display: flex; gap: 8px; padding: 12px 14px; border-top: 1px solid var(--borda); background: var(--superficie); }
+.chat__bloqueio {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 14px; border-top: 1px solid var(--borda);
+  background: var(--superficie); font-size: 13px; color: var(--texto-2);
+}
 .chat__form input { flex: 1; padding: 10px 13px; border-radius: var(--raio-full); border: 1px solid var(--borda); background: var(--fundo-2); font-size: 13px; }
 .chat__form button { width: 38px; height: 38px; border-radius: 50%; padding: 0; }
 
@@ -883,6 +888,19 @@ select.filtro:hover { border-color: var(--borda-forte); }
 .barra__acoes { margin-left: auto; display: flex; align-items: center; gap: 10px; }
 
 .pagina { padding: 26px 28px 90px; max-width: 1500px; width: 100%; }
+
+/* Página que ocupa a janela inteira, sem rolagem — hoje só a mesa de
+   atendimento. Antes ela media 100vh menos um valor fixo e sobrava uma
+   faixa: a página rolava, e a barra grudada no topo passava a cobrir o
+   cabeçalho do card, escondendo atrás dela o botão de assumir a
+   conversa. O :has limita a regra a esta página; as demais continuam
+   rolando normalmente. */
+.conteudo:has(.pagina--cheia) { height: 100vh; overflow: hidden; }
+.pagina--cheia {
+  display: flex; flex-direction: column;
+  flex: 1; min-height: 0; padding-bottom: 26px;
+}
+.pagina--cheia > * { flex: 1; min-height: 0; }
 
 /* --------------------------- indicadores --------------------------- */
 .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(226px, 1fr)); gap: 16px; }

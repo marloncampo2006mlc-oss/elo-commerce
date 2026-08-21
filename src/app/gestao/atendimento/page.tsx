@@ -23,7 +23,7 @@ export default async function Atendimento() {
           ? `${aguardando} cliente(s) aguardando na fila`
           : 'Nenhum cliente aguardando'}
       />
-      <div className="pagina">
+      <div className="pagina pagina--cheia">
         <Desk
           filaInicial={JSON.parse(JSON.stringify(fila))}
           historicoInicial={JSON.parse(JSON.stringify(historico))}

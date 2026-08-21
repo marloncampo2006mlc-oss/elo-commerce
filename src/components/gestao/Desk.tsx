@@ -46,7 +46,7 @@ export function Desk({ filaInicial, historicoInicial }: {
   const [cliente, setCliente] = useState<DadosCliente | null>(null);
   const [texto, setTexto] = useState('');
   const { sucesso, erro } = useToast();
-  const fimRef = useRef<HTMLDivElement>(null);
+  const msgsRef = useRef<HTMLDivElement>(null);
 
   const carregarFila = useCallback(async () => {
     const resposta = await fetch('/api/gestao/atendimento/fila');
@@ -74,7 +74,13 @@ export function Desk({ filaInicial, historicoInicial }: {
     return () => clearInterval(intervalo);
   }, [carregarFila, carregarConversa, selecionado]);
 
-  useEffect(() => { fimRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [mensagens.length]);
+  // Rola apenas a caixa de mensagens. scrollIntoView() arrastaria junto
+  // todos os ancestrais roláveis — inclusive a página — e o cabeçalho do
+  // card acabava atrás da barra fixa, com o botão de assumir escondido.
+  useEffect(() => {
+    const caixa = msgsRef.current;
+    if (caixa) caixa.scrollTo({ top: caixa.scrollHeight, behavior: 'smooth' });
+  }, [mensagens.length]);
 
   async function acao(caminho: string, corpo?: object) {
     if (!selecionado) return;
@@ -95,7 +101,7 @@ export function Desk({ filaInicial, historicoInicial }: {
   const naFila = conversa?.status === 'aguardando_atendente';
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '300px minmax(0,1fr) 280px', gap: 14, height: 'calc(100vh - 130px)' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '300px minmax(0,1fr) 280px', gap: 14, height: '100%', minHeight: 0 }}>
       {/* ---------- fila ---------- */}
       <aside className="cartao" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div className="cartao__topo" style={{ gap: 6 }}>
@@ -169,11 +175,10 @@ export function Desk({ filaInicial, historicoInicial }: {
               </div>
             </div>
 
-            <div className="chat__msgs" style={{ flex: 1 }}>
+            <div className="chat__msgs" style={{ flex: 1 }} ref={msgsRef}>
               {mensagens.map((mensagem) => (
                 <div key={mensagem.id} className={`msg msg--${mensagem.autor}`}>{mensagem.conteudo}</div>
               ))}
-              <div ref={fimRef} />
             </div>
 
             {emAtendimento ? (
@@ -189,10 +194,20 @@ export function Desk({ filaInicial, historicoInicial }: {
                        placeholder="Responder ao cliente…" aria-label="Resposta" />
                 <button className="btn btn--primario" type="submit" aria-label="Enviar">➤</button>
               </form>
-            ) : (
-              <div style={{ padding: 14, borderTop: '1px solid var(--borda)' }} className="dim">
-                {naFila ? 'Assuma o atendimento para responder.' : 'Conversa encerrada.'}
+            ) : naFila ? (
+              /* Antes aqui só havia o texto "assuma o atendimento para
+                 responder", e a única forma de assumir era o botão do
+                 cabeçalho. Oferecer a ação no mesmo lugar em que ela é
+                 pedida evita o beco sem saída. */
+              <div className="chat__bloqueio">
+                <span>Esta conversa está esperando um atendente.</span>
+                <button className="btn btn--sm btn--primario"
+                        onClick={() => void acao('assumir')}>
+                  Assumir para responder
+                </button>
               </div>
+            ) : (
+              <div className="chat__bloqueio dim">Conversa encerrada.</div>
             )}
           </>
         )}
