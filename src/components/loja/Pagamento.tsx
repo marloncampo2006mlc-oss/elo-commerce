@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { moeda } from '@/lib/formato';
 import { useToast } from '@/components/Toasts';
+import { IconeCheck } from '@/components/Icones';
 
 type Forma = 'pix' | 'credito' | 'debito';
 
@@ -98,7 +99,7 @@ export function Pagamento({ pedidoId, numero, total }: {
     if (cobranca.forma !== 'pix') {
       return (
         <div className="pagamento__resultado">
-          <div className="pagamento__selo">✓</div>
+          <div className="pagamento__selo"><IconeCheck tamanho={22} /></div>
           <h2>Pagamento registrado</h2>
           <p className="dim">
             Pedido <strong>#{cobranca.numero}</strong> · {moeda(cobranca.total)} ·{' '}
@@ -145,7 +146,9 @@ export function Pagamento({ pedidoId, numero, total }: {
         </div>
 
         <button className="btn btn--primario btn--bloco" onClick={() => void copiar()}>
-          {copiado ? '✓ Código copiado' : 'Copiar código Pix'}
+          {copiado
+            ? <><IconeCheck tamanho={15} /> Código copiado</>
+            : 'Copiar código Pix'}
         </button>
 
         <Link href="/" className="acesso-loja__link" style={{ display: 'block', marginTop: 14 }}>

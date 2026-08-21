@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { moeda } from '@/lib/formato';
 import { useToast } from '@/components/Toasts';
 import type { Produto } from '@/modules/catalogo/catalogo.types';
+import { IconeCaixa } from '@/components/Icones';
 
 export function TabelaProdutos({ produtos, categorias, total }: {
   produtos: Produto[]; categorias: string[]; total: number;
@@ -59,7 +60,8 @@ export function TabelaProdutos({ produtos, categorias, total }: {
                     <div className="flex">
                       <span className="mini">
                         {produto.imagem?.startsWith('/')
-                          ? <img src={produto.imagem} alt="" /> : <span>📦</span>}
+                          ? <img src={produto.imagem} alt="" />
+                          : <IconeCaixa tamanho={16} />}
                       </span>
                       <div>
                         <div style={{ fontWeight: 550 }}>{produto.nome}</div>
@@ -100,7 +102,8 @@ export function TabelaProdutos({ produtos, categorias, total }: {
               <div className="flex" style={{ marginBottom: 16 }}>
                 <span className="mini">
                   {ajustando.imagem?.startsWith('/')
-                    ? <img src={ajustando.imagem} alt="" /> : <span>📦</span>}
+                    ? <img src={ajustando.imagem} alt="" />
+                    : <IconeCaixa tamanho={18} />}
                 </span>
                 <div>
                   <strong>{ajustando.nome}</strong>

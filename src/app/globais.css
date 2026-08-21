@@ -243,6 +243,12 @@ td.acoes { text-align: right; white-space: nowrap; }
 .msg--atendente { background: rgb(22 163 74 / .12); border: 1px solid rgb(22 163 74 / .3); border-bottom-left-radius: 4px; align-self: flex-start; }
 .msg--sistema { align-self: center; background: transparent; color: var(--texto-3); font-size: 11.5px; font-style: italic; }
 
+.chat__msgs--mesa .msg--atendente,
+.chat__msgs--mesa .msg--bot {
+  align-self: flex-end;
+  border-bottom-left-radius: 13px; border-bottom-right-radius: 4px;
+}
+
 .chat__opcoes { display: flex; flex-direction: column; gap: 6px; padding: 0 16px 12px; }
 .chat__opcao {
   text-align: left; padding: 9px 12px; border-radius: 9px; font-size: 12.5px;
@@ -357,7 +363,18 @@ td.acoes { text-align: right; white-space: nowrap; }
   background: linear-gradient(135deg, rgb(109 74 255 / .12), transparent);
   box-shadow: 0 0 0 3px rgb(109 74 255 / .12);
 }
-.perfil__icone { font-size: 15px; }
+/* O ícone do perfil virou um quadrado com fundo próprio: dá peso visual
+   ao cartão e mantém todos os quatro perfis com a mesma altura, coisa
+   que emoji não garantia — cada um vinha com sua própria caixa. */
+.perfil__icone {
+  display: grid; place-items: center;
+  width: 28px; height: 28px; border-radius: 8px; margin-bottom: 3px;
+  background: var(--superficie-2); border: 1px solid var(--borda);
+  color: var(--texto-2);
+}
+.perfil--ativo .perfil__icone {
+  background: var(--grad-marca); border-color: transparent; color: #fff;
+}
 .perfil__nome { font-size: 12.5px; font-weight: 600; text-transform: capitalize; }
 .perfil__qtd { font-size: 10.5px; color: var(--texto-3); font-variant-numeric: tabular-nums; }
 
@@ -367,7 +384,7 @@ td.acoes { text-align: right; white-space: nowrap; }
 }
 
 .priv { display: flex; align-items: flex-start; gap: 9px; padding: 4px 0; font-size: 12.5px; }
-.priv__marca { color: var(--verde); font-weight: 700; width: 12px; flex: 0 0 auto; }
+.priv__marca { color: var(--verde); display: grid; place-items: center; width: 14px; flex: 0 0 auto; }
 .priv--nao { opacity: .42; }
 .priv--nao .priv__marca { color: var(--texto-3); }
 
@@ -575,7 +592,7 @@ td.acoes { text-align: right; white-space: nowrap; }
   border: 1px solid transparent; transition: var(--transicao);
 }
 .priv-item input { position: absolute; opacity: 0; width: 0; height: 0; }
-.priv-item__marca { color: var(--verde); font-weight: 700; width: 13px; flex: 0 0 auto; }
+.priv-item__marca { color: var(--verde); display: grid; place-items: center; width: 14px; flex: 0 0 auto; }
 .priv-item__rotulo { display: block; }
 .priv-item__desc { display: block; font-size: 11px; color: var(--texto-3); }
 .priv-item--nao { opacity: .45; }
@@ -763,7 +780,10 @@ select.filtro:hover { border-color: var(--borda-forte); }
   transition: transform var(--transicao);
 }
 .produto:hover .produto__capa img { transform: scale(1.05); }
-.produto__emoji { position: relative; font-size: 46px; }
+.produto__vazio {
+  display: grid; place-items: center; color: var(--texto-3);
+  width: 100%; height: 100%;
+}
 .produto__tag { position: absolute; top: 12px; left: 12px; }
 
 .produto__corpo { padding: 16px 17px 18px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
@@ -912,6 +932,14 @@ button.lateral__item {
 }
 .pagina--cheia > * { flex: 1; min-height: 0; }
 
+/* Ícone de aviso em página inteira — hoje o cadeado de acesso negado. */
+.aviso__icone {
+  display: grid; place-items: center;
+  width: 52px; height: 52px; border-radius: 14px; margin-bottom: 14px;
+  color: var(--ambar);
+  background: rgb(217 119 6 / .12); border: 1px solid rgb(217 119 6 / .25);
+}
+
 /* --------------------------- indicadores --------------------------- */
 .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(226px, 1fr)); gap: 16px; }
 
@@ -994,6 +1022,9 @@ button.lateral__item {
   width: 42px; height: 42px; border-radius: 10px; overflow: hidden; flex: 0 0 auto;
   border: 1px solid var(--borda); display: grid; place-items: center;
   background: radial-gradient(circle at 50% 42%, rgb(190 205 255 / .16), transparent 70%);
+  /* Vale para o ícone de produto sem foto: discreto, para não competir
+     com as miniaturas reais na mesma lista. */
+  color: var(--texto-3);
 }
 .mini img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.28); }
 
@@ -1015,6 +1046,21 @@ button.lateral__item {
   background: none; border: 0; padding: 0; cursor: pointer;
   font: inherit; color: var(--violeta-claro); text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+/* Matriz de privilégios: a coluna diz sim ou não de relance. O verde
+   sozinho já carrega o significado, mas o traço do "não" precisa de
+   forma própria — cor sozinha exclui quem não a distingue. */
+.matriz__sim, .matriz__nao {
+  display: inline-grid; place-items: center;
+  width: 22px; height: 22px; border-radius: 6px;
+}
+.matriz__sim { color: var(--verde); background: rgb(22 163 74 / .12); }
+.matriz__nao { color: var(--texto-3); background: var(--superficie-2); }
+
+.cabecalho-perfil {
+  display: inline-flex; align-items: center; gap: 6px;
+  text-transform: capitalize;
 }
 .ligacao:hover { color: var(--ciano); }
 

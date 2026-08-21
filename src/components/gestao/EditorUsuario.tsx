@@ -1,7 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { PainelLateral } from '@/components/Modal';
+import {
+  IconeAtendimento, IconeChave, IconeCheck, IconeEscudoCheck,
+  IconeGrafico, IconeMenos, IconePrancheta,
+} from '@/components/Icones';
 import { useToast } from '@/components/Toasts';
 import { dataCurta } from '@/lib/formato';
 import {
@@ -14,8 +18,19 @@ export const COR_PAPEL: Record<PapelUsuario, string> = {
   administrador: 'vermelho', gerente: 'violeta', supervisor: 'ciano', atendente: 'verde',
 };
 
-export const ICONE_PAPEL: Record<PapelUsuario, string> = {
-  administrador: '🛡', gerente: '📋', supervisor: '📊', atendente: '🎧',
+/**
+ * Emoji foi trocado por ícone desenhado.
+ *
+ * Cada sistema operacional desenha o próprio emoji, com peso e proporção
+ * diferentes — uma fileira deles nunca alinha, e a cor vem pronta, sem
+ * respeitar o tema. O conjunto SVG do projeto herda cor e tamanho do
+ * contexto, que é o que uma tela de administração precisa.
+ */
+export const ICONE_PAPEL: Record<PapelUsuario, ReactNode> = {
+  administrador: <IconeEscudoCheck tamanho={16} />,
+  gerente: <IconePrancheta tamanho={16} />,
+  supervisor: <IconeGrafico tamanho={16} />,
+  atendente: <IconeAtendimento tamanho={16} />,
 };
 
 interface Props {
@@ -235,7 +250,9 @@ export function EditorUsuario({ usuario, meuId, aoFechar, aoSalvar, aoRedefinirS
                      editavel ? 'priv-item--editavel' : ''}`}>
               <input type="checkbox" checked={tem} disabled={!editavel}
                      onChange={() => alternarPrivilegio(privilegio.chave)} />
-              <span className="priv-item__marca" aria-hidden="true">{tem ? '✓' : '✕'}</span>
+              <span className="priv-item__marca" aria-hidden="true">
+                {tem ? <IconeCheck tamanho={13} /> : <IconeMenos tamanho={13} />}
+              </span>
               <span>
                 <span className="priv-item__rotulo">{privilegio.rotulo}</span>
                 <span className="priv-item__desc">{privilegio.descricao}</span>
@@ -257,7 +274,7 @@ export function EditorUsuario({ usuario, meuId, aoFechar, aoSalvar, aoRedefinirS
         <div className="flex" style={{ gap: 8 }}>
           <button className="btn btn--sm" disabled={salvando}
                   onClick={() => aoRedefinirSenha(usuario)}>
-            🔑 Redefinir senha
+            <IconeChave tamanho={15} /> Redefinir senha
           </button>
           {!ehVoce && (
             <button className={`btn btn--sm ${usuario.ativo ? 'btn--perigo' : ''}`}

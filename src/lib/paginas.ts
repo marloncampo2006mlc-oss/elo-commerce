@@ -15,21 +15,20 @@
 export interface PaginaGestao {
   href: string;
   rotulo: string;
-  icone: string;
   grupo: 'Operação' | 'Atendimento' | 'Análise' | 'Administração';
   /** Privilégio necessário para abrir a página. */
   privilegio: string;
 }
 
 export const PAGINAS: PaginaGestao[] = [
-  { href: '/gestao/painel',      rotulo: 'Painel',          icone: '◈', grupo: 'Operação',      privilegio: 'bi.ver' },
-  { href: '/gestao/produtos',    rotulo: 'Produtos',        icone: '▤', grupo: 'Operação',      privilegio: 'catalogo.ver' },
-  { href: '/gestao/pedidos',     rotulo: 'Pedidos',         icone: '▦', grupo: 'Operação',      privilegio: 'pedidos.ver' },
-  { href: '/gestao/clientes',    rotulo: 'Clientes',        icone: '◍', grupo: 'Operação',      privilegio: 'clientes.ver' },
-  { href: '/gestao/no-code',     rotulo: 'No-Code',         icone: '⬡', grupo: 'Atendimento',   privilegio: 'bots.editar' },
-  { href: '/gestao/atendimento', rotulo: 'Atendimento',     icone: '◐', grupo: 'Atendimento',   privilegio: 'atendimento.atender' },
-  { href: '/gestao/bi',          rotulo: 'BI / Supervisão', icone: '◔', grupo: 'Análise',       privilegio: 'bi.ver' },
-  { href: '/gestao/usuarios',    rotulo: 'Usuários',        icone: '◍', grupo: 'Administração', privilegio: 'usuarios.gerenciar' },
+  { href: '/gestao/painel',      rotulo: 'Painel',          grupo: 'Operação',      privilegio: 'bi.ver' },
+  { href: '/gestao/produtos',    rotulo: 'Produtos',        grupo: 'Operação',      privilegio: 'catalogo.ver' },
+  { href: '/gestao/pedidos',     rotulo: 'Pedidos',         grupo: 'Operação',      privilegio: 'pedidos.ver' },
+  { href: '/gestao/clientes',    rotulo: 'Clientes',        grupo: 'Operação',      privilegio: 'clientes.ver' },
+  { href: '/gestao/no-code',     rotulo: 'No-Code',         grupo: 'Atendimento',   privilegio: 'bots.editar' },
+  { href: '/gestao/atendimento', rotulo: 'Atendimento',     grupo: 'Atendimento',   privilegio: 'atendimento.atender' },
+  { href: '/gestao/bi',          rotulo: 'BI / Supervisão', grupo: 'Análise',       privilegio: 'bi.ver' },
+  { href: '/gestao/usuarios',    rotulo: 'Usuários',        grupo: 'Administração', privilegio: 'usuarios.gerenciar' },
 ];
 
 export const GRUPOS = ['Operação', 'Atendimento', 'Análise', 'Administração'] as const;
