@@ -1,30 +1,24 @@
 # Guia de apresentação — Elo Platform
 
-Como apresentar o projeto e defender o código numa entrevista técnica.
-
 ---
 
-## 1. O pitch de 60 segundos
+## Pitch
 
-Decore a estrutura, não as palavras.
-
-> "É uma plataforma que junta cinco frentes: **loja**, **gestão**, um **construtor de chatbot no-code**, **atendimento humano** e **BI**.
+> É uma plataforma que junta cinco frentes: **loja**, **gestão**, um **construtor de chatbot no-code**, **atendimento humano** e **BI**.
 >
 > O que amarra tudo é um fluxo só: eu monto o chatbot arrastando blocos, publico, e **aquele fluxo passa a ser o assistente da loja de verdade** — não é mockup. Se o bot não resolve, ele transfere a conversa para uma fila de atendimento humano, e tudo isso vira indicador no BI.
 >
 > Fiz em **Next.js com TypeScript e PostgreSQL, sem ORM** — escrevi o SQL na mão porque queria entender transação e índice, não só a abstração.
 >
-> A parte que eu mais gosto: as regras críticas não estão só no código. O total do pedido é recalculado por *trigger* no banco, e a baixa de estoque é uma função que lança exceção e cancela a transação inteira. Mesmo que outro sistema escreva direto na tabela, o dado não fica inconsistente."
+> A parte que eu mais gosto: as regras críticas não estão só no código. O total do pedido é recalculado por *trigger* no banco, e a baixa de estoque é uma função que lança exceção e cancela a transação inteira. Mesmo que outro sistema escreva direto na tabela, o dado não fica inconsistente.
 
 **Por que essa ordem funciona:** abre pelo produto, passa pela stack (a próxima pergunta deles) e fecha com profundidade técnica.
 
 ---
 
-## 2. Roteiro de demonstração
+## Demo
 
-Oito passos. Cada um prova algo diferente — não é passeio pelo menu.
-
-| # | O que fazer | O que dizer |
+| # | O que ela faz
 |---|---|---|
 | 1 | Abrir a **loja** | "Vitrine com busca e filtros. O front é Next com Server Components — a consulta roda no servidor." |
 | 2 | **Comprar** um produto | Compre de verdade. Prova que é sistema, não tela. |
@@ -54,7 +48,6 @@ executarTurno() → carrega o nó atual → executa → resolve a aresta
                 → encadeia automáticos → para no que espera resposta
 ```
 
-**O que dizer:**
 - "Cada tipo de bloco é um executor isolado. Adicionar um bloco novo é criar um arquivo — o motor não muda."
 - "As consultas ao banco chegam **injetadas**, por isso consigo testar o motor sem nenhuma infraestrutura."
 - "Tem um **limite de saltos por turno**. Se alguém desenhar um ciclo A→B→A no editor, o servidor não trava."
@@ -66,19 +59,16 @@ SELECT id, preco, ativo FROM produtos WHERE id = $1 FOR UPDATE
 SELECT baixar_estoque($1, $2)
 ```
 
-**O que dizer:**
 - "`FOR UPDATE` trava a linha do produto até o fim da transação. Sem isso, dois clientes comprando o último item ao mesmo tempo passariam os dois."
 - "A baixa é uma função no banco que lança exceção. Se faltar saldo, a transação inteira aborta — não fica pedido sem estoque nem estoque sem pedido."
 
 ### `lib/autorizacao.ts` — a segurança
 
-**O que dizer:**
 - "Verifico **capacidade**, não cargo. O usuário tem um papel, que é um pacote padrão, mas dá para conceder privilégio a privilégio."
 - "Consulto o **banco**, não o cookie. O token carrega o papel do momento do login — se eu revogasse um acesso, só valeria no próximo login. Assim vale na hora."
 
 ### `db/sql/001_schema.sql` — o banco
 
-**O que dizer:**
 - "O total do pedido é recalculado por trigger. A regra que não pode divergir eu coloco onde o dado mora."
 - "Enums em vez de VARCHAR: estado impossível não entra."
 
@@ -118,8 +108,6 @@ SELECT baixar_estoque($1, $2)
 - **Aprendi:** compensar com z-index deixaria a armadilha esperando o próximo modal.
 
 ---
-
-## 5. Perguntas prováveis
 
 **Por que não usou ORM?**
 Escolha de aprendizado: queria entender índice, transação e plano de execução. Em equipe com prazo, um ORM faz sentido — é decisão de contexto. E paguei o custo: toda query parametrizada, sem concatenação.
