@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { IconeAssistente } from './loja/IconesLoja';
+import { IconeEnviar, IconeFechar } from './Icones';
+import { ordinal, tempoEspera } from '@/lib/formato';
 
 interface Opcao { id: string; rotulo: string }
 interface Mensagem {
@@ -11,6 +13,8 @@ interface Mensagem {
 interface Conversa {
   atendimento: { id: string; protocolo: string; status: string };
   mensagens: Mensagem[];
+  /** Só existe enquanto a conversa aguarda um atendente humano. */
+  fila: { posicao: number; total_na_fila: number; espera_segundos: number } | null;
 }
 
 /**
@@ -165,7 +169,7 @@ export function WidgetChat() {
           <span>{conversa?.atendimento.protocolo ?? 'iniciando…'}</span>
         </div>
         <button className="btn btn--sm btn--fantasma" onClick={() => setAberto(false)}
-                aria-label="Fechar">✕</button>
+                aria-label="Fechar"><IconeFechar /></button>
       </header>
 
       <div className="chat__msgs">
@@ -183,8 +187,26 @@ export function WidgetChat() {
           </div>
         )}
 
+        {/* Espera sem informação é o que faz a pessoa fechar a janela.
+            Dizer a posição e há quanto tempo ela espera transforma um
+            "aguarde" indefinido em algo que dá para acompanhar — e o
+            número cai sozinho a cada consulta, sem recarregar. */}
         {conversa?.atendimento.status === 'aguardando_atendente' && (
-          <div className="msg msg--sistema">Aguardando um atendente entrar na conversa…</div>
+          conversa.fila ? (
+            <div className="espera espera--chat">
+              <span className={`espera__vez ${
+                conversa.fila.posicao === 1 ? 'espera__vez--proximo' : ''}`}>
+                {conversa.fila.posicao === 1
+                  ? 'Você é o próximo'
+                  : `Você é o ${ordinal(conversa.fila.posicao)} da fila`}
+              </span>
+              <span className="dim">
+                esperando há {tempoEspera(conversa.fila.espera_segundos)}
+              </span>
+            </div>
+          ) : (
+            <div className="msg msg--sistema">Aguardando um atendente entrar na conversa…</div>
+          )
         )}
 
         <div ref={fimRef} />
@@ -213,7 +235,7 @@ export function WidgetChat() {
                  placeholder="Digite sua mensagem…" maxLength={500} aria-label="Mensagem"
                  disabled={!conversa || carregando} />
           <button className="btn btn--primario" type="submit" disabled={!texto.trim() || carregando}
-                  aria-label="Enviar">➤</button>
+                  aria-label="Enviar"><IconeEnviar /></button>
         </form>
       )}
     </section>
