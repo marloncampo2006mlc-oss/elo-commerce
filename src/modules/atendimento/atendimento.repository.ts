@@ -38,6 +38,16 @@ export interface ItemFila extends Atendimento {
   atendente_nome: string | null;
   total_mensagens: number;
   espera_segundos: number;
+  /** 1 = próximo a ser atendido. null para quem já saiu da fila. */
+  posicao_fila: number | null;
+}
+
+/** O que uma pessoa que espera precisa saber: onde está e há quanto tempo. */
+export interface EsperaNaFila {
+  posicao: number;
+  espera_segundos: number;
+  /** Quantos aguardam no total, para dar dimensão à posição. */
+  total_na_fila: number;
 }
 
 export const atendimentoRepository = {
@@ -165,7 +175,13 @@ export const atendimentoRepository = {
               (SELECT COUNT(*)::int FROM atendimento_mensagens m WHERE m.atendimento_id = a.id)
                 AS total_mensagens,
               EXTRACT(EPOCH FROM (NOW() - COALESCE(a.entrou_fila_em, a.created_at)))::int
-                AS espera_segundos
+                AS espera_segundos,
+              CASE WHEN a.status = 'aguardando_atendente' THEN (
+                SELECT COUNT(*)::int + 1 FROM atendimentos f
+                 WHERE f.status = 'aguardando_atendente' AND NOT f.teste
+                   AND COALESCE(f.entrou_fila_em, f.created_at)
+                     < COALESCE(a.entrou_fila_em, a.created_at)
+              ) END AS posicao_fila
          FROM atendimentos a
          LEFT JOIN clientes c ON c.id = a.cliente_id
          LEFT JOIN usuarios u ON u.id = a.atendente_id
@@ -176,12 +192,40 @@ export const atendimentoRepository = {
     );
   },
 
+  /**
+   * Posição e tempo de espera de uma conversa específica.
+   *
+   * A posição é contada, não armazenada: guardar um número de fila numa
+   * coluna exigiria reescrever todas as linhas a cada atendimento
+   * assumido, e qualquer falha no meio deixaria a fila mentindo. Contar
+   * quantos entraram antes usa o dado que já existe e nunca desatualiza.
+   *
+   * Devolve null quando a conversa não está esperando — quem já foi
+   * atendido não tem posição.
+   */
+  esperaNaFila(atendimentoId: string): Promise<EsperaNaFila | null> {
+    return consultarUm<EsperaNaFila>(
+      `SELECT (SELECT COUNT(*)::int + 1 FROM atendimentos f
+                WHERE f.status = 'aguardando_atendente' AND NOT f.teste
+                  AND COALESCE(f.entrou_fila_em, f.created_at)
+                    < COALESCE(a.entrou_fila_em, a.created_at)) AS posicao,
+              (SELECT COUNT(*)::int FROM atendimentos f
+                WHERE f.status = 'aguardando_atendente' AND NOT f.teste) AS total_na_fila,
+              EXTRACT(EPOCH FROM (NOW() - COALESCE(a.entrou_fila_em, a.created_at)))::int
+                AS espera_segundos
+         FROM atendimentos a
+        WHERE a.id = $1 AND a.status = 'aguardando_atendente'`,
+      [atendimentoId],
+    );
+  },
+
   historico(limite = 30): Promise<ItemFila[]> {
     return consultar<ItemFila>(
       `SELECT a.*, c.nome AS cliente_nome, u.nome AS atendente_nome,
               (SELECT COUNT(*)::int FROM atendimento_mensagens m WHERE m.atendimento_id = a.id)
                 AS total_mensagens,
-              0 AS espera_segundos
+              0 AS espera_segundos,
+              NULL::int AS posicao_fila
          FROM atendimentos a
          LEFT JOIN clientes c ON c.id = a.cliente_id
          LEFT JOIN usuarios u ON u.id = a.atendente_id

@@ -243,6 +243,16 @@ td.acoes { text-align: right; white-space: nowrap; }
 .msg--atendente { background: rgb(22 163 74 / .12); border: 1px solid rgb(22 163 74 / .3); border-bottom-left-radius: 4px; align-self: flex-start; }
 .msg--sistema { align-self: center; background: transparent; color: var(--texto-3); font-size: 11.5px; font-style: italic; }
 
+/* Mesa de atendimento: o ponto de vista se inverte.
+   No widget da loja quem lê é o cliente, então a fala DELE vai à
+   direita. Na mesa quem lê é o atendente: a fala do cliente passa para
+   a esquerda e a da casa — atendente e bot, que são o mesmo lado do
+   balcão — vai para a direita. Sem isto o atendente via a própria
+   resposta no lugar de quem ele está atendendo. */
+.chat__msgs--mesa .msg--cliente {
+  align-self: flex-start;
+  border-bottom-right-radius: 13px; border-bottom-left-radius: 4px;
+}
 .chat__msgs--mesa .msg--atendente,
 .chat__msgs--mesa .msg--bot {
   align-self: flex-end;
@@ -258,6 +268,32 @@ td.acoes { text-align: right; white-space: nowrap; }
 .chat__opcao:hover { border-color: var(--violeta); background: var(--superficie-2); }
 
 .chat__form { display: flex; gap: 8px; padding: 12px 14px; border-top: 1px solid var(--borda); background: var(--superficie); }
+/* Espera na fila — mostrada nas duas pontas: para o atendente, na lista;
+   para o cliente, dentro do chat. A posição ganha destaque porque é a
+   informação que responde "falta muito?"; o tempo vem em seguida. */
+.espera {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  font-size: 11.5px;
+}
+.espera__vez {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; border-radius: var(--raio-full);
+  font-weight: 650; font-variant-numeric: tabular-nums;
+  color: var(--violeta-claro); background: rgb(109 74 255 / .14);
+  border: 1px solid rgb(109 74 255 / .28);
+}
+.espera__vez--proximo {
+  color: var(--verde); background: rgb(22 163 74 / .14); border-color: rgb(22 163 74 / .3);
+}
+
+/* Dentro do chat da loja o aviso ocupa a largura toda e fica centrado:
+   ali ele não é um item de lista, é o estado da conversa. */
+.espera--chat {
+  justify-content: center; margin: 4px 0;
+  padding: 10px; border-radius: 10px;
+  background: var(--superficie-2); border: 1px solid var(--borda);
+}
+
 .chat__bloqueio {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   padding: 12px 14px; border-top: 1px solid var(--borda);

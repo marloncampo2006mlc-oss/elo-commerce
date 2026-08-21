@@ -13,15 +13,18 @@ export default async function Atendimento() {
     atendimentoService.historico(20),
   ]);
 
-  const aguardando = fila.filter((item) => item.status === 'aguardando_atendente').length;
-
   return (
     <>
+      {/*
+        O subtítulo não conta ninguém de propósito.
+        Ele é renderizado no servidor, uma vez, enquanto a fila se
+        atualiza a cada 5s no navegador — o número congelava e passava a
+        contradizer a lista logo abaixo. A contagem viva fica na aba
+        "Fila" e no título do navegador, que acompanham o polling.
+      */}
       <BarraGestao
         titulo="Atendimento"
-        subtitulo={aguardando > 0
-          ? `${aguardando} cliente(s) aguardando na fila`
-          : 'Nenhum cliente aguardando'}
+        subtitulo="Quem está esperando e as conversas em andamento"
       />
       <div className="pagina pagina--cheia">
         <Desk

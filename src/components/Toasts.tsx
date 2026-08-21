@@ -7,7 +7,9 @@ interface Toast { id: number; titulo: string; texto?: string; tipo: 'info' | 'su
 const Contexto = createContext<{
   sucesso: (titulo: string, texto?: string) => void;
   erro: (titulo: string, texto?: string) => void;
-}>({ sucesso: () => {}, erro: () => {} });
+  /** Nem todo aviso é resultado de uma ação: "chegou alguém na fila" é só notícia. */
+  info: (titulo: string, texto?: string) => void;
+}>({ sucesso: () => {}, erro: () => {}, info: () => {} });
 
 export const useToast = () => useContext(Contexto);
 
@@ -24,6 +26,7 @@ export function ProvedorToast({ children }: { children: ReactNode }) {
     <Contexto.Provider value={{
       sucesso: (titulo, texto) => adicionar('sucesso', titulo, texto),
       erro: (titulo, texto) => adicionar('erro', titulo, texto),
+      info: (titulo, texto) => adicionar('info', titulo, texto),
     }}>
       {children}
       <div className="toasts" role="status" aria-live="polite">

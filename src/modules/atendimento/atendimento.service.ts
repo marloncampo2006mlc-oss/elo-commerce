@@ -1,5 +1,7 @@
 import { consultar, consultarUm } from '@/lib/db';
-import { atendimentoRepository, type Atendimento, type Mensagem } from './atendimento.repository';
+import {
+  atendimentoRepository, type Atendimento, type EsperaNaFila, type Mensagem,
+} from './atendimento.repository';
 import { botsRepository } from '@/modules/bots/bots.repository';
 import { acharNoInicial, executarTurno } from '@/chatbot/motor';
 import { Conflito, NaoEncontrado, NaoProcessavel } from '@/lib/erros';
@@ -42,6 +44,12 @@ const dependenciasReais: DependenciasExecutor = {
 export interface ConversaCompleta {
   atendimento: Atendimento;
   mensagens: Mensagem[];
+  /**
+   * Preenchido só enquanto a conversa espera na fila. É o que permite
+   * dizer ao cliente onde ele está, em vez do genérico "aguarde" — a
+   * espera sem informação é o que faz a pessoa desistir.
+   */
+  fila: EsperaNaFila | null;
 }
 
 export const atendimentoService = {
@@ -99,7 +107,18 @@ export const atendimentoService = {
   async obter(id: string): Promise<ConversaCompleta> {
     const atendimento = await atendimentoRepository.buscarPorId(id);
     if (!atendimento) throw NaoEncontrado('Atendimento');
-    return { atendimento, mensagens: await atendimentoRepository.mensagens(id) };
+
+    // A consulta da fila só acontece para quem está esperando: quem já
+    // foi assumido não tem posição, e cobrar o banco por isso a cada
+    // consulta do widget seria desperdício num caminho muito chamado.
+    const [mensagens, fila] = await Promise.all([
+      atendimentoRepository.mensagens(id),
+      atendimento.status === 'aguardando_atendente'
+        ? atendimentoRepository.esperaNaFila(id)
+        : Promise.resolve(null),
+    ]);
+
+    return { atendimento, mensagens, fila };
   },
 
   /** Um turno da conversa com o bot. */
@@ -179,7 +198,7 @@ export const atendimentoService = {
 
   async finalizar(id: string, atendenteId: string, nome: string): Promise<ConversaCompleta> {
     const { atendimento } = await atendimentoService.obter(id);
-    if (atendimento.status === 'finalizado') return { atendimento, mensagens: [] };
+    if (atendimento.status === 'finalizado') return { atendimento, mensagens: [], fila: null };
     await atendimentoRepository.finalizar(id, atendenteId, nome);
     return atendimentoService.obter(id);
   },

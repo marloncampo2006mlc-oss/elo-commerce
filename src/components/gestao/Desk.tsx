@@ -1,15 +1,21 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { moeda } from '@/lib/formato';
+import { moeda, ordinal, tempoEspera } from '@/lib/formato';
 import { SeloStatus } from '@/components/SeloStatus';
 import { useToast } from '@/components/Toasts';
-import { IconeAtendimento } from '@/components/Icones';
+import {
+  IconeAtendimento, IconeEnviar, IconeSino, IconeSinoCortado,
+} from '@/components/Icones';
+import { tocarAlerta } from '@/lib/alertaSonoro';
+
+const CHAVE_SOM = 'elo-alerta-fila';
 
 interface ItemFila {
   id: string; protocolo: string; status: string; canal: string;
   cliente_nome: string | null; atendente_nome: string | null;
   total_mensagens: number; espera_segundos: number; created_at: string;
+  posicao_fila: number | null;
 }
 interface Mensagem { id: string; autor: string; conteudo: string }
 interface Evento { id: string; tipo: string; descricao: string; created_at: string }
@@ -18,12 +24,6 @@ interface DadosCliente {
   total_pedidos: number; total_gasto: number;
   pedidos: Array<{ numero: number; status: string; total: number; created_at: string }>;
 }
-
-const tempoEspera = (segundos: number): string => {
-  if (segundos < 60) return `${segundos}s`;
-  const minutos = Math.floor(segundos / 60);
-  return minutos < 60 ? `${minutos}min` : `${Math.floor(minutos / 60)}h${minutos % 60}min`;
-};
 
 /**
  * Mesa de atendimento.
@@ -45,8 +45,54 @@ export function Desk({ filaInicial, historicoInicial }: {
   const [conversa, setConversa] = useState<ItemFila | null>(null);
   const [cliente, setCliente] = useState<DadosCliente | null>(null);
   const [texto, setTexto] = useState('');
-  const { sucesso, erro } = useToast();
+  const { sucesso, erro, info } = useToast();
   const msgsRef = useRef<HTMLDivElement>(null);
+
+  const [somLigado, setSomLigado] = useState(true);
+  /**
+   * Quem já estava na fila na última consulta.
+   *
+   * `null` marca que ainda não houve nenhuma: quem abre a tela com
+   * cinco pessoas esperando não deve receber cinco alertas de "chegou
+   * alguém". Só o que aparece DEPOIS da primeira carga é novidade.
+   */
+  const conhecidosRef = useRef<Set<string> | null>(null);
+
+  const aguardandoAgora = fila.filter(
+    (item) => item.status === 'aguardando_atendente').length;
+
+  useEffect(() => {
+    setSomLigado(localStorage.getItem(CHAVE_SOM) !== 'desligado');
+  }, []);
+
+  /**
+   * Avisa quando alguém novo entra na fila.
+   *
+   * O aviso é do navegador, não do sistema operacional: notificação
+   * nativa exige permissão, e uma permissão pedida de surpresa costuma
+   * ser negada — deixando o atendente sem aviso nenhum. Um toast, o som
+   * e o contador no título da aba funcionam sempre, inclusive com a aba
+   * em segundo plano, que é justamente quando o aviso importa.
+   */
+  const anunciarNovidades = useCallback((novaFila: ItemFila[]) => {
+    const aguardando = novaFila.filter((item) => item.status === 'aguardando_atendente');
+    const ids = new Set(aguardando.map((item) => item.id));
+
+    const conhecidos = conhecidosRef.current;
+    conhecidosRef.current = ids;
+    if (conhecidos === null) return;
+
+    const novas = aguardando.filter((item) => !conhecidos.has(item.id));
+    if (novas.length === 0) return;
+
+    for (const nova of novas) {
+      info(
+        'Novo cliente na fila',
+        `${nova.cliente_nome ?? 'Visitante'} · ${nova.protocolo}`,
+      );
+    }
+    if (somLigado) tocarAlerta();
+  }, [info, somLigado]);
 
   const carregarFila = useCallback(async () => {
     const resposta = await fetch('/api/gestao/atendimento/fila');
@@ -54,7 +100,8 @@ export function Desk({ filaInicial, historicoInicial }: {
     const { data } = await resposta.json();
     setFila(data.fila);
     setHistorico(data.historico);
-  }, []);
+    anunciarNovidades(data.fila as ItemFila[]);
+  }, [anunciarNovidades]);
 
   const carregarConversa = useCallback(async (id: string) => {
     const resposta = await fetch(`/api/gestao/atendimento/${id}`);
@@ -65,6 +112,28 @@ export function Desk({ filaInicial, historicoInicial }: {
     setConversa(data.atendimento);
     setCliente(data.cliente ?? null);
   }, []);
+
+  useEffect(() => { anunciarNovidades(filaInicial); }, [anunciarNovidades, filaInicial]);
+
+  /**
+   * Quantos esperam, no título da aba.
+   *
+   * É o único aviso que atravessa a aba em segundo plano — que é
+   * exatamente quando o atendente não está olhando a tela.
+   *
+   * A dependência inclui `fila` de propósito, e não só a contagem: o
+   * Next escreve o título vindo do `metadata` no commit inicial e
+   * sobrescreve o nosso uma vez. Reafirmar a cada consulta da fila faz o
+   * contador se recuperar sozinho, sem depender de vencer essa corrida.
+   */
+  useEffect(() => {
+    document.title = aguardandoAgora > 0
+      ? `(${aguardandoAgora}) Atendimento · Elo`
+      : 'Atendimento · Elo';
+  }, [aguardandoAgora, fila]);
+
+  // Sair da tela não pode deixar o contador preso no título da aba.
+  useEffect(() => () => { document.title = 'Elo Platform'; }, []);
 
   useEffect(() => {
     const intervalo = setInterval(() => {
@@ -107,11 +176,30 @@ export function Desk({ filaInicial, historicoInicial }: {
         <div className="cartao__topo" style={{ gap: 6 }}>
           <button className={`btn btn--sm ${aba === 'fila' ? 'btn--primario' : 'btn--fantasma'}`}
                   onClick={() => setAba('fila')}>
-            Fila {fila.length > 0 && `(${fila.length})`}
+            {/* O contador é de quem ESPERA, não do tamanho da lista: a
+                aba também mostra conversas já assumidas, e um número
+                que some as duas não diz o que precisa de atenção. */}
+            Fila {aguardandoAgora > 0 && `(${aguardandoAgora})`}
           </button>
           <button className={`btn btn--sm ${aba === 'historico' ? 'btn--primario' : 'btn--fantasma'}`}
                   onClick={() => setAba('historico')}>
             Histórico
+          </button>
+
+          <button className="btn btn--sm btn--fantasma direita"
+                  aria-pressed={somLigado}
+                  title={somLigado ? 'Desligar o som de novo cliente' : 'Ligar o som de novo cliente'}
+                  aria-label={somLigado ? 'Desligar o som de novo cliente' : 'Ligar o som de novo cliente'}
+                  onClick={() => {
+                    const proximo = !somLigado;
+                    setSomLigado(proximo);
+                    localStorage.setItem(CHAVE_SOM, proximo ? 'ligado' : 'desligado');
+                    // Tocar na hora de ligar confirma que o som funciona
+                    // e destrava o áudio do navegador, que só libera
+                    // depois de um clique.
+                    if (proximo) tocarAlerta();
+                  }}>
+            {somLigado ? <IconeSino tamanho={15} /> : <IconeSinoCortado tamanho={15} />}
           </button>
         </div>
 
@@ -139,9 +227,17 @@ export function Desk({ filaInicial, historicoInicial }: {
               <div className="dim mono" style={{ fontSize: 11 }}>{item.protocolo}</div>
               <div className="dim" style={{ fontSize: 11.5, marginTop: 3 }}>
                 {item.canal} · {item.total_mensagens} msgs
-                {item.status === 'aguardando_atendente' && ` · espera ${tempoEspera(item.espera_segundos)}`}
                 {item.atendente_nome && ` · ${item.atendente_nome}`}
               </div>
+
+              {item.status === 'aguardando_atendente' && item.posicao_fila !== null && (
+                <div className="espera" style={{ marginTop: 6 }}>
+                  <span className={`espera__vez ${item.posicao_fila === 1 ? 'espera__vez--proximo' : ''}`}>
+                    {ordinal(item.posicao_fila)} na fila
+                  </span>
+                  <span className="dim">esperando há {tempoEspera(item.espera_segundos)}</span>
+                </div>
+              )}
             </button>
           ))}
         </div>
@@ -175,7 +271,11 @@ export function Desk({ filaInicial, historicoInicial }: {
               </div>
             </div>
 
-            <div className="chat__msgs" style={{ flex: 1 }} ref={msgsRef}>
+            {/* --mesa espelha os lados: aqui quem lê é o atendente, então
+                o cliente fica à esquerda e a nossa fala à direita. No
+                widget da loja é o contrário, e o mesmo CSS serve aos
+                dois casos. */}
+            <div className="chat__msgs chat__msgs--mesa" style={{ flex: 1 }} ref={msgsRef}>
               {mensagens.map((mensagem) => (
                 <div key={mensagem.id} className={`msg msg--${mensagem.autor}`}>{mensagem.conteudo}</div>
               ))}
@@ -192,7 +292,9 @@ export function Desk({ filaInicial, historicoInicial }: {
                     }}>
                 <input value={texto} onChange={(evento) => setTexto(evento.target.value)}
                        placeholder="Responder ao cliente…" aria-label="Resposta" />
-                <button className="btn btn--primario" type="submit" aria-label="Enviar">➤</button>
+                <button className="btn btn--primario" type="submit" aria-label="Enviar">
+                  <IconeEnviar />
+                </button>
               </form>
             ) : naFila ? (
               /* Antes aqui só havia o texto "assuma o atendimento para
