@@ -167,6 +167,12 @@ export const IconeEnvelope = ({ tamanho = 18 }: Props) => (
   </svg>
 );
 
+export const IconeChevron = ({ tamanho = 14 }: Props) => (
+  <svg {...base(tamanho)}>
+    <path d="m8 10 4 4 4-4" />
+  </svg>
+);
+
 /* ------------------------------ navegação ------------------------- */
 
 export const IconePainel = ({ tamanho = 18 }: Props) => (

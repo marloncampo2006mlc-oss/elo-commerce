@@ -906,21 +906,61 @@ select.filtro:hover { border-color: var(--borda-forte); }
 /* ===================================================================
    18. GESTÃO — estrutura
    =================================================================== */
+/* Deixou de ser grade: com a lateral em position:fixed ela não ocupa
+   mais célula nenhuma, e o conteúdo caía na primeira coluna — 68px de
+   largura para a página inteira. A margem reserva o espaço da faixa sem
+   depender de a lateral estar no fluxo. */
 .gestao {
-  display: grid; grid-template-columns: 248px 1fr; min-height: 100vh;
+  display: block; min-height: 100vh;
   background:
     radial-gradient(46rem 30rem at 78% -6%, rgb(109 74 255 / .10), transparent 62%),
     var(--fundo);
 }
 
 /* --------------------------- lateral ------------------------------- */
+/* --- larguras do menu ---
+   A coluna da grade vale a faixa recolhida; o menu aberto passa por cima
+   do conteúdo em vez de empurrá-lo. Empurrar faria a página inteira
+   refluir a cada passada de mouse, e ler uma tabela viraria perseguir a
+   linha que se moveu. */
+:root { --faixa: 68px; --menu-aberto: 250px; }
+
 .lateral {
-  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  position: fixed; top: 0; left: 0; bottom: 0; z-index: 60;
+  width: var(--faixa); overflow: hidden;
   display: flex; flex-direction: column; padding: 20px 14px 18px;
-  background: var(--fundo-2); border-right: 1px solid var(--borda); z-index: 40;
+  background: var(--fundo-2); border-right: 1px solid var(--borda);
+  transition: width 200ms cubic-bezier(.4, 0, .2, 1), box-shadow 200ms;
+}
+
+/* Abre no hover e também no foco: quem navega por teclado nunca dispara
+   um :hover, e sem isto o menu seria inalcançável sem mouse. */
+.lateral:hover, .lateral:focus-within {
+  width: var(--menu-aberto); overflow-y: auto;
+  box-shadow: var(--sombra-lg);
+}
+
+/* Os rótulos somem por opacidade, não por display: o texto continua
+   ocupando o mesmo lugar, então a largura não "salta" ao abrir, e
+   leitores de tela seguem anunciando o nome do item. */
+.lateral__rotulo {
+  opacity: 0; transition: opacity 140ms;
+  white-space: nowrap; pointer-events: none;
+}
+.lateral:hover .lateral__rotulo, .lateral:focus-within .lateral__rotulo {
+  opacity: 1; pointer-events: auto;
+}
+
+/* Sem mouse não existe hover: em toque e telas estreitas o menu fica
+   sempre aberto, e a grade devolve o espaço a ele. */
+@media (hover: none), (max-width: 720px) {
+  .lateral { width: var(--menu-aberto); overflow-y: auto; }
+  .lateral__rotulo { opacity: 1; pointer-events: auto; }
+  .conteudo { margin-left: var(--menu-aberto); }
 }
 
 .lateral__marca { display: flex; align-items: center; gap: 11px; padding: 4px 8px 24px; }
+.lateral__sair { justify-content: flex-start; gap: 9px; overflow: hidden; }
 .lateral__logo {
   width: 36px; height: 36px; border-radius: 11px; flex: 0 0 auto;
   display: grid; place-items: center; color: #fff; font-size: 15px;
@@ -930,11 +970,80 @@ select.filtro:hover { border-color: var(--borda-forte); }
 .lateral__marca strong { display: block; font-size: 14px; letter-spacing: -.02em; }
 .lateral__marca span span { font-size: 10.5px; color: var(--texto-3); }
 
-.lateral__nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.lateral__nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
 .lateral__grupo {
   font-size: 10px; text-transform: uppercase; letter-spacing: .14em;
   color: var(--texto-3); padding: 18px 10px 7px; font-weight: 700;
 }
+
+/* --- menus principais e submenus ---
+   O menu principal é botão, não link: ele não leva a lugar nenhum, só
+   revela o que está embaixo. Marcá-lo como link prometeria uma navegação
+   que não acontece. */
+.menu { display: flex; flex-direction: column; }
+
+.menu__principal {
+  display: flex; align-items: center; gap: 11px;
+  width: 100%; padding: 9px 11px; border: 0; border-radius: 9px;
+  background: none; cursor: pointer; font: inherit;
+  color: var(--texto-2); font-weight: 600; font-size: 13.5px;
+  transition: var(--transicao);
+}
+.menu__principal:hover { background: var(--superficie-2); color: var(--texto); }
+
+/* Destaca o menu que contém a página aberta mesmo estando recolhido —
+   é o que diz "você está aqui dentro" quando a faixa está estreita. */
+.menu__principal--ativo { color: var(--texto); }
+.menu__principal--ativo .lateral__icone { color: var(--violeta-claro); }
+
+.menu__seta {
+  margin-left: auto; display: grid; place-items: center;
+  color: var(--texto-3); transition: rotate 180ms; flex: 0 0 auto;
+}
+.menu__seta--aberta { rotate: 180deg; }
+
+/* grid-template-rows animável: a altura vai de 0 a "o que couber" sem
+   precisar medir o conteúdo em JavaScript. */
+.menu__submenus {
+  display: grid; grid-template-rows: 0fr;
+  transition: grid-template-rows 200ms cubic-bezier(.4, 0, .2, 1);
+}
+.menu__submenus > * { overflow: hidden; min-height: 0; }
+.menu__lista { display: flex; flex-direction: column; gap: 2px; padding-top: 2px; }
+.menu__submenus--abertos { grid-template-rows: 1fr; }
+
+.submenu {
+  position: relative;
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 11px 7px 26px; margin-left: 16px; border-radius: 8px;
+  color: var(--texto-2); font-size: 13px; transition: var(--transicao);
+}
+
+/* A linha vertical é o que amarra o submenu ao seu menu: sem ela os
+   itens parecem uma segunda lista solta, e não filhos daquele título. */
+.submenu::before {
+  content: ''; position: absolute; left: 9px; top: 0; bottom: 0;
+  width: 1.5px; background: var(--borda);
+}
+.submenu:first-child::before { top: 4px; }
+.submenu:last-child::before { bottom: 50%; }
+
+.submenu__icone {
+  display: grid; place-items: center; width: 18px; flex: 0 0 auto; opacity: .85;
+}
+.submenu:hover { background: var(--superficie-2); color: var(--texto); }
+
+.submenu--ativo {
+  background: linear-gradient(90deg, rgb(109 74 255 / .18), rgb(109 74 255 / .03));
+  color: var(--texto); font-weight: 600;
+}
+.submenu--ativo::before { background: var(--grad-marca); width: 2px; }
+.submenu--ativo .submenu__icone { color: var(--violeta-claro); opacity: 1; }
+
+/* Recolhido, sobram apenas os ícones dos menus principais: os submenus
+   sem rótulo seriam uma coluna de ícones sem significado. */
+.lateral:not(:hover):not(:focus-within) .menu__submenus { grid-template-rows: 0fr; }
+.lateral:not(:hover):not(:focus-within) .menu__seta { opacity: 0; }
 
 .lateral__item {
   position: relative; display: flex; align-items: center; gap: 11px;
@@ -979,7 +1088,7 @@ button.lateral__item {
 .lateral__perfil-texto span { font-size: 10.5px; color: var(--texto-3); }
 
 /* --------------------------- barra e página ------------------------ */
-.conteudo { display: flex; flex-direction: column; min-width: 0; }
+.conteudo { display: flex; flex-direction: column; min-width: 0; margin-left: var(--faixa); }
 
 .barra {
   position: sticky; top: 0; z-index: 30;
@@ -1232,12 +1341,41 @@ td.acoes { text-align: right; white-space: nowrap; }
 .acesso-loja, .pagamento, .pagamento__resultado {
   display: flex; flex-direction: column;
 }
+/* O espaçamento entre as partes vira regra do bloco, em vez de margem
+   escrita à mão em cada campo. Antes cada etapa repetia um marginTop
+   inline, e bastava esquecer um para a tela ficar desalinhada. */
+.acesso-loja__cabecalho { margin-bottom: 18px; }
 .acesso-loja__titulo { font-size: 19px; letter-spacing: -.02em; margin-bottom: 6px; }
-.acesso-loja__sub { font-size: 13px; color: var(--texto-2); margin-bottom: 18px; }
+.acesso-loja__sub { font-size: 13px; color: var(--texto-2); line-height: 1.5; }
+
+.acesso-loja__campos { display: flex; flex-direction: column; gap: 14px; margin-bottom: 18px; }
+.acesso-loja__opcoes { display: flex; flex-direction: column; gap: 10px; }
+
+/* Rótulo e atalho na mesma linha: o "esqueci minha senha" precisa estar
+   onde a pessoa percebe que não lembra, colado ao campo da senha. */
+.campo__linha { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+
+/* Código de verificação exibido na tela porque não há serviço de e-mail.
+   Tratado como aviso, não como resultado: fundo âmbar sinaliza que é uma
+   condição da instalação, e não parte normal do fluxo. */
+.codigo-demo {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
+  margin-bottom: 18px; padding: 14px; border-radius: 11px;
+  background: rgb(217 119 6 / .09); border: 1px dashed rgb(217 119 6 / .38);
+}
+.codigo-demo__rotulo {
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: .12em;
+  font-weight: 700; color: var(--ambar);
+}
+.codigo-demo__valor {
+  font-family: var(--mono); font-size: 27px; letter-spacing: .22em;
+  line-height: 1.1; color: var(--texto);
+}
+.codigo-demo__nota { font-size: 11.5px; color: var(--texto-2); line-height: 1.45; }
 
 .opcao-acesso {
   display: flex; align-items: center; gap: 12px;
-  padding: 13px 15px; margin-bottom: 10px; width: 100%;
+  padding: 13px 15px; width: 100%;
   border-radius: 11px; border: 1px solid var(--borda); background: var(--superficie);
   cursor: pointer; font-size: 14px; font-weight: 550; transition: var(--transicao);
 }
@@ -1271,6 +1409,12 @@ td.acoes { text-align: right; white-space: nowrap; }
 }
 .acesso-loja__voltar { margin-bottom: 14px; }
 .acesso-loja__link { margin-top: 14px; text-align: center; }
+/* Junto do rótulo o atalho é parte da linha, não um bloco à parte. */
+.acesso-loja__link--inline {
+  margin-top: 0; text-align: right; font-size: 11.5px;
+  color: var(--violeta-claro); text-decoration: none;
+}
+.acesso-loja__link--inline:hover { text-decoration: underline; }
 .acesso-loja__voltar:hover, .acesso-loja__link:hover { color: var(--violeta-claro); }
 
 .acesso-loja__erro {

@@ -2,12 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import type { ReactNode } from 'react';
-import { GRUPOS, paginasPermitidas } from '@/lib/paginas';
+import { useEffect, useState, type ReactNode } from 'react';
+import { grupoDaPagina, menusPermitidos, type Grupo } from '@/lib/paginas';
 import type { SessaoUsuario } from '@/lib/sessao';
 import {
-  IconeAtendimento, IconeClientes, IconeFluxo, IconeGrafico, IconeLoja,
-  IconePainel, IconePedidos, IconeProdutos, IconeSair, IconeUsuarios,
+  IconeAtendimento, IconeCaixaAberta, IconeChevron, IconeClientes, IconeEngrenagem,
+  IconeFluxo, IconeGrafico, IconeLoja, IconePainel, IconePedidos, IconeProdutos,
+  IconeSair, IconeUsuarios,
 } from './Icones';
 import { BotaoTema } from './BotaoTema';
 
@@ -23,11 +24,33 @@ const ICONES: Record<string, ReactNode> = {
   '/gestao/usuarios': <IconeUsuarios />,
 };
 
+/** Ícone do menu principal — é o que aparece na faixa recolhida. */
+const ICONES_GRUPO: Record<Grupo, ReactNode> = {
+  'Operação': <IconeCaixaAberta />,
+  'Atendimento': <IconeAtendimento />,
+  'Análise': <IconeGrafico />,
+  'Administração': <IconeEngrenagem />,
+};
+
 /**
  * Menu da gestão, montado a partir dos privilégios efetivos da pessoa.
  *
  * Esconder um item aqui é conveniência, não segurança: quem digitar a
  * URL direto ainda é barrado pela guarda da própria página.
+ *
+ * COMPORTAMENTO
+ * Em repouso o menu é uma faixa estreita, só com os ícones dos menus
+ * principais. Levar o mouse até ela abre a largura inteira, com os
+ * rótulos; tirar o mouse recolhe de volta.
+ *
+ * A faixa existe em vez de o menu sumir por completo porque um menu
+ * invisível é um menu que ninguém encontra — a pessoa precisaria
+ * adivinhar que há algo na borda esquerda. A faixa mostra que existe e
+ * convida o movimento.
+ *
+ * Aberto, ele passa POR CIMA do conteúdo, sem empurrá-lo. Se a página
+ * reflowasse a cada passada de mouse, ler uma tabela viraria um exercício
+ * de perseguir a linha que se moveu.
  */
 export function NavegacaoGestao({ usuario, privilegios }: {
   usuario: SessaoUsuario;
@@ -35,7 +58,22 @@ export function NavegacaoGestao({ usuario, privilegios }: {
 }) {
   const caminho = usePathname();
   const router = useRouter();
-  const permitidas = paginasPermitidas(privilegios);
+  const menus = menusPermitidos(privilegios);
+
+  /**
+   * Qual menu principal está aberto. Um de cada vez: dois abertos
+   * empurram o resto para fora da tela e reintroduzem a rolagem que a
+   * hierarquia veio resolver.
+   */
+  const [aberto, setAberto] = useState<Grupo | null>(null);
+
+  /**
+   * Navegar abre sozinho o menu de quem chegou.
+   *
+   * Sem isso, entrar em /gestao/pedidos por um link mostraria todos os
+   * menus fechados, e a pessoa não veria onde está.
+   */
+  useEffect(() => { setAberto(grupoDaPagina(caminho)); }, [caminho]);
 
   async function sair() {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -47,34 +85,60 @@ export function NavegacaoGestao({ usuario, privilegios }: {
     .map((parte) => parte[0]).join('').toUpperCase();
 
   return (
-    <aside className="lateral">
-      <Link href={permitidas[0]?.href ?? '/'} className="lateral__marca">
+    <aside className="lateral" aria-label="Navegação da gestão">
+      <Link href={menus[0]?.submenus[0]?.href ?? '/'} className="lateral__marca">
         <span className="lateral__logo" aria-hidden="true">◆</span>
-        <span>
+        <span className="lateral__rotulo">
           <strong>Elo Platform</strong>
           <span>gestão</span>
         </span>
       </Link>
 
-      <nav className="lateral__nav" aria-label="Navegação da gestão">
-        {GRUPOS.map((grupo) => {
-          const itens = permitidas.filter((pagina) => pagina.grupo === grupo);
-          if (itens.length === 0) return null;   // grupo vazio não vira título órfão
+      <nav className="lateral__nav">
+        {menus.map(({ grupo, submenus }) => {
+          const expandido = aberto === grupo;
+          const contemAtual = submenus.some(
+            (pagina) => caminho === pagina.href || caminho.startsWith(`${pagina.href}/`));
 
           return (
-            <div key={grupo}>
-              <div className="lateral__grupo">{grupo}</div>
-              {itens.map((pagina) => {
-                const ativo = caminho === pagina.href || caminho.startsWith(`${pagina.href}/`);
-                return (
-                  <Link key={pagina.href} href={pagina.href}
-                        className={`lateral__item ${ativo ? 'lateral__item--ativo' : ''}`}
-                        aria-current={ativo ? 'page' : undefined}>
-                    <span className="lateral__icone">{ICONES[pagina.href]}</span>
-                    {pagina.rotulo}
-                  </Link>
-                );
-              })}
+            <div key={grupo} className="menu">
+              <button type="button"
+                      className={`menu__principal ${contemAtual ? 'menu__principal--ativo' : ''}`}
+                      aria-expanded={expandido}
+                      onClick={() => setAberto((atual) => (atual === grupo ? null : grupo))}>
+                <span className="lateral__icone">{ICONES_GRUPO[grupo]}</span>
+                <span className="lateral__rotulo">{grupo}</span>
+                <span className={`menu__seta ${expandido ? 'menu__seta--aberta' : ''}`}
+                      aria-hidden="true">
+                  <IconeChevron tamanho={14} />
+                </span>
+              </button>
+
+              {/* A altura anima para o submenu deslizar em vez de saltar.
+                  `hidden` só quando fechado E fora de transição manteria
+                  o item fora da ordem de tabulação — aqui basta o
+                  contêiner recortar. */}
+              <div className={`menu__submenus ${expandido ? 'menu__submenus--abertos' : ''}`}>
+                {/* O wrapper existe para a animação: a técnica de animar
+                    de 0fr a 1fr exige UM filho na grade. Com os links
+                    soltos, o segundo em diante virava linha implícita de
+                    altura automática e o menu fechado continuava ocupando
+                    espaço. */}
+                <div className="menu__lista">
+                {submenus.map((pagina) => {
+                  const ativo = caminho === pagina.href || caminho.startsWith(`${pagina.href}/`);
+                  return (
+                    <Link key={pagina.href} href={pagina.href}
+                          className={`submenu ${ativo ? 'submenu--ativo' : ''}`}
+                          tabIndex={expandido ? undefined : -1}
+                          aria-current={ativo ? 'page' : undefined}>
+                      <span className="submenu__icone">{ICONES[pagina.href]}</span>
+                      <span className="lateral__rotulo">{pagina.rotulo}</span>
+                    </Link>
+                  );
+                })}
+                </div>
+              </div>
             </div>
           );
         })}
@@ -85,19 +149,19 @@ export function NavegacaoGestao({ usuario, privilegios }: {
 
         <Link href="/" className="lateral__item">
           <span className="lateral__icone"><IconeLoja /></span>
-          Ver a loja
+          <span className="lateral__rotulo">Ver a loja</span>
         </Link>
 
         <div className="lateral__perfil">
           <span className="lateral__avatar">{iniciais}</span>
-          <span className="lateral__perfil-texto">
+          <span className="lateral__perfil-texto lateral__rotulo">
             <strong>{usuario.nome}</strong>
             <span>{usuario.papel} · {privilegios.length} privilégio(s)</span>
           </span>
         </div>
 
-        <button className="btn btn--sm btn--bloco" onClick={() => void sair()}>
-          <IconeSair /> Sair
+        <button className="btn btn--sm btn--bloco lateral__sair" onClick={() => void sair()}>
+          <IconeSair /> <span className="lateral__rotulo">Sair</span>
         </button>
       </div>
     </aside>
