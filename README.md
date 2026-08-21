@@ -4,7 +4,53 @@ Plataforma que reúne **loja**, **gestão**, **construtor de chatbot no-code**, 
 
 Construída sobre Next.js, TypeScript e PostgreSQL, sem ORM: todo SQL é escrito à mão e as regras críticas de integridade vivem no próprio banco.
 
-> Esta é a branch `elo-platform`. A branch `main` mantém a versão anterior (Express + JavaScript puro), publicada e funcionando.
+---
+
+## ▶ Acesse a plataforma no ar
+
+Tudo abaixo está publicado e funcionando. Não é protótipo nem vídeo — é o sistema rodando com banco de verdade.
+
+| Ambiente | Endereço | Quem entra |
+|---|---|---|
+| **Loja** | **https://elo-commerce-xi.vercel.app** | aberta, não precisa de conta |
+| **Gestão** | **https://elo-commerce-xi.vercel.app/login** | use as credenciais abaixo |
+
+### Credenciais da área de gestão
+
+| Campo | Valor |
+|---|---|
+| E-mail | `admin@elo.dev` |
+| Senha | `elo-Kd8E6qm0KXh8JY` |
+
+> Conta de demonstração, com acesso de administrador, criada para quem está avaliando o projeto.
+> O banco tem dados fictícios e pode ser reiniciado a qualquer momento — fique à vontade para criar, alterar e testar.
+
+**Se a primeira visita demorar alguns segundos:** o PostgreSQL hiberna quando fica ocioso. Recarregue uma vez e ele responde normal.
+
+---
+
+## ▶ Roteiro de 5 minutos
+
+O caminho que mostra o que o projeto realmente faz — cada passo prova uma coisa diferente.
+
+| # | Onde | O que fazer | O que isso prova |
+|---|---|---|---|
+| 1 | Loja | busque um produto e **finalize uma compra** | é venda de verdade: pedido, itens e baixa de estoque na mesma transação |
+| 2 | Gestão → **Pedidos** | encontre o pedido que você acabou de fazer | o estoque já baixou; nada foi simulado |
+| 3 | Gestão → **Pedidos** | avance o status do pedido | máquina de estados: só as transições válidas aparecem, e cancelar devolve o estoque |
+| 4 | Gestão → **No-Code** | abra o fluxo e mude o texto de uma mensagem → **Salvar** → **Publicar** | o fluxo é dado (JSONB), não código |
+| 5 | Loja | abra o chat no canto da tela | **a mensagem que você escreveu está lá** — o no-code alimenta o bot real |
+| 6 | Chat da loja | peça *"falar com um atendente"* | a conversa sai do bot e entra na fila humana |
+| 7 | Gestão → **Atendimento** | assuma a conversa e responda | transferência bot → humano, com o histórico junto |
+| 8 | Gestão → **BI** | troque o período do filtro | os números saem de views SQL, incluindo a taxa de resolução do bot |
+
+### O detalhe que vale olhar
+
+Na tela de **Usuários**, crie alguém com o perfil *atendente* e entre com essa conta. Depois digite `/gestao/bi` direto na barra de endereço.
+
+O acesso é negado no **servidor** — a página nem chega a ser montada. Não é o menu que some: a guarda está junto do dado, porque esconder botão não é proteção.
+
+---
 
 ## Documentação
 
@@ -12,6 +58,7 @@ Construída sobre Next.js, TypeScript e PostgreSQL, sem ORM: todo SQL é escrito
 |---|---|
 | [Arquitetura](docs/ARQUITETURA.md) | como o projeto está organizado e por que cada decisão foi tomada |
 | [Guia de apresentação](docs/APRESENTACAO.md) | roteiro de demo, defesa do código e perguntas prováveis |
+| [Desenvolvimento](docs/DESENVOLVIMENTO.md) | como rodar o projeto na sua máquina e o que cada script faz |
 
 ## O ciclo que o projeto demonstra
 
@@ -41,6 +88,30 @@ Tudo vira indicador no BI
 | **Atendimento** (`/gestao/atendimento`) | fila, transferência do bot para humano, histórico e contexto do cliente |
 | **BI** (`/gestao/bi`) | indicadores com filtro de período, gráficos de vendas, pedidos, clientes e atendimento |
 
+## A área de gestão, tela por tela
+
+É a parte que não aparece para o cliente final — e onde está a maior parte das regras.
+
+| Tela | O que você encontra | O que sustenta a tela |
+|---|---|---|
+| **Painel** | resumo do dia: vendas, pedidos abertos, fila de atendimento | consultas agregadas direto no banco, sem cálculo no navegador |
+| **Produtos** | cadastro, preço, estoque e imagem | produto já vendido é **inativado**, nunca apagado — o histórico do pedido não pode perder a referência |
+| **Pedidos** | lista, detalhe com itens e avanço de status | máquina de estados com fonte única: o servidor valida e a interface só oferece o que é possível |
+| **Clientes** | base de clientes e histórico de compras | cliente com pedido também é inativado, não excluído |
+| **No-Code** | editor visual: arrasta blocos, conecta, versiona, testa e publica | o fluxo é um grafo `{ nodes, edges }` em JSONB; a publicação é **recusada** se houver bloco sem saída ou opção desconectada |
+| **Atendimento** | fila de conversas, assumir, responder, finalizar | a conversa guarda a versão do bot em que começou — publicar uma v2 não reescreve o que já estava em andamento |
+| **BI** | vendas, pedidos, clientes e atendimento com filtro de período | views SQL; a taxa de resolução do bot sai da própria base de conversas |
+| **Usuários** | cadastrar pessoas, definir perfil e conceder privilégios avulsos | quatro perfis, 12 privilégios; dá para fugir do pacote e liberar privilégio a privilégio |
+
+**Quem enxerga o quê:** cada página declara o privilégio que exige, num mapa único que o menu, a guarda da página e o redirecionamento pós-login consultam. Perfil sem `bi.ver` não abre o BI nem digitando a URL.
+
+| Perfil | Alcance |
+|---|---|
+| `administrador` | tudo, incluindo gestão de pessoas |
+| `gerente` | opera loja e chatbots, não gerencia pessoas |
+| `supervisor` | acompanha indicadores e atende, sem alterar o catálogo |
+| `atendente` | atende a fila e monta fluxos; não vê faturamento nem cadastros |
+
 ## Stack
 
 | Camada | Tecnologia |
@@ -52,6 +123,7 @@ Tudo vira indicador no BI
 | Gráficos | Recharts |
 | Testes | Vitest |
 | Autenticação | própria — bcrypt + cookie HttpOnly assinado por HMAC |
+| Publicação | Vercel (serverless) + PostgreSQL gerenciado |
 
 ## Arquitetura
 
@@ -88,33 +160,6 @@ app/(loja)      público          app/gestao      exige sessão
 - **Atendimento por polling** — funções serverless não mantêm WebSocket aberto; consultar a cada 5s é a solução honesta para esse ambiente.
 - **Exclusão protegida** — cliente com pedido e produto vendido são inativados, nunca apagados.
 
-## Rodando localmente
-
-Pré-requisitos: Node.js 20+ e PostgreSQL 14+.
-
-```bash
-npm install
-cp .env.example .env    # ajuste as credenciais do seu PostgreSQL
-createdb elo_commerce
-npm run db:reset        # schema + dados fictícios + usuários + chatbot inicial
-npm run dev
-```
-
-Acesse **http://localhost:3000**. O comando `db:usuarios` imprime as senhas geradas — elas não são exibidas de novo.
-
-### Scripts
-
-| Comando | O que faz |
-|---|---|
-| `npm run dev` | sobe a aplicação em desenvolvimento |
-| `npm run build` | build de produção |
-| `npm run db:migrate` | aplica migrations pendentes |
-| `npm run db:reset` | recria tudo do zero (recusa rodar contra banco remoto) |
-| `npm run db:bot` | cria e publica o chatbot inicial |
-| `npm run db:senha -- email senha` | redefine a senha de um usuário |
-| `npm test` | roda a suíte de testes |
-| `npm run typecheck` | verificação de tipos |
-
 ## Segurança
 
 - Autorização verificada **no servidor**, junto do acesso ao dado — esconder botão não é proteção.
@@ -122,15 +167,14 @@ Acesse **http://localhost:3000**. O comando `db:usuarios` imprime as senhas gera
 - Senhas com bcrypt; o hash é comparado mesmo quando o e-mail não existe, para o tempo de resposta não revelar quais e-mails estão cadastrados.
 - Cookie `HttpOnly` + `SameSite` + `Secure` em produção, assinado por HMAC.
 - Todo SQL parametrizado; nenhuma concatenação de entrada do usuário.
-- `db:reset` recusa executar contra banco remoto ou `NODE_ENV=production`.
+- O comando de reset do banco recusa executar contra banco remoto ou `NODE_ENV=production`.
+- Nenhum segredo no repositório: senhas de demonstração são geradas na hora e as chaves de produção vivem só nas variáveis de ambiente.
 
 ## Testes
 
-```bash
-npm test
-```
-
 Cobrem o que quebra silenciosamente: validação de CPF por dígito verificador, transições válidas do pedido, integridade do token de sessão (adulteração e expiração), execução do motor do chatbot (menu, condição, contexto, ciclo infinito) e as regras que impedem publicar um fluxo quebrado.
+
+Como rodar a suíte está em [Desenvolvimento](docs/DESENVOLVIMENTO.md).
 
 ## Estrutura
 

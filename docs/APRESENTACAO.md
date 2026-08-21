@@ -160,6 +160,14 @@ Responda com naturalidade: **usei IA como ferramenta, e sei explicar cada decis�
 
 ## 7. Checklist da véspera
 
+**Os endereços:**
+
+| | |
+|---|---|
+| Loja | https://elo-commerce-xi.vercel.app |
+| Gestão | https://elo-commerce-xi.vercel.app/login |
+
+
 - [ ] Abrir o site uma vez, para acordar o banco do Supabase
 - [ ] Testar login e deixar a aba já autenticada
 - [ ] Conferir se há produto com estoque para a demo de compra
