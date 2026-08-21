@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation';
 import { botsService } from '@/modules/bots/bots.service';
 import { lerSessao } from '@/lib/sessao';
 import { EditorFluxo } from '@/components/nocode/EditorFluxo';
-import { BarraGestao } from '@/components/BarraGestao';
 import type { Fluxo } from '@/chatbot/tipos';
 
 export const dynamic = 'force-dynamic';
@@ -19,21 +18,17 @@ export default async function EditorPagina({ params }: { params: Promise<{ id: s
   const versoes = await botsService.versoes(bot.id);
   const publicada = versoes.find((versao) => versao.status === 'publicada');
 
+  // Sem BarraGestao: o estúdio traz a própria barra, com o nome do
+  // fluxo, os números e as ações. Duas barras empilhadas roubavam altura
+  // do canvas para repetir a mesma informação.
   return (
-    <>
-      <BarraGestao titulo={bot.nome}
-                   subtitulo={publicada
-                     ? `v${publicada.versao} no ar · editando v${rascunho.versao}`
-                     : `editando v${rascunho.versao} — ainda não publicado`} />
-
-      <EditorFluxo
-        botId={bot.id}
-        botNome={bot.nome}
-        versaoId={rascunho.id}
-        versao={rascunho.versao}
-        fluxoInicial={rascunho.fluxo as Fluxo}
-        publicada={Boolean(publicada)}
-      />
-    </>
+    <EditorFluxo
+      botId={bot.id}
+      botNome={bot.nome}
+      versaoId={rascunho.id}
+      versao={rascunho.versao}
+      fluxoInicial={rascunho.fluxo as Fluxo}
+      publicada={Boolean(publicada)}
+    />
   );
 }

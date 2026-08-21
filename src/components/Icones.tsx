@@ -110,6 +110,59 @@ export const IconeSinoCortado = ({ tamanho = 18 }: Props) => (
   </svg>
 );
 
+/* --------------------- ferramentas do estúdio ---------------------- */
+
+export const IconeVoltar = ({ tamanho = 17 }: Props) => (
+  <svg {...base(tamanho)}>
+    <path d="M19 12H5M11 18l-6-6 6-6" />
+  </svg>
+);
+
+export const IconeBlocos = ({ tamanho = 17 }: Props) => (
+  <svg {...base(tamanho)}>
+    <rect x="3.5" y="3.5" width="7" height="7" rx="1.6" />
+    <rect x="13.5" y="3.5" width="7" height="7" rx="1.6" />
+    <rect x="3.5" y="13.5" width="7" height="7" rx="1.6" />
+    <rect x="13.5" y="13.5" width="7" height="7" rx="1.6" />
+  </svg>
+);
+
+export const IconeOrganizar = ({ tamanho = 17 }: Props) => (
+  <svg {...base(tamanho)}>
+    <rect x="2.5" y="9" width="6" height="6" rx="1.5" />
+    <rect x="15.5" y="3.5" width="6" height="5.5" rx="1.5" />
+    <rect x="15.5" y="15" width="6" height="5.5" rx="1.5" />
+    <path d="M8.5 12h3.5v-5.7h3.5M12 12v6.2h3.5" />
+  </svg>
+);
+
+export const IconeDepurar = ({ tamanho = 17 }: Props) => (
+  <svg {...base(tamanho)}>
+    <rect x="8" y="7" width="8" height="12" rx="4" />
+    <path d="M8 11H4.5M8 15H4.5M16 11h3.5M16 15h3.5M9.5 6l-1.2-2M14.5 6l1.2-2" />
+  </svg>
+);
+
+export const IconeAjustar = ({ tamanho = 17 }: Props) => (
+  <svg {...base(tamanho)}>
+    <path d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15" />
+  </svg>
+);
+
+export const IconeDisquete = ({ tamanho = 17 }: Props) => (
+  <svg {...base(tamanho)}>
+    <path d="M4.5 6A1.5 1.5 0 0 1 6 4.5h9.5L19.5 8.5V18a1.5 1.5 0 0 1-1.5 1.5H6A1.5 1.5 0 0 1 4.5 18V6Z" />
+    <path d="M8 4.5v4h6v-4M8 19.5v-5h8v5" />
+  </svg>
+);
+
+export const IconePublicar = ({ tamanho = 17 }: Props) => (
+  <svg {...base(tamanho)}>
+    <path d="M12 20V6M6 12l6-6 6 6" />
+    <path d="M4.5 3.5h15" />
+  </svg>
+);
+
 /* --------------------- blocos do editor no-code -------------------- */
 
 export const IconeIniciar = ({ tamanho = 15 }: Props) => (

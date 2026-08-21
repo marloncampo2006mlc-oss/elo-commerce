@@ -347,10 +347,125 @@ td.acoes { text-align: right; white-space: nowrap; }
 @keyframes pulsar { 0%, 60%, 100% { opacity: .3; } 30% { opacity: 1; } }
 
 /* --------------------------- 8. NO-CODE ---------------------------- */
-.editor { display: grid; grid-template-columns: 210px 1fr 300px; height: calc(100vh - 57px); }
-.editor__blocos { border-right: 1px solid var(--borda); padding: 16px 12px; overflow-y: auto; background: var(--fundo-2); }
-.editor__canvas { position: relative; background: var(--fundo); }
-.editor__props { border-left: 1px solid var(--borda); padding: 16px; overflow-y: auto; background: var(--fundo-2); }
+/* ---------------------- ESTÚDIO DO NO-CODE -------------------------
+   Tela dedicada: ao abrir um fluxo o assunto deixa de ser "uma seção da
+   gestão" e passa a ser um documento. A faixa lateral sai de cena — o
+   estúdio traz o próprio caminho de volta — e o canvas fica com a tela
+   inteira, que é o que ele precisa.
+
+   O :has() resolve isso sem reestruturar layouts: a regra vale só
+   enquanto existir um estúdio dentro da gestão. */
+.gestao:has(.estudio) .lateral { display: none; }
+.gestao:has(.estudio) .conteudo { margin-left: 0; }
+.gestao:has(.estudio) { background: var(--fundo); }
+
+.estudio { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+.estudio__topo {
+  display: flex; align-items: center; gap: 16px;
+  padding: 11px 16px; flex: 0 0 auto;
+  background: var(--fundo-2); border-bottom: 1px solid var(--borda);
+}
+.estudio__voltar {
+  display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 auto;
+  border-radius: 9px; border: 1px solid var(--borda); background: var(--superficie);
+  color: var(--texto-2); transition: var(--transicao);
+}
+.estudio__voltar:hover { color: var(--texto); border-color: var(--borda-forte); }
+
+.estudio__identidade strong { display: block; font-size: 14.5px; letter-spacing: -.015em; }
+.estudio__identidade span { font-size: 11.5px; color: var(--texto-3); }
+
+.estudio__medidas {
+  display: flex; align-items: center; gap: 14px; margin-left: auto;
+  font-size: 11.5px; color: var(--texto-3);
+}
+.estudio__medidas b { color: var(--texto); font-variant-numeric: tabular-nums; }
+
+.estudio__selo {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border-radius: var(--raio-full); font-weight: 600;
+}
+.estudio__selo--ok { color: var(--verde); background: rgb(22 163 74 / .12); }
+.estudio__selo--erro { color: var(--ambar); background: rgb(217 119 6 / .12); }
+
+.estudio__acoes { display: flex; gap: 8px; flex: 0 0 auto; }
+
+.estudio__area { display: flex; flex: 1; min-height: 0; }
+.estudio__blocos {
+  width: 210px; flex: 0 0 auto; overflow-y: auto;
+  padding: 16px 12px; background: var(--fundo-2); border-right: 1px solid var(--borda);
+}
+.estudio__canvas { position: relative; flex: 1; min-width: 0; background: var(--fundo); }
+.estudio__props {
+  width: 300px; flex: 0 0 auto; overflow-y: auto;
+  padding: 16px; background: var(--fundo-2); border-left: 1px solid var(--borda);
+}
+
+.estudio__mapa {
+  background: var(--superficie) !important;
+  border: 1px solid var(--borda); border-radius: 10px;
+}
+
+/* --- barra de ferramentas flutuante ---
+   Sobre o canvas em vez de numa coluna: são ações sobre o desenho, e
+   perto dele a mão percorre menos distância. */
+.ferramentas {
+  position: absolute; bottom: 18px; left: 50%; translate: -50% 0; z-index: 12;
+  display: flex; align-items: center; gap: 4px; padding: 6px;
+  border-radius: 13px; border: 1px solid var(--borda-forte);
+  background: color-mix(in srgb, var(--fundo-2) 92%, transparent);
+  backdrop-filter: blur(14px); box-shadow: var(--sombra-lg);
+}
+.ferramentas__divisor { width: 1px; height: 22px; background: var(--borda); margin: 0 3px; }
+
+.ferramenta {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 12px; border-radius: 9px; border: 0; background: none;
+  cursor: pointer; font: inherit; font-size: 12.5px; font-weight: 550;
+  color: var(--texto-2); transition: var(--transicao); white-space: nowrap;
+}
+.ferramenta:hover { background: var(--superficie-2); color: var(--texto); }
+.ferramenta--ativa {
+  background: rgb(109 74 255 / .16); color: var(--violeta-claro);
+}
+
+/* Em tela estreita ficam só os ícones: a barra inteira não caberia, e
+   um rótulo cortado pela metade é pior que ícone nenhum. */
+@media (max-width: 1080px) {
+  .ferramenta span { display: none; }
+  .ferramenta { padding: 9px; }
+}
+
+/* --- destaque do bloco em execução ---
+   Ligar o painel do depurador ao desenho: sem isso a pessoa lê o id do
+   bloco e vai procurá-lo no canvas com o olho. */
+.no-flow--executando .no-flow,
+.react-flow__node.no-flow--executando .no-flow {
+  border-color: var(--violeta); box-shadow: 0 0 0 3px rgb(109 74 255 / .3);
+}
+
+/* --- painel do depurador --- */
+.depurador {
+  flex: 0 0 auto; padding: 10px 14px;
+  background: var(--superficie-2); border-bottom: 1px solid var(--borda);
+  display: flex; flex-direction: column; gap: 7px;
+}
+.depurador__linha { display: flex; flex-direction: column; gap: 3px; }
+.depurador__rotulo {
+  font-size: 9.5px; text-transform: uppercase; letter-spacing: .13em;
+  font-weight: 700; color: var(--texto-3);
+}
+.depurador__valor {
+  font-family: var(--mono); font-size: 11.5px; color: var(--violeta-claro);
+  word-break: break-all;
+}
+.depurador__vazio { font-size: 11.5px; color: var(--texto-3); font-style: italic; }
+.depurador__vars { display: flex; flex-wrap: wrap; gap: 5px; }
+.depurador__var {
+  font-family: var(--mono); font-size: 11px; padding: 2px 7px;
+  border-radius: 6px; background: var(--superficie); border: 1px solid var(--borda);
+}
 
 .bloco-arrastavel {
   display: flex; align-items: center; gap: 9px; padding: 9px 11px; margin-bottom: 6px;
