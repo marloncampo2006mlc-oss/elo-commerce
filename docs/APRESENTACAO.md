@@ -84,7 +84,7 @@ SELECT baixar_estoque($1, $2)
 
 ---
 
-## 4. As dificuldades reais
+## 4. Principais dificuldades:
 
 "Qual foi sua maior dificuldade?" é onde a maioria trava ou inventa. Escolha **duas** e conte bem.
 
