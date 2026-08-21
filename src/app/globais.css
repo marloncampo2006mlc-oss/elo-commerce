@@ -1208,6 +1208,16 @@ td.acoes { text-align: right; white-space: nowrap; }
 .opcao-acesso--google { background: #fff; color: #1f1f1f; border-color: #dadce0; }
 .opcao-acesso--google:hover { background: #f8f9fa; }
 
+/* Provedor social sem credencial no servidor: visível, para a pessoa
+   saber que existe, e claramente fora de uso, para ela não tentar. */
+.opcao-acesso--off {
+  opacity: .55; cursor: not-allowed;
+}
+.opcao-acesso--off:hover { background: #fff; }
+.opcao-acesso--off small {
+  display: block; font-size: 11px; font-weight: 500; opacity: .8;
+}
+
 .acesso-loja__divisor {
   display: flex; align-items: center; gap: 12px;
   margin: 18px 0 14px; color: var(--texto-3); font-size: 11.5px;

@@ -5,6 +5,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { useToast } from '@/components/Toasts';
 import { Olho } from '@/components/Icone';
 import { IconeEnvelope } from '@/components/Icones';
+import { IconeGoogle } from './IconesLoja';
 
 type Etapa = 'escolha' | 'entrar' | 'cadastrar';
 
@@ -29,6 +30,26 @@ export function AcessoCliente({ aoEntrar, proximo }: {
   const [verSenha, setVerSenha] = useState(false);
   const [falha, setFalha] = useState<string | null>(null);
   const [cpf, setCpf] = useState('');
+
+  /**
+   * `null` enquanto não sabemos: o botão nasce neutro em vez de piscar
+   * de "disponível" para "indisponível" assim que a consulta responde.
+   */
+  const [googleDisponivel, setGoogleDisponivel] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const resposta = await fetch('/api/loja/auth/sessao');
+        if (!resposta.ok) return;
+        const { data } = await resposta.json();
+        setGoogleDisponivel(Boolean(data?.provedores?.google));
+      } catch {
+        // Sem resposta, o botão fica no estado neutro e o caminho por
+        // e-mail continua à vista — que é o que precisa funcionar.
+      }
+    })();
+  }, []);
 
   /**
    * O callback do Google volta por redirecionamento, não por fetch —
@@ -92,18 +113,28 @@ export function AcessoCliente({ aoEntrar, proximo }: {
           Precisamos identificar você para registrar o pedido e acompanhar a entrega.
         </p>
 
+        {googleDisponivel === false ? (
+          /* Configuração ausente no servidor. Mostrar o botão ativo faria
+             a pessoa sair da loja e voltar com erro; desligado e com o
+             motivo à vista, ela escolhe outro caminho na hora. */
+          <div className="opcao-acesso opcao-acesso--google opcao-acesso--off"
+               aria-disabled="true">
+            <span className="opcao-acesso__icone" aria-hidden="true">
+              <IconeGoogle />
+            </span>
+            <span>
+              Entrar com Google
+              <small>indisponível nesta instalação</small>
+            </span>
+          </div>
+        ) : (
         <a className="opcao-acesso opcao-acesso--google" href="/api/loja/auth/google">
           <span className="opcao-acesso__icone" aria-hidden="true">
-            {/* Marca do Google em suas quatro cores oficiais */}
-            <svg width="19" height="19" viewBox="0 0 48 48">
-              <path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-3.2-.4-4.7H24v8.9h11.9c-.5 2.8-2.1 5.1-4.4 6.7v5.6h7.1c4.2-3.8 6.5-9.5 6.5-16.5Z" />
-              <path fill="#34A853" d="M24 46c5.9 0 10.9-2 14.6-5.3l-7.1-5.6c-2 1.3-4.5 2.1-7.5 2.1-5.8 0-10.7-3.9-12.4-9.1H4.3v5.8C8 41.3 15.4 46 24 46Z" />
-              <path fill="#FBBC05" d="M11.6 28.1c-.4-1.3-.7-2.7-.7-4.1s.2-2.8.7-4.1v-5.8H4.3C2.8 17 2 20.4 2 24s.8 7 2.3 9.9l7.3-5.8Z" />
-              <path fill="#EA4335" d="M24 10.8c3.3 0 6.2 1.1 8.5 3.3l6.3-6.3C34.9 4.2 29.9 2 24 2 15.4 2 8 6.7 4.3 14.1l7.3 5.8c1.7-5.2 6.6-9.1 12.4-9.1Z" />
-            </svg>
+            <IconeGoogle />
           </span>
           Entrar com Google
         </a>
+        )}
 
         <button className="opcao-acesso" type="button" onClick={() => setEtapa('entrar')}>
           <span className="opcao-acesso__icone" aria-hidden="true"><IconeEnvelope /></span>

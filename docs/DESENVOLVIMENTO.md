@@ -35,7 +35,35 @@ O `.env.example` documenta todas. As que importam para subir o projeto:
 | `ADMIN_PASSWORD` | senha do administrador criado no primeiro deploy |
 | `ELO_APP` | `loja`, `gestao` ou vazio. Vazio expõe tudo, que é o modo de desenvolvimento |
 
-As credenciais de login social (Google, GitHub, Facebook) e as do Pix são **opcionais**: sem elas, o login por e-mail continua funcionando e o checkout gera um código Pix de demonstração.
+As credenciais do Pix são **opcionais**: sem elas o checkout gera um código de demonstração, com formato válido e chave de exemplo, sem transferir valor nenhum.
+
+## Login com Google
+
+O botão "Entrar com Google" aparece **desligado**, com o aviso *indisponível nesta instalação*, enquanto o servidor não tiver as credenciais OAuth. Não é falha: sem `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET`, não existe aplicação registrada para o Google autorizar. O login por e-mail e senha funciona normalmente nesse estado.
+
+Para ligar:
+
+1. Em [console.cloud.google.com](https://console.cloud.google.com) → **APIs e Serviços** → **Tela de permissão OAuth**, configure a tela como *Externo* e publique.
+2. Em **Credenciais** → **Criar credenciais** → **ID do cliente OAuth** → tipo *Aplicativo da Web*.
+3. Em **URIs de redirecionamento autorizados**, cadastre um endereço para cada ambiente onde a loja roda. O caminho é sempre o mesmo, só o domínio muda:
+
+   ```
+   http://localhost:3000/api/loja/auth/google/callback
+   https://SEU-DOMINIO.vercel.app/api/loja/auth/google/callback
+   ```
+
+   O Google recusa o login se o endereço não bater **exatamente** — barra final, `http` contra `https` e porta contam.
+
+4. Copie o ID e a chave secreta para as variáveis de ambiente:
+
+   ```
+   GOOGLE_CLIENT_ID=...
+   GOOGLE_CLIENT_SECRET=...
+   ```
+
+   Na sua máquina, no `.env`. Em produção, em **Settings → Environment Variables** do projeto na Vercel — e refaça o deploy, porque a variável só entra no build seguinte.
+
+O segredo nunca vai para o repositório: quem o guarda é o ambiente. O `state` do fluxo OAuth é assinado com o `SESSION_SECRET`, então esse também precisa estar definido para o login social funcionar.
 
 ## Scripts
 
