@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import bcrypt from 'bcryptjs';
 import { consultarUm, pool } from '../lib/db.js';
 import { authService } from '../modules/auth/auth.service.js';
 import { botsRepository } from '../modules/bots/bots.repository.js';
@@ -19,7 +20,26 @@ import { FLUXO_INICIAL } from './fluxo-inicial.js';
  * que já mantém o próprio registro do que rodou.
  */
 
-async function criarAdministrador(): Promise<void> {
+/**
+ * Garante que a conta de demonstração ABRE com a senha do ambiente.
+ *
+ * Antes esta função só criava o usuário quando ele ainda não existia, e
+ * saía de fininho quando existia. O efeito era invisível e ruim: uma vez
+ * criada a conta, trocar ADMIN_PASSWORD não mudava mais nada, e a senha
+ * publicada na documentação deixava de abrir a plataforma sem que
+ * nenhum log acusasse o problema. Para uma conta cujas credenciais são
+ * divulgadas de propósito, quem manda tem que ser o ambiente.
+ *
+ * Por isso agora o deploy reafirma a senha a cada build. É a mesma ideia
+ * do resto deste arquivo — repetir não causa efeito colateral — só que
+ * aplicada também ao caso em que a linha já existe. Se alguém trocar a
+ * senha pela tela, o próximo deploy devolve a documentada.
+ *
+ * A comparação usa o verificador do bcrypt, e não o hash: dois hashes da
+ * mesma senha são diferentes por causa do sal, então comparar strings
+ * reescreveria a linha em todo build sem necessidade.
+ */
+async function garantirAdministrador(): Promise<void> {
   const email = (process.env.ADMIN_EMAIL ?? 'admin@elo.dev').trim().toLowerCase();
   const senha = process.env.ADMIN_PASSWORD;
 
@@ -28,20 +48,35 @@ async function criarAdministrador(): Promise<void> {
     return;
   }
 
-  const existente = await consultarUm<{ id: string }>(
-    'SELECT id FROM usuarios WHERE email = $1', [email]);
+  const existente = await consultarUm<{ id: string; senha_hash: string; ativo: boolean }>(
+    'SELECT id, senha_hash, ativo FROM usuarios WHERE email = $1', [email]);
 
-  if (existente) {
-    console.log(`   ↷ ${email} já existe`);
+  if (!existente) {
+    await pool.query(
+      `INSERT INTO usuarios (nome, email, senha_hash, papel)
+       VALUES ($1, $2, $3, 'administrador')`,
+      ['Administrador', email, await authService.gerarHash(senha)],
+    );
+    console.log(`   ✓ administrador criado: ${email}`);
     return;
   }
 
+  const jaAbre = await bcrypt.compare(senha, existente.senha_hash);
+
+  if (jaAbre && existente.ativo) {
+    console.log(`   ↷ ${email} já abre com a senha do ambiente`);
+    return;
+  }
+
+  // Reativa junto: conta de demonstração bloqueada por engano deixaria
+  // a documentação mentindo do mesmo jeito que a senha errada.
   await pool.query(
-    `INSERT INTO usuarios (nome, email, senha_hash, papel)
-     VALUES ($1, $2, $3, 'administrador')`,
-    ['Administrador', email, await authService.gerarHash(senha)],
+    `UPDATE usuarios
+        SET senha_hash = $2, ativo = TRUE, papel = 'administrador'
+      WHERE id = $1`,
+    [existente.id, await authService.gerarHash(senha)],
   );
-  console.log(`   ✓ administrador criado: ${email}`);
+  console.log(`   ✓ acesso de ${email} realinhado com ADMIN_PASSWORD`);
 }
 
 async function publicarBotInicial(): Promise<void> {
@@ -69,7 +104,7 @@ async function publicarBotInicial(): Promise<void> {
 
 async function preparar(): Promise<void> {
   console.log('🚀 Preparando o ambiente...');
-  await criarAdministrador();
+  await garantirAdministrador();
   await publicarBotInicial();
   console.log('✅ Ambiente pronto.');
 }
