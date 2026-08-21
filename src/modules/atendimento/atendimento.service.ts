@@ -76,7 +76,6 @@ export const atendimentoService = {
     const inicial = acharNoInicial(fluxo);
 
     const atendimento = await atendimentoRepository.criar({
-      protocolo: await atendimentoRepository.proximoProtocolo(),
       canal: opcoes.canal ?? 'chatbot',
       botVersaoId: versao.id,
       clienteId: opcoes.clienteId ?? null,

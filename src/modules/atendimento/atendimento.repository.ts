@@ -51,26 +51,44 @@ export interface EsperaNaFila {
 }
 
 export const atendimentoRepository = {
-  async proximoProtocolo(): Promise<string> {
-    const linha = await consultarUm<{ protocolo: string }>(
-      `SELECT 'AT-' || TO_CHAR(NOW(), 'YYMMDD') || '-' ||
-              LPAD((COUNT(*) + 1)::text, 4, '0') AS protocolo
-         FROM atendimentos WHERE created_at::date = CURRENT_DATE`,
-    );
-    return linha?.protocolo ?? `AT-${Date.now()}`;
-  },
-
+  /**
+   * Abre o atendimento, gerando o protocolo na mesma transação.
+   *
+   * O número era calculado numa consulta separada, antes do INSERT, e
+   * entre ler e gravar cabia outra conversa nascendo: as duas recebiam o
+   * mesmo protocolo e a segunda batia na constraint UNIQUE. Tentar de
+   * novo depois do erro reduzia o problema, mas não o eliminava — com
+   * várias aberturas ao mesmo tempo, as tentativas colidiam entre si.
+   *
+   * A trava consultiva resolve na origem: ela serializa APENAS a emissão
+   * do protocolo do dia, e é liberada no fim da transação. Duas conversas
+   * simultâneas passam uma de cada vez por este trecho e seguem em
+   * paralelo no resto. Nada mais na tabela fica bloqueado.
+   */
   async criar(dados: {
-    protocolo: string; canal: string; botVersaoId: string | null;
+    canal: string; botVersaoId: string | null;
     clienteId: string | null; teste: boolean; noAtual: string | null;
   }): Promise<Atendimento> {
-    const criado = await consultarUm<Atendimento>(
-      `INSERT INTO atendimentos (protocolo, canal, bot_versao_id, cliente_id, teste, no_atual, status)
-       VALUES ($1, $2, $3, $4, $5, $6, 'em_andamento') RETURNING *`,
-      [dados.protocolo, dados.canal, dados.botVersaoId, dados.clienteId, dados.teste, dados.noAtual],
-    );
-    if (!criado) throw new Error('Falha ao abrir atendimento');
-    return criado;
+    return emTransacao(async (client) => {
+      await client.query(
+        "SELECT pg_advisory_xact_lock(hashtext('elo_protocolo_' || CURRENT_DATE::text))");
+
+      const { rows } = await client.query<Atendimento>(
+        `INSERT INTO atendimentos
+           (protocolo, canal, bot_versao_id, cliente_id, teste, no_atual, status)
+         SELECT 'AT-' || TO_CHAR(NOW(), 'YYMMDD') || '-' ||
+                LPAD((COALESCE(MAX(SUBSTRING(protocolo FROM '[0-9]{4}$')::int), 0) + 1)::text,
+                     4, '0'),
+                $1, $2, $3, $4, $5, 'em_andamento'
+           FROM atendimentos WHERE created_at::date = CURRENT_DATE
+         RETURNING *`,
+        [dados.canal, dados.botVersaoId, dados.clienteId, dados.teste, dados.noAtual],
+      );
+
+      const criado = rows[0];
+      if (!criado) throw new Error('Falha ao abrir atendimento');
+      return criado;
+    });
   },
 
   buscarPorId(id: string): Promise<Atendimento | null> {
