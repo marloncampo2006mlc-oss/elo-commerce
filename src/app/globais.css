@@ -268,6 +268,30 @@ td.acoes { text-align: right; white-space: nowrap; }
 .chat__opcao:hover { border-color: var(--violeta); background: var(--superficie-2); }
 
 .chat__form { display: flex; gap: 8px; padding: 12px 14px; border-top: 1px solid var(--borda); background: var(--superficie); }
+/* Mesa de atendimento — três colunas com larguras que cediam mal.
+   Fila e contexto eram fixos em 300px e 280px, então toda a folga saía
+   da coluna do meio: numa janela de notebook a conversa era espremida a
+   poucos pixels e o texto quebrava letra a letra. Agora as laterais
+   encolhem primeiro e, quando não cabem mais, o contexto do cliente sai
+   — ele é apoio à conversa, não a conversa. */
+.mesa {
+  display: grid; gap: 14px; height: 100%; min-height: 0;
+  grid-template-columns: minmax(240px, 300px) minmax(0, 1fr) minmax(230px, 280px);
+}
+.mesa__fila, .mesa__conversa { display: flex; flex-direction: column; overflow: hidden; }
+.mesa__contexto { overflow-y: auto; }
+
+@media (max-width: 1180px) {
+  .mesa { grid-template-columns: minmax(220px, 270px) minmax(0, 1fr); }
+  .mesa__contexto { display: none; }
+}
+
+@media (max-width: 820px) {
+  /* Sem espaço para duas colunas, a lista vira uma faixa no topo e a
+     conversa fica com o resto — o atendente precisa é de ler e responder. */
+  .mesa { grid-template-columns: minmax(0, 1fr); grid-template-rows: 190px minmax(0, 1fr); }
+}
+
 /* Espera na fila — mostrada nas duas pontas: para o atendente, na lista;
    para o cliente, dentro do chat. A posição ganha destaque porque é a
    informação que responde "falta muito?"; o tempo vem em seguida. */

@@ -170,9 +170,9 @@ export function Desk({ filaInicial, historicoInicial }: {
   const naFila = conversa?.status === 'aguardando_atendente';
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '300px minmax(0,1fr) 280px', gap: 14, height: '100%', minHeight: 0 }}>
+    <div className="mesa">
       {/* ---------- fila ---------- */}
-      <aside className="cartao" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <aside className="cartao mesa__fila">
         <div className="cartao__topo" style={{ gap: 6 }}>
           <button className={`btn btn--sm ${aba === 'fila' ? 'btn--primario' : 'btn--fantasma'}`}
                   onClick={() => setAba('fila')}>
@@ -244,7 +244,7 @@ export function Desk({ filaInicial, historicoInicial }: {
       </aside>
 
       {/* ---------- conversa ---------- */}
-      <section className="cartao" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <section className="cartao mesa__conversa">
         {!conversa ? (
           <div className="vazio" style={{ margin: 'auto' }}>
             <div className="vazio__icone"><IconeAtendimento tamanho={26} /></div>
@@ -316,7 +316,7 @@ export function Desk({ filaInicial, historicoInicial }: {
       </section>
 
       {/* ---------- contexto do cliente ---------- */}
-      <aside className="cartao" style={{ overflowY: 'auto' }}>
+      <aside className="cartao mesa__contexto">
         <div className="cartao__topo"><div><h3>Dados do cliente</h3></div></div>
 
         {!cliente ? (
