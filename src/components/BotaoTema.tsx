@@ -40,7 +40,10 @@ export function BotaoTema({ variante = 'icone' }: { variante?: 'icone' | 'menu' 
     return (
       <button type="button" className="lateral__item" onClick={alternar} title={rotulo}>
         <span className="lateral__icone">{icone}</span>
-        Tema {vaiPara}
+        {/* O rótulo precisa da classe para sumir junto com os outros
+            quando o menu está recolhido — como texto solto ele vazava
+            para fora da faixa estreita. */}
+        <span className="lateral__rotulo">Tema {vaiPara}</span>
       </button>
     );
   }

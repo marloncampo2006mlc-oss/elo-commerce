@@ -933,9 +933,13 @@ select.filtro:hover { border-color: var(--borda-forte); }
   transition: width 200ms cubic-bezier(.4, 0, .2, 1), box-shadow 200ms;
 }
 
-/* Abre no hover e também no foco: quem navega por teclado nunca dispara
-   um :hover, e sem isto o menu seria inalcançável sem mouse. */
-.lateral:hover, .lateral:focus-within {
+/* Abre no hover e no foco POR TECLADO.
+   Era :focus-within, e isso mantinha o menu aberto depois de qualquer
+   clique: o botão clicado guarda o foco, então tirar o mouse não
+   fechava mais nada — só clicar fora. :has(:focus-visible) casa apenas
+   quando o foco veio do teclado, que é o caso em que o menu realmente
+   precisa continuar aberto. */
+.lateral:hover, .lateral:has(:focus-visible) {
   width: var(--menu-aberto); overflow-y: auto;
   box-shadow: var(--sombra-lg);
 }
@@ -947,7 +951,7 @@ select.filtro:hover { border-color: var(--borda-forte); }
   opacity: 0; transition: opacity 140ms;
   white-space: nowrap; pointer-events: none;
 }
-.lateral:hover .lateral__rotulo, .lateral:focus-within .lateral__rotulo {
+.lateral:hover .lateral__rotulo, .lateral:has(:focus-visible) .lateral__rotulo {
   opacity: 1; pointer-events: auto;
 }
 
@@ -1042,8 +1046,8 @@ select.filtro:hover { border-color: var(--borda-forte); }
 
 /* Recolhido, sobram apenas os ícones dos menus principais: os submenus
    sem rótulo seriam uma coluna de ícones sem significado. */
-.lateral:not(:hover):not(:focus-within) .menu__submenus { grid-template-rows: 0fr; }
-.lateral:not(:hover):not(:focus-within) .menu__seta { opacity: 0; }
+.lateral:not(:hover):not(:has(:focus-visible)) .menu__submenus { grid-template-rows: 0fr; }
+.lateral:not(:hover):not(:has(:focus-visible)) .menu__seta { opacity: 0; }
 
 .lateral__item {
   position: relative; display: flex; align-items: center; gap: 11px;
