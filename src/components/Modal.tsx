@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { IconeFechar } from './Icones';
 
 /**
  * Modal renderizado em portal, direto no <body>.
@@ -51,7 +52,7 @@ export function Modal({ titulo, largo = false, aoFechar, children }: {
         <header className="modal__topo">
           <h2>{titulo}</h2>
           <button className="btn btn--sm btn--fantasma" style={{ marginLeft: 'auto' }}
-                  onClick={aoFechar} aria-label="Fechar">✕</button>
+                  onClick={aoFechar} aria-label="Fechar"><IconeFechar /></button>
         </header>
         <div className="modal__corpo">{children}</div>
       </div>
@@ -92,7 +93,7 @@ export function PainelLateral({ titulo, cabecalho, aoFechar, children }: {
         <header className="modal__topo">
           {cabecalho ?? <h2>{titulo}</h2>}
           <button className="btn btn--sm btn--fantasma" style={{ marginLeft: 'auto' }}
-                  onClick={aoFechar} aria-label="Fechar">✕</button>
+                  onClick={aoFechar} aria-label="Fechar"><IconeFechar /></button>
         </header>
         <div className="modal__corpo">{children}</div>
       </aside>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { IconeAtualizar, IconeEnviar, IconeFechar } from '@/components/Icones';
 
 interface Mensagem {
   id: string; autor: string; conteudo: string;
@@ -61,8 +62,10 @@ export function PainelTeste({ botId, versaoId, aoFechar }: {
           <strong>Testar fluxo</strong>
           <span>rascunho · não conta no BI</span>
         </div>
-        <button className="btn btn--sm" onClick={() => void iniciar()}>↻</button>
-        <button className="btn btn--sm btn--fantasma" onClick={aoFechar} aria-label="Fechar">✕</button>
+        <button className="btn btn--sm" onClick={() => void iniciar()}
+                aria-label="Reiniciar o teste"><IconeAtualizar /></button>
+        <button className="btn btn--sm btn--fantasma" onClick={aoFechar}
+                aria-label="Fechar"><IconeFechar /></button>
       </header>
 
       <div className="chat__msgs">
@@ -86,7 +89,9 @@ export function PainelTeste({ botId, versaoId, aoFechar }: {
       <form className="chat__form" onSubmit={(evento) => { evento.preventDefault(); void enviar(texto); }}>
         <input value={texto} onChange={(evento) => setTexto(evento.target.value)}
                placeholder="Responder como cliente…" aria-label="Mensagem de teste" />
-        <button className="btn btn--primario" type="submit" aria-label="Enviar">➤</button>
+        <button className="btn btn--primario" type="submit" aria-label="Enviar">
+          <IconeEnviar />
+        </button>
       </form>
     </div>
   );

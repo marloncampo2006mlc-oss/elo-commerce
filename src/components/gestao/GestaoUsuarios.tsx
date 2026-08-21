@@ -5,7 +5,8 @@ import { useMemo, useState } from 'react';
 import { Modal } from '@/components/Modal';
 import { Indicador } from './Indicador';
 import {
-  IconeBuscaG, IconeChave, IconeEngrenagem, IconeEscudoCheck, IconeMais, IconeUsuarios,
+  IconeAtualizar, IconeBuscaG, IconeChave, IconeCheck, IconeEngrenagem,
+  IconeEscudoCheck, IconeMais, IconeMenos, IconeUsuarios,
 } from '@/components/Icones';
 import { EditorUsuario, COR_PAPEL, ICONE_PAPEL } from './EditorUsuario';
 import { useToast } from '@/components/Toasts';
@@ -123,7 +124,7 @@ export function GestaoUsuarios({ usuarios, meuId }: { usuarios: Usuario[]; meuId
           valor={PAPEIS.length}
           nota={
             <button className="ligacao" onClick={() => setVerMatriz(true)}>
-              ver o que cada um pode →
+              ver o que cada um pode
             </button>
           } />
       </section>
@@ -279,7 +280,9 @@ export function GestaoUsuarios({ usuarios, meuId }: { usuarios: Usuario[]; meuId
                   const tem = privilegio.papeis.includes(form.papel);
                   return (
                     <div key={privilegio.chave} className={`priv ${tem ? '' : 'priv--nao'}`}>
-                      <span className="priv__marca">{tem ? '✓' : '✕'}</span>
+                      <span className="priv__marca" aria-hidden="true">
+                        {tem ? <IconeCheck tamanho={13} /> : <IconeMenos tamanho={13} />}
+                      </span>
                       <span>{privilegio.rotulo}</span>
                     </div>
                   );
@@ -293,7 +296,7 @@ export function GestaoUsuarios({ usuarios, meuId }: { usuarios: Usuario[]; meuId
                          onChange={(evento) => setForm({ ...form, senha: evento.target.value })} />
                   <button className="btn btn--sm" type="button"
                           onClick={() => setForm({ ...form, senha: gerarSenha() })}>
-                    ↻ Gerar
+                    <IconeAtualizar tamanho={14} /> Gerar
                   </button>
                 </div>
                 <span className="campo__dica">
@@ -330,7 +333,9 @@ export function GestaoUsuarios({ usuarios, meuId }: { usuarios: Usuario[]; meuId
                           await navigator.clipboard.writeText(senhaGerada.senha);
                           setCopiado(true);
                         }}>
-                  {copiado ? '✓ Copiado' : 'Copiar senha'}
+                  {copiado
+                    ? <><IconeCheck tamanho={14} /> Copiado</>
+                    : 'Copiar senha'}
                 </button>
               </div>
 
@@ -364,7 +369,11 @@ export function GestaoUsuarios({ usuarios, meuId }: { usuarios: Usuario[]; meuId
                     <tr>
                       <th>Privilégio</th>
                       {PAPEIS.map((papel) => (
-                        <th key={papel} className="num">{ICONE_PAPEL[papel]} {papel}</th>
+                        <th key={papel} className="num">
+                          <span className="cabecalho-perfil">
+                            {ICONE_PAPEL[papel]} {papel}
+                          </span>
+                        </th>
                       ))}
                     </tr>
                   </thead>
@@ -378,8 +387,12 @@ export function GestaoUsuarios({ usuarios, meuId }: { usuarios: Usuario[]; meuId
                         {PAPEIS.map((papel) => (
                           <td key={papel} className="num" style={{ fontSize: 15 }}>
                             {privilegio.papeis.includes(papel)
-                              ? <span style={{ color: 'var(--verde)' }}>✓</span>
-                              : <span className="dim">—</span>}
+                              ? <span className="matriz__sim" aria-label="permitido">
+                                  <IconeCheck tamanho={14} />
+                                </span>
+                              : <span className="matriz__nao" aria-label="negado">
+                                  <IconeMenos tamanho={14} />
+                                </span>}
                           </td>
                         ))}
                       </tr>

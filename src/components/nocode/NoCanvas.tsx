@@ -1,19 +1,31 @@
 'use client';
 
 import { Handle, Position, type NodeProps } from '@xyflow/react';
+import type { ReactNode } from 'react';
 import type { DadosNo, TipoNo } from '@/chatbot/tipos';
+import {
+  IconeBalao, IconeBifurcacao, IconeBuscaG, IconeCaixa, IconeHeadset,
+  IconeIniciar, IconeInterrogacao, IconeLista, IconeParar,
+} from '@/components/Icones';
 
-/** Aparência de cada tipo de bloco no canvas. */
-export const ESTILO_BLOCO: Record<TipoNo, { icone: string; cor: string; rotulo: string }> = {
-  inicio:           { icone: '▶', cor: '#16a34a', rotulo: 'Início' },
-  mensagem:         { icone: '💬', cor: '#6d4aff', rotulo: 'Mensagem' },
-  pergunta:         { icone: '❓', cor: '#0ea5e9', rotulo: 'Pergunta' },
-  menu:             { icone: '☰', cor: '#d97706', rotulo: 'Menu' },
-  condicao:         { icone: '⑂', cor: '#db2777', rotulo: 'Condição' },
-  buscar_produtos:  { icone: '🔎', cor: '#17c4e0', rotulo: 'Buscar produtos' },
-  consultar_pedido: { icone: '📦', cor: '#8b5cf6', rotulo: 'Consultar pedido' },
-  transferir:       { icone: '🎧', cor: '#f59e0b', rotulo: 'Transferir' },
-  finalizar:        { icone: '⏹', cor: '#dc2626', rotulo: 'Finalizar' },
+/**
+ * Aparência de cada tipo de bloco no canvas.
+ *
+ * Os ícones são desenhados, não emoji: no canvas eles aparecem lado a
+ * lado, em blocos de tamanho fixo, e emoji chega com métrica própria de
+ * cada sistema — a fileira nunca alinhava, e a cor vinha pronta, sem
+ * acompanhar a cor do bloco.
+ */
+export const ESTILO_BLOCO: Record<TipoNo, { icone: ReactNode; cor: string; rotulo: string }> = {
+  inicio:           { icone: <IconeIniciar />,       cor: '#16a34a', rotulo: 'Início' },
+  mensagem:         { icone: <IconeBalao />,         cor: '#6d4aff', rotulo: 'Mensagem' },
+  pergunta:         { icone: <IconeInterrogacao />,  cor: '#0ea5e9', rotulo: 'Pergunta' },
+  menu:             { icone: <IconeLista />,         cor: '#d97706', rotulo: 'Menu' },
+  condicao:         { icone: <IconeBifurcacao />,    cor: '#db2777', rotulo: 'Condição' },
+  buscar_produtos:  { icone: <IconeBuscaG tamanho={15} />, cor: '#17c4e0', rotulo: 'Buscar produtos' },
+  consultar_pedido: { icone: <IconeCaixa tamanho={15} />,  cor: '#8b5cf6', rotulo: 'Consultar pedido' },
+  transferir:       { icone: <IconeHeadset />,       cor: '#f59e0b', rotulo: 'Transferir' },
+  finalizar:        { icone: <IconeParar />,         cor: '#dc2626', rotulo: 'Finalizar' },
 };
 
 /**
@@ -85,7 +97,7 @@ export function NoCanvas({ data, selected }: NodeProps) {
 
       {saidasCondicao.map((saida) => (
         <div key={saida} className="no-flow__opcao" style={{ position: 'relative', paddingRight: 14 }}>
-          {saida === 'sim' ? '✓ verdadeiro' : '✗ falso'}
+          {saida === 'sim' ? 'verdadeiro' : 'falso'}
           <Handle
             type="source"
             position={Position.Right}

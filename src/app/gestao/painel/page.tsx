@@ -11,6 +11,7 @@ import {
   IconeAlerta, IconeAtendimento, IconeCaixaAberta, IconeClientes, IconeDinheiro,
 } from '@/components/Icones';
 import { exigirAcesso } from '@/lib/guardaPagina';
+import { IconeCaixa } from '@/components/Icones';
 
 export const dynamic = 'force-dynamic';
 
@@ -85,12 +86,13 @@ export default async function Painel() {
             </div>
             <div className="lista">
               {estoque.length === 0 ? (
-                <p className="dim" style={{ padding: 20 }}>Estoque saudável em todos os itens ✅</p>
+                <p className="dim" style={{ padding: 20 }}>Estoque saudável em todos os itens.</p>
               ) : estoque.map((produto) => (
                 <div key={produto.id} className="lista__item">
                   <span className="mini">
                     {produto.imagem?.startsWith('/')
-                      ? <img src={produto.imagem} alt="" /> : <span>📦</span>}
+                      ? <img src={produto.imagem} alt="" />
+                      : <IconeCaixa tamanho={16} />}
                   </span>
                   <div className="lista__txt">
                     <strong>{produto.nome}</strong>

@@ -12,6 +12,7 @@ import { useToast } from '@/components/Toasts';
 import { ESTILO_BLOCO, NoCanvas, type DadosNoCanvas } from './NoCanvas';
 import { PainelPropriedades } from './PainelPropriedades';
 import { PainelTeste } from './PainelTeste';
+import { IconeAlerta } from '@/components/Icones';
 
 interface Props {
   botId: string;
@@ -162,7 +163,7 @@ function Editor(props: Props) {
       return;
     }
 
-    sucesso('Publicado! 🚀', 'O chat da loja já está usando este fluxo');
+    sucesso('Fluxo publicado', 'O chat da loja já está usando esta versão');
     window.location.reload();
   }
 
@@ -193,7 +194,9 @@ function Editor(props: Props) {
           <>
             <div className="lateral__grupo">Impedem publicar</div>
             {problemas.map((problema, indice) => (
-              <div key={indice} className="problema">⚠ {problema}</div>
+              <div key={indice} className="problema">
+                <IconeAlerta tamanho={14} /> {problema}
+              </div>
             ))}
           </>
         )}

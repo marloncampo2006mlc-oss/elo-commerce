@@ -9,6 +9,7 @@ import { useToast } from './Toasts';
 import { IconeCarrinho } from './loja/IconesLoja';
 import { AcessoCliente } from './loja/AcessoCliente';
 import { Pagamento } from './loja/Pagamento';
+import { IconeCaixa, IconeFechar } from '@/components/Icones';
 
 interface ClienteSessao { id: string; nome: string; email: string }
 
@@ -80,7 +81,7 @@ export function PainelCarrinho({ cliente }: { cliente: ClienteSessao | null }) {
             <div className="mini">
               {item.imagem?.startsWith('/')
                 ? <img src={item.imagem} alt={item.nome} />
-                : <span>📦</span>}
+                : <IconeCaixa tamanho={18} />}
             </div>
 
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -99,7 +100,7 @@ export function PainelCarrinho({ cliente }: { cliente: ClienteSessao | null }) {
             </strong>
 
             <button className="btn btn--sm btn--perigo" onClick={() => remover(item.id)}
-                    aria-label={`Remover ${item.nome}`}>✕</button>
+                    aria-label={`Remover ${item.nome}`}><IconeFechar tamanho={13} /></button>
           </div>
         ))}
       </div>

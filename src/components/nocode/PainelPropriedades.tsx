@@ -3,6 +3,7 @@
 import type { Node } from '@xyflow/react';
 import type { DadosNo } from '@/chatbot/tipos';
 import { ESTILO_BLOCO, type DadosNoCanvas } from './NoCanvas';
+import { IconeFechar } from '@/components/Icones';
 
 interface Props {
   no: Node | null;
@@ -34,7 +35,9 @@ export function PainelPropriedades({ no, aoAlterar, aoRemover }: Props) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div className="lateral__grupo" style={{ paddingLeft: 0, paddingTop: 0 }}>
-        <span style={{ color: estilo.cor }}>{estilo.icone}</span> {estilo.rotulo}
+        <span style={{ color: estilo.cor, display: 'inline-flex', verticalAlign: '-3px' }}>
+          {estilo.icone}
+        </span> {estilo.rotulo}
       </div>
 
       <div className="campo">
@@ -79,7 +82,7 @@ export function PainelPropriedades({ no, aoAlterar, aoRemover }: Props) {
               <button className="btn btn--sm btn--perigo" aria-label="Remover opção"
                       onClick={() => alterar({
                         opcoes: (dados.opcoes ?? []).filter((atual) => atual.id !== opcao.id),
-                      })}>✕</button>
+                      })}><IconeFechar tamanho={13} /></button>
             </div>
           ))}
           <button className="btn btn--sm" onClick={() => alterar({

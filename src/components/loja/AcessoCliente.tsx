@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
 import { useToast } from '@/components/Toasts';
 import { Olho } from '@/components/Icone';
+import { IconeEnvelope } from '@/components/Icones';
 
 type Etapa = 'escolha' | 'entrar' | 'cadastrar';
 
@@ -105,7 +106,7 @@ export function AcessoCliente({ aoEntrar, proximo }: {
         </a>
 
         <button className="opcao-acesso" type="button" onClick={() => setEtapa('entrar')}>
-          <span className="opcao-acesso__icone" aria-hidden="true">✉</span>
+          <span className="opcao-acesso__icone" aria-hidden="true"><IconeEnvelope /></span>
           Entrar com e-mail e senha
         </button>
 
@@ -123,7 +124,7 @@ export function AcessoCliente({ aoEntrar, proximo }: {
     return (
       <form className="acesso-loja" onSubmit={(evento) => void enviar(evento, 'login')}>
         <button type="button" className="acesso-loja__voltar" onClick={() => setEtapa('escolha')}>
-          ← outras formas de entrar
+          Outras formas de entrar
         </button>
 
         <h2 className="acesso-loja__titulo">Entrar</h2>
@@ -165,7 +166,7 @@ export function AcessoCliente({ aoEntrar, proximo }: {
   return (
     <form className="acesso-loja" onSubmit={(evento) => void enviar(evento, 'cadastro')}>
       <button type="button" className="acesso-loja__voltar" onClick={() => setEtapa('escolha')}>
-        ← outras formas de entrar
+        Outras formas de entrar
       </button>
 
       <h2 className="acesso-loja__titulo">Criar conta</h2>

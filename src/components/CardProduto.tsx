@@ -4,6 +4,7 @@ import { moeda } from '@/lib/formato';
 import { useCarrinho } from './Carrinho';
 import { useToast } from './Toasts';
 import { IconeCarrinho } from './loja/IconesLoja';
+import { IconeCaixa } from '@/components/Icones';
 
 export interface ProdutoVitrine {
   id: string; nome: string; descricao: string | null; categoria: string;
@@ -24,7 +25,7 @@ export function CardProduto({ produto }: { produto: ProdutoVitrine }) {
         <span className="produto__halo" aria-hidden="true" />
         {temImagem
           ? <img src={produto.imagem!} alt={produto.nome} loading="lazy" />
-          : <span className="produto__emoji">{produto.imagem ?? '📦'}</span>}
+          : <span className="produto__vazio" aria-hidden="true"><IconeCaixa tamanho={40} /></span>}
 
         {produto.estoque <= 5 && (
           <span className="produto__tag">
