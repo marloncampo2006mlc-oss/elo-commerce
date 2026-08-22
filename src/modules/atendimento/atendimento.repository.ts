@@ -302,6 +302,29 @@ export const atendimentoRepository = {
   },
 
   /**
+   * Marca como abandonada a conversa que o cliente deixou para trás.
+   *
+   * Chamada quando a MESMA pessoa abre uma conversa nova: a anterior
+   * ficava aberta para sempre, e a fila acumulava "Visitante · chatbot"
+   * indistinguíveis, das quais só uma tinha alguém do outro lado. O
+   * atendente escolhia no escuro, escrevia numa conversa morta, e o
+   * cliente nunca via a resposta.
+   *
+   * Só age sobre conversa ainda viva: uma já finalizada ou resolvida
+   * mantém o desfecho que teve, para o BI não perder a distinção entre
+   * quem foi atendido e quem desistiu.
+   */
+  async abandonar(atendimentoId: string): Promise<void> {
+    await executar(
+      `UPDATE atendimentos
+          SET status = 'abandonado', finalizado_em = NOW()
+        WHERE id = $1
+          AND status IN ('em_andamento', 'aguardando_atendente', 'em_atendimento')`,
+      [atendimentoId],
+    );
+  },
+
+  /**
    * O CLIENTE encerra a própria conversa — sem atendente, porque pode
    * não haver nenhum: a pessoa pode desistir ainda no bot.
    */

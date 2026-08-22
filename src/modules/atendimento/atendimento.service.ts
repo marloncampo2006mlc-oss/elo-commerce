@@ -62,7 +62,29 @@ export const atendimentoService = {
    */
   async iniciar(opcoes: {
     canal?: string; clienteId?: string | null; versaoId?: string | null; teste?: boolean;
+    /** Conversa que esta pessoa tinha aberta antes — será abandonada. */
+    anteriorId?: string | null;
   } = {}): Promise<ConversaCompleta> {
+    /**
+     * Fecha a conversa anterior ANTES de abrir a nova.
+     *
+     * Sem isso, cada reinício deixava um "Visitante" órfão na fila, e a
+     * lista virava um monte de conversas idênticas das quais só a última
+     * tinha alguém do outro lado.
+     *
+     * O id vem do navegador, que é quem sabe qual conversa aquela pessoa
+     * tinha — visitante anônimo não tem cadastro para o servidor
+     * consultar. Não é uma credencial: abandonar só interrompe uma
+     * conversa que já estava sem dono, e no pior caso alguém encerra a
+     * própria sessão.
+     */
+    if (opcoes.anteriorId) {
+      await atendimentoRepository.abandonar(opcoes.anteriorId).catch(() => {
+        // Id inválido ou já encerrado não pode impedir a conversa nova:
+        // a pessoa está tentando falar com a loja agora.
+      });
+    }
+
     const versao = opcoes.versaoId
       ? await botsRepository.versaoPorId(opcoes.versaoId)
       : await botsRepository.publicadaDaLoja();

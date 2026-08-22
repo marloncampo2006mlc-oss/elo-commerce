@@ -7,6 +7,8 @@ import { ok } from '@/lib/api';
 const corpoSchema = z.object({
   canal: z.enum(['chatbot', 'ura', 'whatsapp']).default('chatbot'),
   clienteId: z.string().uuid().nullish(),
+  /** Conversa que o widget tinha aberta — encerrada ao abrir esta. */
+  anteriorId: z.string().uuid().nullish(),
 });
 
 /**
@@ -16,6 +18,6 @@ const corpoSchema = z.object({
  */
 export const POST = comTratamentoDeErro(async (request: NextRequest) => {
   const corpo = await request.json().catch(() => ({}));
-  const { canal, clienteId } = corpoSchema.parse(corpo);
-  return ok(await atendimentoService.iniciar({ canal, clienteId }), 201);
+  const { canal, clienteId, anteriorId } = corpoSchema.parse(corpo);
+  return ok(await atendimentoService.iniciar({ canal, clienteId, anteriorId }), 201);
 });

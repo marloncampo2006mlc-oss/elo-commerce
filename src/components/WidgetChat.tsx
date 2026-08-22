@@ -77,10 +77,20 @@ export function WidgetChat() {
 
   /** Abre uma conversa nova e devolve os dados dela, sem mexer no estado de carregando. */
   async function abrirConversa(): Promise<Conversa | null> {
+    /**
+     * Entrega a conversa anterior para o servidor encerrá-la.
+     *
+     * Só o navegador sabe qual era — visitante anônimo não tem cadastro
+     * onde o servidor pudesse procurar. Sem isso, cada reinício deixava
+     * um "Visitante" órfão na fila, e o atendente acabava escrevendo
+     * numa conversa que ninguém mais estava lendo.
+     */
+    const anteriorId = localStorage.getItem(CHAVE_CONVERSA);
+
     const resposta = await fetch('/api/chat/iniciar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ canal: 'chatbot' }),
+      body: JSON.stringify({ canal: 'chatbot', anteriorId }),
     });
     const corpo = await resposta.json();
     if (!resposta.ok) throw new Error(corpo.erro ?? 'Falha ao abrir o atendimento');
@@ -149,7 +159,9 @@ export function WidgetChat() {
          * nova, então continuar digitando funciona como a pessoa espera
          * — sem precisar entender o que rolou por trás.
          */
-        localStorage.removeItem(CHAVE_CONVERSA);
+        // A chave NÃO é apagada aqui: `abrirConversa` precisa do id
+        // antigo para o servidor encerrar aquela conversa, e ela mesma
+        // sobrescreve a chave com a conversa nova.
         const nova = await abrirConversa();
         if (nova) {
           const segunda = await fetch(`/api/chat/${nova.atendimento.id}/mensagens`, {
@@ -321,7 +333,7 @@ export function WidgetChat() {
       {encerrada ? (
         <div style={{ padding: 14, borderTop: '1px solid var(--borda)' }}>
           <button className="btn btn--primario btn--bloco"
-                  onClick={() => { localStorage.removeItem(CHAVE_CONVERSA); void iniciar(); }}>
+                  onClick={() => void iniciar()}>
             Iniciar nova conversa
           </button>
         </div>

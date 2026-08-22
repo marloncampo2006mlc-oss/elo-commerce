@@ -102,10 +102,38 @@ async function publicarBotInicial(): Promise<void> {
   console.log(`   ✓ chatbot "${bot.nome}" publicado`);
 }
 
+/**
+ * Encerra conversas que ficaram penduradas.
+ *
+ * Uma conversa só sai da fila quando alguém a encerra — mas o cliente
+ * que simplesmente fecha o navegador não encerra nada, e aquela linha
+ * fica "aguardando atendente" para sempre. Com o tempo a fila enche de
+ * "Visitante · chatbot" idênticos, dos quais nenhum tem gente do outro
+ * lado, e o atendente passa a escolher no escuro.
+ *
+ * Seis horas é folgado de propósito: ninguém espera atendimento por seis
+ * horas com a janela aberta, então o corte não alcança quem ainda está
+ * lá. E marcar como `abandonado`, em vez de apagar, preserva no BI a
+ * diferença entre quem foi atendido e quem desistiu.
+ */
+async function encerrarConversasAbandonadas(): Promise<void> {
+  const { rowCount } = await pool.query(
+    `UPDATE atendimentos
+        SET status = 'abandonado', finalizado_em = NOW()
+      WHERE status IN ('em_andamento', 'aguardando_atendente', 'em_atendimento')
+        AND created_at < NOW() - INTERVAL '6 hours'`,
+  );
+
+  console.log(rowCount
+    ? `   ✓ ${rowCount} conversa(s) parada(s) marcada(s) como abandonada(s)`
+    : '   ↷ nenhuma conversa parada na fila');
+}
+
 async function preparar(): Promise<void> {
   console.log('🚀 Preparando o ambiente...');
   await garantirAdministrador();
   await publicarBotInicial();
+  await encerrarConversasAbandonadas();
   console.log('✅ Ambiente pronto.');
 }
 
