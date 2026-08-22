@@ -7,8 +7,14 @@ import { exigirAcesso } from '@/lib/guardaPagina';
 
 export const dynamic = 'force-dynamic';
 
-const cpfFormatado = (cpf: string) =>
-  cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+/**
+ * CPF é opcional desde que o login social e o cadastro por e-mail
+ * deixaram de exigi-lo — só o checkout continua pedindo, para a nota
+ * fiscal. Uma pessoa sem CPF ainda é um cliente válido, então a página
+ * inteira não pode quebrar por causa de uma célula da tabela.
+ */
+const cpfFormatado = (cpf: string | null) =>
+  cpf ? cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : '—';
 
 export default async function ClientesGestao() {
   await exigirAcesso('clientes.ver');

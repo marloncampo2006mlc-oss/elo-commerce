@@ -2,7 +2,11 @@ export interface Cliente {
   id: string;
   nome: string;
   email: string;
-  cpf: string;
+  /**
+   * Opcional desde que o login social e o cadastro por e-mail passaram
+   * a não exigi-lo — só o checkout continua pedindo, para a nota fiscal.
+   */
+  cpf: string | null;
   telefone: string | null;
   data_nascimento: string | null;
   cidade: string | null;
