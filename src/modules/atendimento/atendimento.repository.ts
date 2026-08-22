@@ -301,6 +301,23 @@ export const atendimentoRepository = {
     });
   },
 
+  /**
+   * O CLIENTE encerra a própria conversa — sem atendente, porque pode
+   * não haver nenhum: a pessoa pode desistir ainda no bot.
+   */
+  finalizarComoCliente(atendimentoId: string): Promise<void> {
+    return emTransacao(async (client) => {
+      await client.query(
+        `UPDATE atendimentos SET status = 'finalizado', finalizado_em = NOW() WHERE id = $1`,
+        [atendimentoId],
+      );
+      await atendimentoRepository.gravarMensagem(
+        client, atendimentoId, 'sistema', 'Você encerrou o atendimento.');
+      await atendimentoRepository.gravarEvento(
+        client, atendimentoId, 'finalizacao', 'Cliente encerrou o atendimento', null);
+    });
+  },
+
   async vincularCliente(atendimentoId: string, clienteId: string): Promise<void> {
     await executar('UPDATE atendimentos SET cliente_id = $2 WHERE id = $1',
       [atendimentoId, clienteId]);

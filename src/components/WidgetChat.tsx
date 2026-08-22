@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { IconeAssistente } from './loja/IconesLoja';
-import { IconeEnviar, IconeFechar } from './Icones';
+import { IconeEnviar, IconeFechar, IconeParar } from './Icones';
 import { ordinal, tempoEspera } from '@/lib/formato';
 import { useEntregaGradual } from './useEntregaGradual';
 import { RITMO_ATIVO, RITMO_OCIOSO, abaVisivel } from '@/lib/ritmoDeConsulta';
@@ -75,21 +75,41 @@ export function WidgetChat() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /** Abre uma conversa nova e devolve os dados dela, sem mexer no estado de carregando. */
+  async function abrirConversa(): Promise<Conversa | null> {
+    const resposta = await fetch('/api/chat/iniciar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ canal: 'chatbot' }),
+    });
+    const corpo = await resposta.json();
+    if (!resposta.ok) throw new Error(corpo.erro ?? 'Falha ao abrir o atendimento');
+    const nova = corpo.data as Conversa;
+    setConversa(nova);
+    localStorage.setItem(CHAVE_CONVERSA, nova.atendimento.id);
+    return nova;
+  }
+
   async function iniciar() {
     setCarregando(true);
     setErro(null);
     try {
-      const resposta = await fetch('/api/chat/iniciar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ canal: 'chatbot' }),
-      });
-      const corpo = await resposta.json();
-      if (!resposta.ok) throw new Error(corpo.erro ?? 'Falha ao abrir o atendimento');
-      setConversa(corpo.data as Conversa);
-      localStorage.setItem(CHAVE_CONVERSA, corpo.data.atendimento.id);
+      await abrirConversa();
     } catch (falha) {
       setErro(falha instanceof Error ? falha.message : 'Erro inesperado');
+    } finally {
+      setCarregando(false);
+    }
+  }
+
+  /** O cliente encerra a própria conversa, a qualquer momento. */
+  async function encerrar() {
+    if (!conversa || carregando) return;
+    setCarregando(true);
+    try {
+      const resposta = await fetch(`/api/chat/${conversa.atendimento.id}/encerrar`, { method: 'POST' });
+      const corpo = await resposta.json();
+      if (resposta.ok) setConversa(corpo.data as Conversa);
     } finally {
       setCarregando(false);
     }
@@ -116,6 +136,33 @@ export function WidgetChat() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ texto: conteudo }),
       });
+
+      if (resposta.status === 409) {
+        /**
+         * A conversa que o widget conhecia já não existe mais do lado do
+         * servidor — encerrada por quem quer que tenha sido (o próprio
+         * cliente, um atendente, ou o bot). Antes, isso só aparecia como
+         * um erro na tela, e a pessoa ficava presa: digitar de novo
+         * batia no mesmo 409 pra sempre.
+         *
+         * A mensagem não se perde: ela vira a primeira fala da conversa
+         * nova, então continuar digitando funciona como a pessoa espera
+         * — sem precisar entender o que rolou por trás.
+         */
+        localStorage.removeItem(CHAVE_CONVERSA);
+        const nova = await abrirConversa();
+        if (nova) {
+          const segunda = await fetch(`/api/chat/${nova.atendimento.id}/mensagens`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ texto: conteudo }),
+          });
+          const corpoSegunda = await segunda.json();
+          if (segunda.ok) setConversa(corpoSegunda.data as Conversa);
+        }
+        return;
+      }
+
       const corpo = await resposta.json();
       if (!resposta.ok) throw new Error(corpo.erro ?? 'Falha ao enviar');
       setConversa(corpo.data as Conversa);
@@ -190,6 +237,8 @@ export function WidgetChat() {
   const ultima = visiveis.at(-1);
   const opcoes = ultima?.opcoes ?? [];
   const encerrada = conversa?.atendimento.status === 'finalizado';
+  /** O cliente só vê a opção de encerrar quando há o que encerrar. */
+  const podeEncerrar = Boolean(conversa) && !encerrada;
 
   if (!aberto) {
     return (
@@ -208,6 +257,13 @@ export function WidgetChat() {
           <strong>Assistente Elo</strong>
           <span>{conversa?.atendimento.protocolo ?? 'iniciando…'}</span>
         </div>
+        {podeEncerrar && (
+          <button className="btn btn--sm btn--fantasma" onClick={() => void encerrar()}
+                  disabled={carregando}
+                  title="Encerrar atendimento" aria-label="Encerrar atendimento">
+            <IconeParar tamanho={14} />
+          </button>
+        )}
         <button className="btn btn--sm btn--fantasma" onClick={() => setAberto(false)}
                 aria-label="Fechar"><IconeFechar /></button>
       </header>

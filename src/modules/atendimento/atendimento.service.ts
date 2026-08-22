@@ -201,4 +201,17 @@ export const atendimentoService = {
     await atendimentoRepository.finalizar(id, atendenteId, nome);
     return atendimentoService.obter(id);
   },
+
+  /**
+   * O cliente encerra a própria conversa, do widget da loja.
+   *
+   * Idempotente: um segundo clique — ou um duplo envio da rede — não
+   * gera um segundo "você encerrou o atendimento" no histórico.
+   */
+  async encerrarComoCliente(id: string): Promise<ConversaCompleta> {
+    const { atendimento } = await atendimentoService.obter(id);
+    if (atendimento.status === 'finalizado') return atendimentoService.obter(id);
+    await atendimentoRepository.finalizarComoCliente(id);
+    return atendimentoService.obter(id);
+  },
 };
