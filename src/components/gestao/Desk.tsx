@@ -8,6 +8,7 @@ import {
   IconeAtendimento, IconeEnviar, IconeSino, IconeSinoCortado,
 } from '@/components/Icones';
 import { tocarAlerta } from '@/lib/alertaSonoro';
+import { IlustracaoVazio } from './IlustracaoVazio';
 import { RITMO_ATIVO, RITMO_FILA, RITMO_OCIOSO, abaVisivel } from '@/lib/ritmoDeConsulta';
 
 const CHAVE_SOM = 'elo-alerta-fila';
@@ -198,6 +199,37 @@ export function Desk({ filaInicial, historicoInicial }: {
     <div className="mesa">
       {/* ---------- fila ---------- */}
       <aside className="cartao mesa__fila">
+        {/* Cabeçalho da coluna: identifica a área e concentra os atalhos
+            que valem para a lista inteira — não para uma conversa. */}
+        <div className="mesa__cabecalho">
+          <h3>Atendimentos</h3>
+          <div className="mesa__atalhos">
+            <button type="button" className="atalho" title="Ir para a fila de espera"
+                    aria-label="Ir para a fila de espera"
+                    onClick={() => setAba('fila')}>
+              <IconeAtendimento tamanho={15} />
+              {aguardandoAgora > 0 && <span className="atalho__contador">{aguardandoAgora}</span>}
+            </button>
+
+            <button type="button"
+                    className={`atalho ${somLigado ? 'atalho--ativo' : ''}`}
+                    aria-pressed={somLigado}
+                    title={somLigado ? 'Desligar o som de novo cliente' : 'Ligar o som de novo cliente'}
+                    aria-label={somLigado ? 'Desligar o som de novo cliente' : 'Ligar o som de novo cliente'}
+                    onClick={() => {
+                      const proximo = !somLigado;
+                      setSomLigado(proximo);
+                      localStorage.setItem(CHAVE_SOM, proximo ? 'ligado' : 'desligado');
+                      // Tocar na hora de ligar confirma que o som funciona
+                      // e destrava o áudio do navegador, que só libera
+                      // depois de um clique.
+                      if (proximo) tocarAlerta();
+                    }}>
+              {somLigado ? <IconeSino tamanho={15} /> : <IconeSinoCortado tamanho={15} />}
+            </button>
+          </div>
+        </div>
+
         <div className="cartao__topo" style={{ gap: 6 }}>
           <button className={`btn btn--sm ${aba === 'fila' ? 'btn--primario' : 'btn--fantasma'}`}
                   onClick={() => setAba('fila')}>
@@ -209,22 +241,6 @@ export function Desk({ filaInicial, historicoInicial }: {
           <button className={`btn btn--sm ${aba === 'historico' ? 'btn--primario' : 'btn--fantasma'}`}
                   onClick={() => setAba('historico')}>
             Histórico
-          </button>
-
-          <button className="btn btn--sm btn--fantasma direita"
-                  aria-pressed={somLigado}
-                  title={somLigado ? 'Desligar o som de novo cliente' : 'Ligar o som de novo cliente'}
-                  aria-label={somLigado ? 'Desligar o som de novo cliente' : 'Ligar o som de novo cliente'}
-                  onClick={() => {
-                    const proximo = !somLigado;
-                    setSomLigado(proximo);
-                    localStorage.setItem(CHAVE_SOM, proximo ? 'ligado' : 'desligado');
-                    // Tocar na hora de ligar confirma que o som funciona
-                    // e destrava o áudio do navegador, que só libera
-                    // depois de um clique.
-                    if (proximo) tocarAlerta();
-                  }}>
-            {somLigado ? <IconeSino tamanho={15} /> : <IconeSinoCortado tamanho={15} />}
           </button>
         </div>
 
@@ -271,9 +287,14 @@ export function Desk({ filaInicial, historicoInicial }: {
       {/* ---------- conversa ---------- */}
       <section className="cartao mesa__conversa">
         {!conversa ? (
-          <div className="vazio" style={{ margin: 'auto' }}>
-            <div className="vazio__icone"><IconeAtendimento tamanho={26} /></div>
-            <strong>Selecione uma conversa</strong>
+          /* Tela em repouso: a ilustração ocupa o vazio sem gritar, e o
+             texto abaixo diz o que fazer. Antes era só um ícone pequeno
+             com uma linha, o que deixava a maior coluna da tela parecendo
+             uma área quebrada em vez de uma área à espera. */
+          <div className="mesa__repouso">
+            <IlustracaoVazio />
+            <strong>Nenhuma conversa aberta</strong>
+            <p>Escolha um atendimento na lista ao lado para começar a responder.</p>
           </div>
         ) : (
           <>

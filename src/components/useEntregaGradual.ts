@@ -30,12 +30,16 @@ export interface MensagemEntregavel {
  * Quanto tempo "digitar" uma fala.
  *
  * Proporcional ao tamanho, porque um "ok" instantâneo e um parágrafo
- * instantâneo destoam do mesmo jeito. O teto existe para que um texto
- * longo não vire espera real — passado certo ponto ninguém mais lê a
- * animação como digitação, lê como travamento.
+ * instantâneo destoam do mesmo jeito.
+ *
+ * O piso de 900ms existe porque abaixo disso a pausa deixa de ser lida
+ * como alguém digitando e vira só um piscar — as falas se atropelam na
+ * tela e o efeito some. O teto impede que um texto longo vire espera de
+ * verdade: passado certo ponto ninguém mais lê a animação como
+ * digitação, lê como travamento.
  */
 export function tempoDeDigitacao(texto: string): number {
-  return Math.min(1400, Math.max(400, 280 + texto.length * 16));
+  return Math.min(1800, Math.max(900, 500 + texto.length * 16));
 }
 
 /**

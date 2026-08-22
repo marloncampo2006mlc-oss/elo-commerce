@@ -306,6 +306,48 @@ td.acoes { text-align: right; white-space: nowrap; }
   .mesa { grid-template-columns: minmax(0, 1fr); grid-template-rows: 190px minmax(0, 1fr); }
 }
 
+/* --- cabeçalho e atalhos da coluna de atendimentos ---
+   Os atalhos valem para a LISTA, não para uma conversa: por isso ficam
+   no topo da coluna, e não junto do chat. Botão quadrado, só ícone, num
+   tom neutro — a atenção da tela pertence à conversa. */
+.mesa__cabecalho {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px 10px; flex: 0 0 auto;
+}
+.mesa__cabecalho h3 { font-size: 14.5px; letter-spacing: -.015em; }
+.mesa__atalhos { display: flex; gap: 6px; margin-left: auto; }
+
+.atalho {
+  position: relative;
+  display: grid; place-items: center; width: 30px; height: 30px;
+  border-radius: 8px; border: 1px solid var(--borda);
+  background: var(--superficie); color: var(--texto-2);
+  cursor: pointer; transition: var(--transicao);
+}
+.atalho:hover { color: var(--texto); border-color: var(--borda-forte); }
+.atalho--ativo { color: var(--violeta-claro); border-color: rgb(109 74 255 / .4); }
+
+/* O contador cola no canto do botão em vez de ganhar uma linha própria:
+   é um detalhe do atalho, não um item da interface. */
+.atalho__contador {
+  position: absolute; top: -5px; right: -5px;
+  min-width: 16px; height: 16px; padding: 0 4px;
+  display: grid; place-items: center;
+  border-radius: var(--raio-full); font-size: 9.5px; font-weight: 700;
+  color: #fff; background: var(--vermelho);
+  border: 2px solid var(--fundo-2);
+}
+
+/* --- tela em repouso, sem conversa selecionada --- */
+.mesa__repouso {
+  margin: auto; display: flex; flex-direction: column; align-items: center;
+  text-align: center; padding: 24px; max-width: 320px; color: var(--texto-3);
+}
+.mesa__repouso strong {
+  display: block; margin-top: 6px; font-size: 14.5px; color: var(--texto);
+}
+.mesa__repouso p { margin-top: 6px; font-size: 12.5px; line-height: 1.5; }
+
 /* Espera na fila — mostrada nas duas pontas: para o atendente, na lista;
    para o cliente, dentro do chat. A posição ganha destaque porque é a
    informação que responde "falta muito?"; o tempo vem em seguida. */
