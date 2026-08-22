@@ -5,6 +5,7 @@ import { IconeAssistente } from './loja/IconesLoja';
 import { IconeEnviar, IconeFechar, IconeParar } from './Icones';
 import { ordinal, tempoEspera } from '@/lib/formato';
 import { useEntregaGradual } from './useEntregaGradual';
+import { useSinalDigitacao } from './useSinalDigitacao';
 import { RITMO_ATIVO, RITMO_OCIOSO, abaVisivel } from '@/lib/ritmoDeConsulta';
 
 interface Opcao { id: string; rotulo: string }
@@ -15,6 +16,7 @@ interface Mensagem {
 interface Conversa {
   atendimento: { id: string; protocolo: string; status: string };
   mensagens: Mensagem[];
+  digitando: { cliente: boolean; atendente: boolean };
   /** Só existe enquanto a conversa aguarda um atendente humano. */
   fila: { posicao: number; total_na_fila: number; espera_segundos: number } | null;
 }
@@ -35,13 +37,20 @@ export function WidgetChat() {
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const fimRef = useRef<HTMLDivElement>(null);
+  /** Invalida consultas iniciadas antes de um envio ou encerramento. */
+  const geracaoRef = useRef(0);
 
-  const { visiveis, entregando, digitando, entregarSemAnimacao } =
+  const { visiveis, entregando, digitando: botDigitando, entregarSemAnimacao } =
     useEntregaGradual(conversa?.mensagens ?? []);
+
+  const emAtendimentoHumano = conversa?.atendimento.status === 'em_atendimento';
+  const { sinalizar: sinalizarDigitacao, parar: pararDigitacao } = useSinalDigitacao(
+    emAtendimentoHumano && conversa ? `/api/chat/${conversa.atendimento.id}/digitando` : null,
+  );
 
   useEffect(() => {
     fimRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [visiveis.length, carregando, digitando]);
+  }, [visiveis.length, carregando, botDigitando, conversa?.digitando.atendente]);
 
   /**
    * Retoma a conversa anterior ao montar.
@@ -56,6 +65,7 @@ export function WidgetChat() {
     if (!salvo) return;
 
     void (async () => {
+      const geracao = geracaoRef.current;
       const resposta = await fetch(`/api/chat/${salvo}/mensagens`);
       if (!resposta.ok) { localStorage.removeItem(CHAVE_CONVERSA); return; }
 
@@ -65,6 +75,7 @@ export function WidgetChat() {
         localStorage.removeItem(CHAVE_CONVERSA);
         return;
       }
+      if (geracao !== geracaoRef.current) return;
       // Conversa retomada aparece inteira: encenar de novo o que a
       // pessoa já leu é fazê-la esperar por nada.
       entregarSemAnimacao(data.mensagens.length);
@@ -87,6 +98,7 @@ export function WidgetChat() {
      */
     const anteriorId = localStorage.getItem(CHAVE_CONVERSA);
 
+    const geracao = ++geracaoRef.current;
     const resposta = await fetch('/api/chat/iniciar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -95,6 +107,7 @@ export function WidgetChat() {
     const corpo = await resposta.json();
     if (!resposta.ok) throw new Error(corpo.erro ?? 'Falha ao abrir o atendimento');
     const nova = corpo.data as Conversa;
+    if (geracao !== geracaoRef.current) return null;
     setConversa(nova);
     localStorage.setItem(CHAVE_CONVERSA, nova.atendimento.id);
     return nova;
@@ -116,10 +129,22 @@ export function WidgetChat() {
   async function encerrar() {
     if (!conversa || carregando) return;
     setCarregando(true);
+    ++geracaoRef.current;
     try {
       const resposta = await fetch(`/api/chat/${conversa.atendimento.id}/encerrar`, { method: 'POST' });
-      const corpo = await resposta.json();
-      if (resposta.ok) setConversa(corpo.data as Conversa);
+      if (resposta.ok) {
+        localStorage.removeItem(CHAVE_CONVERSA);
+        setConversa({
+          ...conversa,
+          atendimento: { ...conversa.atendimento, status: 'finalizado' },
+          mensagens: [{
+            id: `final-${Date.now()}`, autor: 'sistema',
+            conteudo: 'Conversa finalizada.', opcoes: null,
+          }],
+          digitando: { cliente: false, atendente: false },
+          fila: null,
+        });
+      }
     } finally {
       setCarregando(false);
     }
@@ -130,7 +155,9 @@ export function WidgetChat() {
     if (!conteudo || !conversa || carregando) return;
 
     setTexto('');
+    pararDigitacao();
     setCarregando(true);
+    const geracao = ++geracaoRef.current;
 
     // Eco otimista: a fala do cliente aparece antes da ida ao servidor.
     setConversa((atual) => atual && {
@@ -177,7 +204,7 @@ export function WidgetChat() {
 
       const corpo = await resposta.json();
       if (!resposta.ok) throw new Error(corpo.erro ?? 'Falha ao enviar');
-      setConversa(corpo.data as Conversa);
+      if (geracao === geracaoRef.current) setConversa(corpo.data as Conversa);
     } catch (falha) {
       setErro(falha instanceof Error ? falha.message : 'Erro inesperado');
     } finally {
@@ -221,9 +248,30 @@ export function WidgetChat() {
      * ou escondida.
      */
     const consultar = async () => {
+      const geracao = geracaoRef.current;
       try {
         const resposta = await fetch(`/api/chat/${conversaId}/mensagens`);
-        if (resposta.ok) setConversa((await resposta.json()).data as Conversa);
+        if (resposta.ok && geracao === geracaoRef.current) {
+          const nova = (await resposta.json()).data as Conversa;
+          if (nova.atendimento.status === 'finalizado') {
+            // O atendimento terminou no servidor: apaga a sessão local
+            // imediatamente. A próxima abertura cria outro protocolo e
+            // nunca reapresenta as mensagens desta conversa.
+            ++geracaoRef.current;
+            localStorage.removeItem(CHAVE_CONVERSA);
+            setConversa({
+              ...nova,
+              mensagens: [{
+                id: `final-${Date.now()}`, autor: 'sistema',
+                conteudo: 'Conversa finalizada.', opcoes: null,
+              }],
+              digitando: { cliente: false, atendente: false },
+              fila: null,
+            });
+          } else {
+            setConversa(nova);
+          }
+        }
       } catch {
         // Rede instável não encerra o acompanhamento: a próxima volta tenta de novo.
       }
@@ -289,8 +337,14 @@ export function WidgetChat() {
           </div>
         ))}
 
-        {(carregando || digitando) && (
+        {(carregando || botDigitando) && (
           <div className="msg msg--bot digitando" aria-label="digitando">
+            <i /><i /><i />
+          </div>
+        )}
+
+        {conversa?.digitando.atendente && !encerrada && (
+          <div className="msg msg--atendente digitando" aria-label="Atendente digitando">
             <i /><i /><i />
           </div>
         )}
@@ -339,7 +393,11 @@ export function WidgetChat() {
         </div>
       ) : (
         <form className="chat__form" onSubmit={(evento) => { evento.preventDefault(); void enviar(texto); }}>
-          <input value={texto} onChange={(evento) => setTexto(evento.target.value)}
+          <input value={texto} onChange={(evento) => {
+                   setTexto(evento.target.value);
+                   if (evento.target.value.trim()) sinalizarDigitacao();
+                   else pararDigitacao();
+                 }}
                  placeholder="Digite sua mensagem…" maxLength={500} aria-label="Mensagem"
                  disabled={!conversa || carregando} />
           <button className="btn btn--primario" type="submit" disabled={!texto.trim() || carregando}

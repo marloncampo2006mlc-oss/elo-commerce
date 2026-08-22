@@ -20,6 +20,8 @@ export interface Atendimento {
   entrou_fila_em: Date | null;
   assumido_em: Date | null;
   finalizado_em: Date | null;
+  cliente_digitando_ate: Date | null;
+  atendente_digitando_ate: Date | null;
   created_at: Date;
 }
 
@@ -248,6 +250,7 @@ export const atendimentoRepository = {
          LEFT JOIN clientes c ON c.id = a.cliente_id
          LEFT JOIN usuarios u ON u.id = a.atendente_id
         WHERE NOT a.teste
+          AND a.entrou_fila_em IS NOT NULL
         ORDER BY a.created_at DESC
         LIMIT $1`,
       [limite],
@@ -288,14 +291,29 @@ export const atendimentoRepository = {
     });
   },
 
+  marcarDigitacao(
+    atendimentoId: string, origem: 'cliente' | 'atendente', digitando: boolean,
+  ): Promise<number> {
+    const coluna = origem === 'cliente' ? 'cliente_digitando_ate' : 'atendente_digitando_ate';
+    return executar(
+      `UPDATE atendimentos
+          SET ${coluna} = CASE WHEN $2 THEN NOW() + INTERVAL '4 seconds' ELSE NULL END
+        WHERE id = $1 AND status = 'em_atendimento'`,
+      [atendimentoId, digitando],
+    );
+  },
+
   finalizar(atendimentoId: string, atendenteId: string, nome: string): Promise<void> {
     return emTransacao(async (client) => {
       await client.query(
-        `UPDATE atendimentos SET status = 'finalizado', finalizado_em = NOW() WHERE id = $1`,
+        `UPDATE atendimentos
+            SET status = 'finalizado', finalizado_em = NOW(),
+                cliente_digitando_ate = NULL, atendente_digitando_ate = NULL
+          WHERE id = $1`,
         [atendimentoId],
       );
       await atendimentoRepository.gravarMensagem(
-        client, atendimentoId, 'sistema', 'Atendimento finalizado.');
+        client, atendimentoId, 'sistema', 'Conversa finalizada.');
       await atendimentoRepository.gravarEvento(
         client, atendimentoId, 'finalizacao', `${nome} finalizou o atendimento`, atendenteId);
     });
@@ -331,11 +349,14 @@ export const atendimentoRepository = {
   finalizarComoCliente(atendimentoId: string): Promise<void> {
     return emTransacao(async (client) => {
       await client.query(
-        `UPDATE atendimentos SET status = 'finalizado', finalizado_em = NOW() WHERE id = $1`,
+        `UPDATE atendimentos
+            SET status = 'finalizado', finalizado_em = NOW(),
+                cliente_digitando_ate = NULL, atendente_digitando_ate = NULL
+          WHERE id = $1`,
         [atendimentoId],
       );
       await atendimentoRepository.gravarMensagem(
-        client, atendimentoId, 'sistema', 'Você encerrou o atendimento.');
+        client, atendimentoId, 'sistema', 'O cliente encerrou a conversa.');
       await atendimentoRepository.gravarEvento(
         client, atendimentoId, 'finalizacao', 'Cliente encerrou o atendimento', null);
     });

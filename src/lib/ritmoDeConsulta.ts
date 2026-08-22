@@ -14,7 +14,7 @@
  */
 
 /** Conversa aberta e visível: a resposta do outro lado precisa chegar. */
-export const RITMO_ATIVO = 1_800;
+export const RITMO_ATIVO = 900;
 
 /** Aba escondida ou conversa parada: presença, não urgência. */
 export const RITMO_OCIOSO = 15_000;

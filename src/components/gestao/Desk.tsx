@@ -10,6 +10,7 @@ import {
 import { tocarAlerta } from '@/lib/alertaSonoro';
 import { IlustracaoVazio } from './IlustracaoVazio';
 import { RITMO_ATIVO, RITMO_FILA, RITMO_OCIOSO, abaVisivel } from '@/lib/ritmoDeConsulta';
+import { useSinalDigitacao } from '@/components/useSinalDigitacao';
 
 const CHAVE_SOM = 'elo-alerta-fila';
 
@@ -46,9 +47,17 @@ export function Desk({ filaInicial, historicoInicial }: {
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [conversa, setConversa] = useState<ItemFila | null>(null);
   const [cliente, setCliente] = useState<DadosCliente | null>(null);
+  const [clienteDigitando, setClienteDigitando] = useState(false);
   const [texto, setTexto] = useState('');
   const { sucesso, erro, info } = useToast();
   const msgsRef = useRef<HTMLDivElement>(null);
+  /** Impede uma resposta antiga do polling de desfazer um envio recente. */
+  const geracaoConversaRef = useRef(0);
+
+  const conversaHumanaId = conversa?.status === 'em_atendimento' ? conversa.id : null;
+  const { sinalizar: sinalizarDigitacao, parar: pararDigitacao } = useSinalDigitacao(
+    conversaHumanaId ? `/api/gestao/atendimento/${conversaHumanaId}/digitando` : null,
+  );
 
   const [somLigado, setSomLigado] = useState(true);
   /**
@@ -114,13 +123,16 @@ export function Desk({ filaInicial, historicoInicial }: {
   }, [anunciarNovidades]);
 
   const carregarConversa = useCallback(async (id: string) => {
+    const geracao = geracaoConversaRef.current;
     const resposta = await fetch(`/api/gestao/atendimento/${id}`);
     if (!resposta.ok) return;
     const { data } = await resposta.json();
+    if (geracao !== geracaoConversaRef.current) return;
     setMensagens(data.mensagens);
     setEventos(data.eventos);
     setConversa(data.atendimento);
     setCliente(data.cliente ?? null);
+    setClienteDigitando(Boolean(data.digitando?.cliente));
   }, []);
 
   useEffect(() => { anunciarNovidades(filaInicial); }, [anunciarNovidades, filaInicial]);
@@ -157,14 +169,34 @@ export function Desk({ filaInicial, historicoInicial }: {
      * Com a aba escondida os dois desaceleram: ninguém está lendo, e
      * manter o ritmo curto só gastaria invocação de função.
      */
-    const intervalo = setInterval(() => {
-      void carregarFila();
-    }, abaVisivel() ? RITMO_FILA : RITMO_OCIOSO);
+    let cancelado = false;
+    let relogioFila: ReturnType<typeof setTimeout>;
+    let relogioConversa: ReturnType<typeof setTimeout>;
 
-    const intervaloConversa = setInterval(() => {
-      if (selecionado) void carregarConversa(selecionado);
-    }, abaVisivel() ? RITMO_ATIVO : RITMO_OCIOSO);
-    return () => { clearInterval(intervalo); clearInterval(intervaloConversa); };
+    const consultarFila = async () => {
+      await carregarFila();
+      if (!cancelado) {
+        relogioFila = setTimeout(() => void consultarFila(),
+          abaVisivel() ? RITMO_FILA : RITMO_OCIOSO);
+      }
+    };
+
+    const consultarConversa = async () => {
+      if (selecionado) await carregarConversa(selecionado);
+      if (!cancelado) {
+        relogioConversa = setTimeout(() => void consultarConversa(),
+          abaVisivel() ? RITMO_ATIVO : RITMO_OCIOSO);
+      }
+    };
+
+    relogioFila = setTimeout(() => void consultarFila(), RITMO_FILA);
+    relogioConversa = setTimeout(() => void consultarConversa(), RITMO_ATIVO);
+
+    return () => {
+      cancelado = true;
+      clearTimeout(relogioFila);
+      clearTimeout(relogioConversa);
+    };
     // `visivel` entra nas dependências para os intervalos serem
     // recriados com o ritmo novo quando a aba muda de estado.
   }, [carregarFila, carregarConversa, selecionado, visivel]);
@@ -179,6 +211,8 @@ export function Desk({ filaInicial, historicoInicial }: {
 
   async function acao(caminho: string, corpo?: object) {
     if (!selecionado) return;
+    // Qualquer GET que começou antes desta mutação passa a ser obsoleto.
+    ++geracaoConversaRef.current;
     const resposta = await fetch(`/api/gestao/atendimento/${selecionado}/${caminho}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -186,6 +220,9 @@ export function Desk({ filaInicial, historicoInicial }: {
     });
     const dados = await resposta.json();
     if (!resposta.ok) { erro('Não foi possível', dados.erro); return false; }
+    // Também invalida uma consulta que tenha começado enquanto o POST
+    // ainda estava sendo persistido no servidor.
+    ++geracaoConversaRef.current;
     await carregarConversa(selecionado);
     await carregarFila();
     return true;
@@ -255,7 +292,11 @@ export function Desk({ filaInicial, historicoInicial }: {
             </div>
           ) : lista.map((item) => (
             <button key={item.id}
-                    onClick={() => { setSelecionado(item.id); void carregarConversa(item.id); }}
+                    onClick={() => {
+                      ++geracaoConversaRef.current;
+                      setSelecionado(item.id);
+                      void carregarConversa(item.id);
+                    }}
                     style={{
                       width: '100%', textAlign: 'left', padding: '12px 16px', background: 'none',
                       border: 0, borderBottom: '1px solid var(--borda)', cursor: 'pointer',
@@ -325,6 +366,11 @@ export function Desk({ filaInicial, historicoInicial }: {
               {mensagens.map((mensagem) => (
                 <div key={mensagem.id} className={`msg msg--${mensagem.autor}`}>{mensagem.conteudo}</div>
               ))}
+              {clienteDigitando && emAtendimento && (
+                <div className="msg msg--cliente digitando" aria-label="Cliente digitando">
+                  <i /><i /><i />
+                </div>
+              )}
             </div>
 
             {emAtendimento ? (
@@ -334,6 +380,7 @@ export function Desk({ filaInicial, historicoInicial }: {
                       if (!texto.trim()) return;
                       const enviado = texto;
                       setTexto('');
+                      pararDigitacao();
 
                       // Eco otimista: a fala aparece antes da ida ao
                       // servidor. Sem isto o atendente escreve, o campo
@@ -347,7 +394,11 @@ export function Desk({ filaInicial, historicoInicial }: {
 
                       await acao('mensagens', { texto: enviado });
                     }}>
-                <input value={texto} onChange={(evento) => setTexto(evento.target.value)}
+                <input value={texto} onChange={(evento) => {
+                         setTexto(evento.target.value);
+                         if (evento.target.value.trim()) sinalizarDigitacao();
+                         else pararDigitacao();
+                       }}
                        placeholder="Responder ao cliente…" aria-label="Resposta" />
                 <button className="btn btn--primario" type="submit" aria-label="Enviar">
                   <IconeEnviar />
